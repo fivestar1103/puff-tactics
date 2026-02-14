@@ -26,6 +26,8 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "`src/scenes/battle/FullBattle.tscn` uses `TurnManager.auto_begin_turn_cycle = false` and starts turn flow with `begin_turn_cycle()` only after roster selection; tile-control victories call `TurnManager.end_battle()` and logs persist to `user://battle_logs/*.json` for downstream moment extraction."
 - "`TurnManager` emits `action_resolved(side, action_payload)` for move/attack/skill outcomes; `full_battle.gd` records per-turn `player_turn_snapshot` + `player_action_result` and stores `turn_summaries` so `src/scripts/utils/moment_extractor.gd` can build feed-ready decisive-moment snapshots."
 - "Async PvP orchestration is centralized in `src/scripts/network/pvp_async.gd`; `full_battle.gd` calls it before match start to fetch nearest-ELO leaderboard opponents and apply ghost `team_paths` + AI weights, then calls it after battle end to upload the player's ghost and submit PvP result/ELO updates."
+- "Progression/accessories are centralized in `src/scripts/puffs/puff_progression.gd` (`PuffProgression` autoload); player puff spawns should use `build_runtime_puff_data(data_path)` so level/XP and equipped gear bonuses apply in feed and battle contexts."
+- "`src/scenes/puffs/Puff.tscn` includes `HatSprite`, `ScarfSprite`, and `RibbonSprite` overlay layers; `src/scripts/puffs/puff.gd` renders equipped accessory visuals from `PuffData.get_equipped_accessories()`."
 
 ## Gotchas
 

@@ -574,7 +574,7 @@ func _spawn_unit(data_path: String, spawn_cell: Vector2i, team: StringName, unit
 	add_child(puff)
 	puff.name = "%s_%s_%d" % [str(team).capitalize(), _name_slug_from_data_path(data_path), unit_index + 1]
 
-	var puff_data_resource: Resource = load(data_path)
+	var puff_data_resource: Resource = _load_puff_data_for_team(data_path, team)
 	if puff_data_resource != null:
 		puff.set_puff_data(puff_data_resource)
 
@@ -1209,7 +1209,11 @@ func _serialize_unit_states() -> Array[Dictionary]:
 			state["cell"] = _to_json_safe(puff.grid_cell)
 			var puff_data: PuffData = puff.puff_data as PuffData
 			if puff_data != null:
-				state["max_hp"] = puff_data.hp
+				if puff_data.has_method("get_effective_hp"):
+					state["max_hp"] = int(puff_data.call("get_effective_hp"))
+				else:
+					state["max_hp"] = puff_data.hp
+				state["level"] = int(puff_data.get("level"))
 				state["unique_skill_id"] = str(puff_data.unique_skill_id)
 			if _turn_manager != null:
 				state["hp"] = _turn_manager.get_current_hp(puff)
@@ -1226,6 +1230,18 @@ func _name_slug_from_data_path(data_path: String) -> String:
 	if data_path.is_empty():
 		return "unit"
 	return data_path.get_file().trim_suffix(".tres")
+
+
+func _load_puff_data_for_team(data_path: String, team: StringName) -> Resource:
+	if data_path.is_empty():
+		return null
+	if team == TEAM_PLAYER:
+		var progression: Node = get_node_or_null("/root/PuffProgression")
+		if progression != null and progression.has_method("build_runtime_puff_data"):
+			var runtime_data_variant: Variant = progression.call("build_runtime_puff_data", data_path)
+			if runtime_data_variant is Resource:
+				return runtime_data_variant
+	return load(data_path)
 
 
 func _to_json_safe(value: Variant) -> Variant:

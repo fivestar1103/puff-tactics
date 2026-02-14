@@ -276,7 +276,8 @@ func _spawn_demo_puff(puff_config: Dictionary) -> void:
 	puff_parent.add_child(puff)
 
 	var puff_data_path: String = str(puff_config.get("data_path", ""))
-	var puff_data_resource: Resource = load(puff_data_path)
+	var team: StringName = puff_config.get("team", TEAM_ENEMY)
+	var puff_data_resource: Resource = _load_puff_data_for_team(puff_data_path, team)
 	if puff_data_resource != null:
 		puff.set_puff_data(puff_data_resource)
 
@@ -285,7 +286,6 @@ func _spawn_demo_puff(puff_config: Dictionary) -> void:
 	puff.set_battle_map(_battle_map)
 	puff.name = _build_demo_puff_name(puff_config)
 
-	var team: StringName = puff_config.get("team", TEAM_ENEMY)
 	register_puff(puff, team)
 
 
@@ -926,6 +926,8 @@ func _resolve_attack_stat(puff: Puff) -> int:
 	var puff_data: PuffData = puff.puff_data as PuffData
 	if puff_data == null:
 		return 1
+	if puff_data.has_method("get_effective_attack"):
+		return maxi(1, int(puff_data.call("get_effective_attack")))
 	return maxi(1, puff_data.attack)
 
 
@@ -933,6 +935,8 @@ func _resolve_defense_stat(puff: Puff) -> int:
 	var puff_data: PuffData = puff.puff_data as PuffData
 	if puff_data == null:
 		return 0
+	if puff_data.has_method("get_effective_defense"):
+		return maxi(0, int(puff_data.call("get_effective_defense")))
 	return maxi(0, puff_data.defense)
 
 
@@ -940,6 +944,8 @@ func _resolve_move_range(puff: Puff) -> int:
 	var puff_data: PuffData = puff.puff_data as PuffData
 	if puff_data == null:
 		return 1
+	if puff_data.has_method("get_effective_move_range"):
+		return maxi(1, int(puff_data.call("get_effective_move_range")))
 	return maxi(1, puff_data.move_range)
 
 
@@ -947,6 +953,8 @@ func _resolve_attack_range(puff: Puff) -> int:
 	var puff_data: PuffData = puff.puff_data as PuffData
 	if puff_data == null:
 		return 1
+	if puff_data.has_method("get_effective_attack_range"):
+		return maxi(1, int(puff_data.call("get_effective_attack_range")))
 	return maxi(1, puff_data.attack_range)
 
 
@@ -954,6 +962,8 @@ func _resolve_max_hp(puff: Puff) -> int:
 	var puff_data: PuffData = puff.puff_data as PuffData
 	if puff_data == null:
 		return 1
+	if puff_data.has_method("get_effective_hp"):
+		return maxi(1, int(puff_data.call("get_effective_hp")))
 	return maxi(1, puff_data.hp)
 
 
@@ -1285,3 +1295,17 @@ func _sync_utility_ai_weights() -> void:
 		ai_positional_advantage_weight,
 		ai_bump_opportunity_weight
 	)
+
+
+func _load_puff_data_for_team(data_path: String, team: StringName) -> Resource:
+	if data_path.is_empty():
+		return null
+
+	if team == TEAM_PLAYER:
+		var progression: Node = get_node_or_null("/root/PuffProgression")
+		if progression != null and progression.has_method("build_runtime_puff_data"):
+			var runtime_data_variant: Variant = progression.call("build_runtime_puff_data", data_path)
+			if runtime_data_variant is Resource:
+				return runtime_data_variant
+
+	return load(data_path)

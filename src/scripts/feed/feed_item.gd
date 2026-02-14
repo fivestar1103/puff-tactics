@@ -283,9 +283,10 @@ func _spawn_snapshot_puff(puff_config: Dictionary) -> void:
 	_battle_root.add_child(puff)
 	puff.set_battle_map(_battle_map)
 
+	var team: StringName = _normalize_team(puff_config.get("team", TEAM_ENEMY))
 	var data_path: String = str(puff_config.get("data_path", ""))
 	if not data_path.is_empty():
-		var puff_data_resource: Resource = load(data_path)
+		var puff_data_resource: Resource = _load_puff_data_for_team(data_path, team)
 		if puff_data_resource != null:
 			puff.set_puff_data(puff_data_resource)
 
@@ -297,7 +298,6 @@ func _spawn_snapshot_puff(puff_config: Dictionary) -> void:
 		puff_name = _build_snapshot_puff_name(puff_config, cell)
 	puff.name = puff_name
 
-	var team: StringName = _normalize_team(puff_config.get("team", TEAM_ENEMY))
 	_turn_manager.register_puff(puff, team)
 
 	var puff_id: int = puff.get_instance_id()
@@ -553,3 +553,17 @@ func _connect_if_needed(source: Object, signal_name: StringName, callback: Calla
 	if source.is_connected(signal_name, callback):
 		return
 	source.connect(signal_name, callback)
+
+
+func _load_puff_data_for_team(data_path: String, team: StringName) -> Resource:
+	if data_path.is_empty():
+		return null
+
+	if team == TEAM_PLAYER:
+		var progression: Node = get_node_or_null("/root/PuffProgression")
+		if progression != null and progression.has_method("build_runtime_puff_data"):
+			var runtime_data_variant: Variant = progression.call("build_runtime_puff_data", data_path)
+			if runtime_data_variant is Resource:
+				return runtime_data_variant
+
+	return load(data_path)

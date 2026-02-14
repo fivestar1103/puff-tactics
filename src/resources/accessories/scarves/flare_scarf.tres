@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AccessoryData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/scripts/puffs/accessory_data.gd" id="1_ut1hy"]
+
+[resource]
+script = ExtResource("1_ut1hy")
+accessory_id = &"flare_scarf"
+display_name = &"Flare Scarf"
+slot = 1
+bonus_attack = 2
+tint_color = Color(0.99, 0.55, 0.43, 1)

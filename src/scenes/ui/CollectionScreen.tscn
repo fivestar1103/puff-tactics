@@ -1,0 +1,110 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/scripts/ui/collection_screen.gd" id="1_tfq4j"]
+
+[node name="CollectionScreen" type="Control"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+script = ExtResource("1_tfq4j")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.03, 0.05, 0.1, 0.76)
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -500.0
+offset_top = -700.0
+offset_right = 500.0
+offset_bottom = 700.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="RootLayout" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Header" type="HBoxContainer" parent="Panel/RootLayout"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Panel/RootLayout/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Puff Collection"
+vertical_alignment = 1
+
+[node name="CloseButton" type="Button" parent="Panel/RootLayout/Header"]
+layout_mode = 2
+size_flags_horizontal = 0
+text = "Close"
+
+[node name="Subtitle" type="Label" parent="Panel/RootLayout"]
+layout_mode = 2
+text = "Owned accessories and puff growth."
+autowrap_mode = 2
+
+[node name="Body" type="HBoxContainer" parent="Panel/RootLayout"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+[node name="PuffColumn" type="VBoxContainer" parent="Panel/RootLayout/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="PuffLabel" type="Label" parent="Panel/RootLayout/Body/PuffColumn"]
+layout_mode = 2
+text = "Puff Levels"
+
+[node name="PuffScroll" type="ScrollContainer" parent="Panel/RootLayout/Body/PuffColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="PuffList" type="VBoxContainer" parent="Panel/RootLayout/Body/PuffColumn/PuffScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="AccessoryColumn" type="VBoxContainer" parent="Panel/RootLayout/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="AccessoryLabel" type="Label" parent="Panel/RootLayout/Body/AccessoryColumn"]
+layout_mode = 2
+text = "Owned Accessories"
+
+[node name="AccessoryScroll" type="ScrollContainer" parent="Panel/RootLayout/Body/AccessoryColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="AccessoryList" type="VBoxContainer" parent="Panel/RootLayout/Body/AccessoryColumn/AccessoryScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8

@@ -3,6 +3,7 @@ class_name FeedMain
 
 const FEED_ITEM_SCRIPT: GDScript = preload("res://src/scripts/feed/feed_item.gd")
 const FEED_SYNC_SCRIPT: GDScript = preload("res://src/scripts/network/feed_sync.gd")
+const COLLECTION_SCREEN_SCENE: PackedScene = preload("res://src/scenes/ui/CollectionScreen.tscn")
 
 const SNAP_DURATION: float = 0.28
 const SWIPE_THRESHOLD_PX: float = 120.0
@@ -183,12 +184,15 @@ var _snap_tween: Tween
 var _feed_items: Array[Node2D] = []
 var _feed_snapshots: Array[Dictionary] = []
 var _feed_sync: Node
+var _collection_screen: Node
 
 
 func _ready() -> void:
 	_setup_feed_sync()
+	_setup_collection_screen()
 	_load_initial_snapshots()
 	_build_feed_items()
+	_connect_fab_actions()
 	_style_fab_buttons()
 	_layout_feed_items()
 	_set_active_item(0, false)
@@ -202,6 +206,9 @@ func _notification(what: int) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _is_collection_visible():
+		return
+
 	if event is InputEventScreenTouch:
 		if event.pressed:
 			_begin_drag(event.position)
@@ -302,6 +309,17 @@ func _setup_feed_sync() -> void:
 	_feed_sync = feed_sync_variant
 	_feed_sync.name = "FeedSync"
 	add_child(_feed_sync)
+
+
+func _setup_collection_screen() -> void:
+	if COLLECTION_SCREEN_SCENE == null:
+		return
+	var collection_variant: Node = COLLECTION_SCREEN_SCENE.instantiate()
+	if collection_variant == null:
+		return
+	_collection_screen = collection_variant
+	_collection_screen.name = "CollectionScreen"
+	add_child(_collection_screen)
 
 
 func _load_initial_snapshots() -> void:
@@ -492,6 +510,47 @@ func _connect_if_available(source: Object, signal_name: StringName, callback: Ca
 	if source.is_connected(signal_name, callback):
 		return
 	source.connect(signal_name, callback)
+
+
+func _connect_fab_actions() -> void:
+	_connect_if_available(profile_button, &"pressed", Callable(self, "_on_profile_button_pressed"))
+	_connect_if_available(create_button, &"pressed", Callable(self, "_on_create_button_pressed"))
+	_connect_if_available(leaderboard_button, &"pressed", Callable(self, "_on_leaderboard_button_pressed"))
+
+
+func _on_profile_button_pressed() -> void:
+	if _collection_screen == null:
+		return
+	if not (_collection_screen is CanvasItem):
+		return
+	var collection_canvas: CanvasItem = _collection_screen
+	if collection_canvas.visible:
+		if _collection_screen.has_method("hide_collection"):
+			_collection_screen.call("hide_collection")
+		else:
+			collection_canvas.visible = false
+		_update_header_text()
+		return
+
+	if _collection_screen.has_method("show_collection"):
+		_collection_screen.call("show_collection")
+	else:
+		collection_canvas.visible = true
+	subtitle_label.text = "Collection open: view puff levels and owned accessories"
+
+
+func _on_create_button_pressed() -> void:
+	subtitle_label.text = "Create mode unlocks with UGC puzzle editor."
+
+
+func _on_leaderboard_button_pressed() -> void:
+	subtitle_label.text = "Leaderboard tab is wired for async PvP updates."
+
+
+func _is_collection_visible() -> bool:
+	if not (_collection_screen is CanvasItem):
+		return false
+	return (_collection_screen as CanvasItem).visible
 
 
 func _style_fab_buttons() -> void:

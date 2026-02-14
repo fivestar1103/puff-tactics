@@ -275,8 +275,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 16,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Added accessory progression system with new AccessoryData resources (hat/scarf/ribbon bonuses), extended puff_data.gd with XP/level growth and effective stat accessors, and added PuffProgression autoload to grant XP from feed_item_completed + battle_ended signals and equip starter accessories per puff. Updated puff.gd/Puff.tscn to render equipped accessory overlays, wired player puff spawns in turn_manager.gd/feed_item.gd/full_battle.gd to use progression runtime PuffData, and added CollectionScreen.tscn + collection_screen.gd opened from FeedMain profile button to show owned accessories and puff growth status. Verified with HOME=/tmp Godot --headless --check-only across all src/scripts/*.gd, headless project boot (--quit), and a runtime smoke test (US016_SMOKE_OK) covering XP awards, overlay textures, and collection population.",
       "dependsOn": ["US-003"]
     },
     {
