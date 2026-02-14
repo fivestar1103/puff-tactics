@@ -36,6 +36,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "Register `VisualTheme` as an autoload and use its StyleBox helpers for consistent label/button/panel styling across feed, battle, story, and editor screens."
 - "BattleMap builds terrain tile art in `src/scripts/core/battle_map.gd::_create_terrain_texture()` via direct `Image` drawing: base gradient fill plus per-terrain symbols and cliff-specific border treatment are applied at atlas generation time."
 - "`TurnManager` now emits `battle_ended(winner)` in addition to `SignalBus` bus events; hook HUD-layer result UI to this signal for scene-local outcome updates."
+- "`src/scripts/ai/enemy_intent.gd` should render movement/skill intents with actor->target arrows and attack intents with crosshair/X overlays to keep intent direction and impact clear."
 
 ## Gotchas
 

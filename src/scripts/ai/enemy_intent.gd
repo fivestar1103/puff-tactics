@@ -8,17 +8,19 @@ const INTENT_ACTION_MOVE: StringName = &"move"
 const INTENT_ACTION_ATTACK: StringName = &"attack"
 const INTENT_ACTION_SKILL: StringName = &"skill"
 
-const MOVE_ARROW_COLOR: Color = Color(0.53, 0.78, 0.98, 0.62)
-const MOVE_DEST_FILL_COLOR: Color = Color(0.53, 0.78, 0.98, 0.22)
-const MOVE_DEST_BORDER_COLOR: Color = Color(0.53, 0.78, 0.98, 0.78)
+const MOVE_ARROW_COLOR: Color = Color(1.0, 0.89, 0.27, 0.96)
+const MOVE_DEST_FILL_COLOR: Color = Color(1.0, 0.89, 0.27, 0.24)
+const MOVE_DEST_BORDER_COLOR: Color = Color(1.0, 0.74, 0.07, 0.9)
 
-const ATTACK_FILL_COLOR: Color = Color(0.99, 0.49, 0.57, 0.24)
-const ATTACK_BORDER_COLOR: Color = Color(0.99, 0.49, 0.57, 0.8)
+const ATTACK_FILL_COLOR: Color = Color(1.0, 0.24, 0.38, 0.22)
+const ATTACK_BORDER_COLOR: Color = Color(1.0, 0.14, 0.33, 0.95)
+const ATTACK_SYMBOL_COLOR: Color = Color(1.0, 0.85, 0.9, 0.95)
 
-const SKILL_FILL_COLOR: Color = Color(0.86, 0.72, 0.99, 0.21)
-const SKILL_BORDER_COLOR: Color = Color(0.86, 0.72, 0.99, 0.76)
-const SKILL_PRIMARY_FILL_COLOR: Color = Color(0.99, 0.82, 0.47, 0.23)
-const SKILL_PRIMARY_BORDER_COLOR: Color = Color(0.99, 0.82, 0.47, 0.82)
+const SKILL_AREA_FILL_COLOR: Color = Color(0.78, 0.44, 1.0, 0.24)
+const SKILL_AREA_BORDER_COLOR: Color = Color(0.74, 0.34, 0.98, 0.9)
+const SKILL_ARROW_COLOR: Color = Color(1.0, 0.56, 0.14, 0.96)
+const SKILL_PRIMARY_FILL_COLOR: Color = Color(1.0, 0.76, 0.30, 0.32)
+const SKILL_PRIMARY_BORDER_COLOR: Color = Color(1.0, 0.62, 0.16, 0.96)
 
 @export var battle_map_path: NodePath
 @export var turn_manager_path: NodePath
@@ -110,7 +112,7 @@ func _draw() -> void:
 			INTENT_ACTION_SKILL:
 				var target_cell: Vector2i = intent.get("target_cell", actor_cell)
 				var skill_cells: Array[Vector2i] = _to_vector2i_array(intent.get("skill_cells", []))
-				_draw_skill_intent(skill_cells, target_cell, tile_map_layer, tile_size)
+				_draw_skill_intent(actor_cell, skill_cells, target_cell, tile_map_layer, tile_size)
 			_:
 				pass
 
@@ -136,37 +138,86 @@ func _draw_attack_intent(target_cell: Vector2i, tile_map_layer: TileMapLayer, ti
 
 	_draw_diamond_at_cell(target_cell, ATTACK_FILL_COLOR, ATTACK_BORDER_COLOR, tile_map_layer, tile_size)
 	var center: Vector2 = _cell_to_local_center(target_cell, tile_map_layer)
-	var radius: float = minf(tile_size.x, tile_size.y) * 0.16
+	var radius: float = minf(tile_size.x, tile_size.y) * 0.18
+	var cross_size: float = radius * 0.75
+	draw_circle(center, cross_size * 0.85, Color(ATTACK_SYMBOL_COLOR.r, ATTACK_SYMBOL_COLOR.g, ATTACK_SYMBOL_COLOR.b, 0.34))
 	draw_line(center + Vector2(-radius, 0.0), center + Vector2(radius, 0.0), ATTACK_BORDER_COLOR, 2.0, true)
 	draw_line(center + Vector2(0.0, -radius), center + Vector2(0.0, radius), ATTACK_BORDER_COLOR, 2.0, true)
+	draw_line(
+		center + Vector2(-cross_size, -cross_size),
+		center + Vector2(cross_size, cross_size),
+		ATTACK_SYMBOL_COLOR,
+		2.0,
+		true
+	)
+	draw_line(
+		center + Vector2(cross_size, -cross_size),
+		center + Vector2(-cross_size, cross_size),
+		ATTACK_SYMBOL_COLOR,
+		2.0,
+		true
+	)
 
 
-func _draw_skill_intent(skill_cells: Array[Vector2i], primary_target_cell: Vector2i, tile_map_layer: TileMapLayer, tile_size: Vector2) -> void:
+func _draw_skill_intent(
+		actor_cell: Vector2i,
+		skill_cells: Array[Vector2i],
+		primary_target_cell: Vector2i,
+		tile_map_layer: TileMapLayer,
+		tile_size: Vector2
+	) -> void:
+	if not _is_cell_in_bounds(actor_cell) or not _is_cell_in_bounds(primary_target_cell):
+		return
+
+	var actor_center: Vector2 = _cell_to_local_center(actor_cell, tile_map_layer)
+	var target_center: Vector2 = _cell_to_local_center(primary_target_cell, tile_map_layer)
+	if actor_cell != primary_target_cell:
+		draw_line(actor_center, target_center, SKILL_ARROW_COLOR, 4.0, true)
+		_draw_arrow_head(actor_center, target_center, SKILL_ARROW_COLOR)
+		_draw_arrow_glow(actor_center, target_center)
 	for cell in skill_cells:
 		if not _is_cell_in_bounds(cell):
 			continue
-		_draw_diamond_at_cell(cell, SKILL_FILL_COLOR, SKILL_BORDER_COLOR, tile_map_layer, tile_size)
+		if cell == actor_cell:
+			draw_circle(_cell_to_local_center(cell, tile_map_layer), 4.0, MOVE_DEST_BORDER_COLOR)
+		_draw_diamond_at_cell(cell, SKILL_AREA_FILL_COLOR, SKILL_AREA_BORDER_COLOR, tile_map_layer, tile_size)
 
 	if _is_cell_in_bounds(primary_target_cell):
 		_draw_diamond_at_cell(primary_target_cell, SKILL_PRIMARY_FILL_COLOR, SKILL_PRIMARY_BORDER_COLOR, tile_map_layer, tile_size)
 		var center: Vector2 = _cell_to_local_center(primary_target_cell, tile_map_layer)
 		draw_circle(center, 6.0, SKILL_PRIMARY_BORDER_COLOR)
+		draw_line(center + Vector2(-6.0, 0.0), center + Vector2(6.0, 0.0), ATTACK_SYMBOL_COLOR, 2.0, true)
+		draw_line(center + Vector2(0.0, -6.0), center + Vector2(0.0, 6.0), ATTACK_SYMBOL_COLOR, 2.0, true)
 
 
-func _draw_arrow_head(start: Vector2, finish: Vector2, color: Color) -> void:
+func _draw_arrow_head(start: Vector2, finish: Vector2, color: Color, head_length: float = 15.0, head_width: float = 8.0) -> void:
 	var direction: Vector2 = finish - start
 	if direction.length_squared() <= 0.001:
 		return
 
 	var unit_direction: Vector2 = direction.normalized()
 	var tangent: Vector2 = Vector2(-unit_direction.y, unit_direction.x)
-	var head_length: float = 13.0
-	var head_width: float = 7.0
 
 	var tip: Vector2 = finish
 	var left: Vector2 = tip - (unit_direction * head_length) + (tangent * head_width)
 	var right: Vector2 = tip - (unit_direction * head_length) - (tangent * head_width)
 	draw_colored_polygon(PackedVector2Array([tip, left, right]), color)
+
+
+func _draw_arrow_glow(start: Vector2, finish: Vector2) -> void:
+	var direction: Vector2 = finish - start
+	if direction.length_squared() <= 0.001:
+		return
+
+	var unit_direction: Vector2 = direction.normalized()
+	var tangent: Vector2 = Vector2(-unit_direction.y, unit_direction.x)
+	var glow_width: float = 16.0
+	var glow_length: float = 8.0
+	var p1: Vector2 = start + tangent * (glow_width * 0.55)
+	var p2: Vector2 = finish - (unit_direction * glow_length) + (tangent * glow_width)
+	var p3: Vector2 = finish - (unit_direction * glow_length) - (tangent * glow_width)
+	var p4: Vector2 = start - tangent * (glow_width * 0.55)
+	draw_colored_polygon(PackedVector2Array([p1, p2, p3, p4]), Color(SKILL_ARROW_COLOR.r, SKILL_ARROW_COLOR.g, SKILL_ARROW_COLOR.b, 0.18))
 
 
 func _draw_diamond_at_cell(

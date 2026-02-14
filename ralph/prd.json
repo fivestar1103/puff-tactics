@@ -497,8 +497,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 26,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Updated src/scripts/ai/enemy_intent.gd to use vivid yellow/gold move arrows, red semi-transparent attack targets with X/crosshair marks, orange skill arrows from actor to target, and purple skill-area highlighting with visible arrow heads and directionally oriented overlays.",
       "dependsOn": ["US-021"]
     },
     {
