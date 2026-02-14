@@ -174,8 +174,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 10,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Added src/scripts/utils/puzzle_generator.gd with template-based generation for bump-to-cliff-kill, defeat-N-in-1-turn, heal-all-allies, and minimum-moves puzzles. Generator scales puzzle setup by difficulty, simulates legal player actions (move/attack/bump/heal) to auto-validate solvability, and returns feed-ready JSON-safe snapshots (map_config/puffs/enemy_intents/target_score plus puzzle_meta validation details). Verified all scripts with headless Godot --check-only and ran a headless smoke test that generated all four templates and round-tripped JSON serialization.",
       "dependsOn": ["US-005", "US-007"]
     },
     {
