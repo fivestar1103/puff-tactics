@@ -11,6 +11,8 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "Tilemap coordinates use Vector2i, world positions use Vector2"
 - "All Supabase responses must be checked for .error before using .data"
 -->
+- "Global gameplay enums/constants live in `src/scripts/core/constants.gd` and are provided via `Constants` autoload."
+- "Cross-system events are centralized in `src/scripts/core/signal_bus.gd` as the `SignalBus` autoload."
 
 ## Gotchas
 
@@ -36,6 +38,8 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "Game state machine: src/scripts/core/game_state.gd"
 - "Feed controller: src/scripts/feed/feed_controller.gd"
 -->
+- "Core constants: src/scripts/core/constants.gd"
+- "Global signals: src/scripts/core/signal_bus.gd"
 
 ## Supabase Notes
 

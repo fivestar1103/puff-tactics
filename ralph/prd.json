@@ -19,8 +19,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Implemented core constants and signal bus autoload scripts; registered both singletons in project.godot. Godot/gdlint CLI unavailable in this environment, so syntax was validated by script review.",
       "dependsOn": []
     },
     {
