@@ -26,6 +26,9 @@ credentials.json
 .mcp.json
 .codex/config.toml
 
+# Confidential docs
+Puff_Tactics_GDD.docx
+
 # Node (for MCP tools)
 node_modules/
 
