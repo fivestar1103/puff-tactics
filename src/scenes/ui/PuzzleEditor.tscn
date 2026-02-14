@@ -1,0 +1,212 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/scripts/ui/puzzle_editor.gd" id="1_ftmr3"]
+
+[node name="PuzzleEditor" type="Control"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+script = ExtResource("1_ftmr3")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.03, 0.05, 0.1, 0.82)
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 32.0
+offset_top = 24.0
+offset_right = -32.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="RootLayout" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="Header" type="HBoxContainer" parent="Panel/RootLayout"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="Panel/RootLayout/Header"]
+layout_mode = 2
+text = "UGC Puzzle Editor"
+
+[node name="StatusLabel" type="Label" parent="Panel/RootLayout/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Drag to paint terrain or place puffs."
+autowrap_mode = 2
+
+[node name="CloseButton" type="Button" parent="Panel/RootLayout/Header"]
+layout_mode = 2
+text = "Close"
+
+[node name="Body" type="HBoxContainer" parent="Panel/RootLayout"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+[node name="EditorColumn" type="VBoxContainer" parent="Panel/RootLayout/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="BoardHintLabel" type="Label" parent="Panel/RootLayout/Body/EditorColumn"]
+layout_mode = 2
+text = "Terrain Paint: drag to paint tiles | Puff Drag: drag puffs, drag empty tile to place"
+autowrap_mode = 2
+
+[node name="BoardArea" type="ColorRect" parent="Panel/RootLayout/Body/EditorColumn"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_minimum_size = Vector2(760, 760)
+color = Color(0.91, 0.95, 1, 0.32)
+mouse_filter = 0
+
+[node name="BoardRoot" type="Node2D" parent="Panel/RootLayout/Body/EditorColumn/BoardArea"]
+
+[node name="SelectionLabel" type="Label" parent="Panel/RootLayout/Body/EditorColumn"]
+layout_mode = 2
+text = "Selected puff: none. Puff Drag mode places new puffs on empty tiles."
+autowrap_mode = 2
+
+[node name="ControlColumn" type="VBoxContainer" parent="Panel/RootLayout/Body"]
+layout_mode = 2
+custom_minimum_size = Vector2(360, 0)
+theme_override_constants/separation = 6
+
+[node name="PuzzleTitleLabel" type="Label" parent="Panel/RootLayout/Body/ControlColumn"]
+layout_mode = 2
+text = "Puzzle Title"
+
+[node name="PuzzleTitleEdit" type="LineEdit" parent="Panel/RootLayout/Body/ControlColumn"]
+layout_mode = 2
+placeholder_text = "My tactical puzzle"
+
+[node name="ToolLabel" type="Label" parent="Panel/RootLayout/Body/ControlColumn"]
+layout_mode = 2
+text = "Placement Tool"
+
+[node name="ToolOptionButton" type="OptionButton" parent="Panel/RootLayout/Body/ControlColumn"]
+layout_mode = 2
+
+[node name="TerrainLabel" type="Label" parent="Panel/RootLayout/Body/ControlColumn"]
+layout_mode = 2
+text = "Terrain Brush"
+
+[node name="TerrainOptionButton" type="OptionButton" parent="Panel/RootLayout/Body/ControlColumn"]
+layout_mode = 2
+
+[node name="TeamLabel" type="Label" parent="Panel/RootLayout/Body/ControlColumn"]
+layout_mode = 2
+text = "Puff Team"
+
+[node name="TeamOptionButton" type="OptionButton" parent="Panel/RootLayout/Body/ControlColumn"]
+layout_mode = 2
+
+[node name="ElementLabel" type="Label" parent="Panel/RootLayout/Body/ControlColumn"]
+layout_mode = 2
+text = "Puff Element"
+
+[node name="ElementOptionButton" type="OptionButton" parent="Panel/RootLayout/Body/ControlColumn"]
+layout_mode = 2
+
+[node name="ClassLabel" type="Label" parent="Panel/RootLayout/Body/ControlColumn"]
+layout_mode = 2
+text = "Puff Class"
+
+[node name="ClassOptionButton" type="OptionButton" parent="Panel/RootLayout/Body/ControlColumn"]
+layout_mode = 2
+
+[node name="WinTemplateLabel" type="Label" parent="Panel/RootLayout/Body/ControlColumn"]
+layout_mode = 2
+text = "Win Condition Template"
+
+[node name="WinTemplateOptionButton" type="OptionButton" parent="Panel/RootLayout/Body/ControlColumn"]
+layout_mode = 2
+
+[node name="TargetScoreLabel" type="Label" parent="Panel/RootLayout/Body/ControlColumn"]
+layout_mode = 2
+text = "Target Score"
+
+[node name="TargetScoreSpinBox" type="SpinBox" parent="Panel/RootLayout/Body/ControlColumn"]
+layout_mode = 2
+
+[node name="ApplyPuffButton" type="Button" parent="Panel/RootLayout/Body/ControlColumn"]
+layout_mode = 2
+text = "Apply To Selected Puff"
+
+[node name="RemovePuffButton" type="Button" parent="Panel/RootLayout/Body/ControlColumn"]
+layout_mode = 2
+text = "Remove Selected Puff"
+
+[node name="ClearBoardButton" type="Button" parent="Panel/RootLayout/Body/ControlColumn"]
+layout_mode = 2
+text = "Clear Board"
+
+[node name="TestPlayButton" type="Button" parent="Panel/RootLayout/Body/ControlColumn"]
+layout_mode = 2
+text = "Test Play"
+
+[node name="PublishButton" type="Button" parent="Panel/RootLayout/Body/ControlColumn"]
+layout_mode = 2
+text = "Publish To Supabase"
+
+[node name="PublishStatusLabel" type="Label" parent="Panel/RootLayout/Body/ControlColumn"]
+layout_mode = 2
+text = "Test-play required before publishing."
+autowrap_mode = 2
+
+[node name="TestPlayLayer" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="Backdrop" type="ColorRect" parent="TestPlayLayer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.03, 0.05, 0.1, 0.76)
+
+[node name="TestPlayRoot" type="Node2D" parent="TestPlayLayer"]
+
+[node name="ExitTestPlayButton" type="Button" parent="TestPlayLayer"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -188.0
+offset_top = 32.0
+offset_right = -32.0
+offset_bottom = 94.0
+grow_horizontal = 0
+text = "Exit Test Play"

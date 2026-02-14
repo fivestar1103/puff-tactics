@@ -4,6 +4,7 @@ class_name FeedMain
 const FEED_ITEM_SCRIPT: GDScript = preload("res://src/scripts/feed/feed_item.gd")
 const FEED_SYNC_SCRIPT: GDScript = preload("res://src/scripts/network/feed_sync.gd")
 const COLLECTION_SCREEN_SCENE: PackedScene = preload("res://src/scenes/ui/CollectionScreen.tscn")
+const PUZZLE_EDITOR_SCENE: PackedScene = preload("res://src/scenes/ui/PuzzleEditor.tscn")
 
 const SNAP_DURATION: float = 0.28
 const SWIPE_THRESHOLD_PX: float = 120.0
@@ -185,11 +186,13 @@ var _feed_items: Array[Node2D] = []
 var _feed_snapshots: Array[Dictionary] = []
 var _feed_sync: Node
 var _collection_screen: Node
+var _puzzle_editor: Node
 
 
 func _ready() -> void:
 	_setup_feed_sync()
 	_setup_collection_screen()
+	_setup_puzzle_editor()
 	_load_initial_snapshots()
 	_build_feed_items()
 	_connect_fab_actions()
@@ -206,7 +209,7 @@ func _notification(what: int) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _is_collection_visible():
+	if _is_collection_visible() or _is_puzzle_editor_visible():
 		return
 
 	if event is InputEventScreenTouch:
@@ -320,6 +323,19 @@ func _setup_collection_screen() -> void:
 	_collection_screen = collection_variant
 	_collection_screen.name = "CollectionScreen"
 	add_child(_collection_screen)
+
+
+func _setup_puzzle_editor() -> void:
+	if PUZZLE_EDITOR_SCENE == null:
+		return
+	var puzzle_editor_variant: Node = PUZZLE_EDITOR_SCENE.instantiate()
+	if puzzle_editor_variant == null:
+		return
+	_puzzle_editor = puzzle_editor_variant
+	_puzzle_editor.name = "PuzzleEditor"
+	add_child(_puzzle_editor)
+	_connect_if_available(_puzzle_editor, &"status_changed", Callable(self, "_on_puzzle_editor_status_changed"))
+	_connect_if_available(_puzzle_editor, &"published", Callable(self, "_on_puzzle_editor_published"))
 
 
 func _load_initial_snapshots() -> void:
@@ -519,6 +535,10 @@ func _connect_fab_actions() -> void:
 
 
 func _on_profile_button_pressed() -> void:
+	if _is_puzzle_editor_visible():
+		subtitle_label.text = "Close the UGC editor before opening collection."
+		return
+
 	if _collection_screen == null:
 		return
 	if not (_collection_screen is CanvasItem):
@@ -540,7 +560,33 @@ func _on_profile_button_pressed() -> void:
 
 
 func _on_create_button_pressed() -> void:
-	subtitle_label.text = "Create mode unlocks with UGC puzzle editor."
+	if _puzzle_editor == null:
+		subtitle_label.text = "UGC puzzle editor scene is unavailable."
+		return
+	if not (_puzzle_editor is CanvasItem):
+		subtitle_label.text = "UGC puzzle editor failed to initialize."
+		return
+
+	if _is_collection_visible():
+		if _collection_screen.has_method("hide_collection"):
+			_collection_screen.call("hide_collection")
+		else:
+			(_collection_screen as CanvasItem).visible = false
+
+	var puzzle_editor_canvas: CanvasItem = _puzzle_editor
+	if puzzle_editor_canvas.visible:
+		if _puzzle_editor.has_method("hide_editor"):
+			_puzzle_editor.call("hide_editor")
+		else:
+			puzzle_editor_canvas.visible = false
+		_update_header_text()
+		return
+
+	if _puzzle_editor.has_method("show_editor"):
+		_puzzle_editor.call("show_editor")
+	else:
+		puzzle_editor_canvas.visible = true
+	subtitle_label.text = "UGC editor open: drag terrain/puffs, test-play, then publish."
 
 
 func _on_leaderboard_button_pressed() -> void:
@@ -551,6 +597,22 @@ func _is_collection_visible() -> bool:
 	if not (_collection_screen is CanvasItem):
 		return false
 	return (_collection_screen as CanvasItem).visible
+
+
+func _is_puzzle_editor_visible() -> bool:
+	if not (_puzzle_editor is CanvasItem):
+		return false
+	return (_puzzle_editor as CanvasItem).visible
+
+
+func _on_puzzle_editor_status_changed(status_text: String) -> void:
+	if not _is_puzzle_editor_visible():
+		return
+	subtitle_label.text = status_text
+
+
+func _on_puzzle_editor_published(_snapshot_id: String, status_text: String) -> void:
+	subtitle_label.text = status_text
 
 
 func _style_fab_buttons() -> void:

@@ -292,8 +292,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 17,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Added src/scenes/ui/PuzzleEditor.tscn + src/scripts/ui/puzzle_editor.gd with drag terrain paint and puff drag/drop placement on the isometric board, including per-puff team/element/class controls and template-based win-condition selection. Integrated FeedMain Create FAB to open/close the editor, block feed swipe input while editing, and surface editor status/publish updates. Editor now enforces test-play before publish by running the authored snapshot through FeedItem and only allowing Supabase upload when the current snapshot hash matches the last completed test run; publish serializes to JSON-safe data and posts to the ugc_puzzles table via SupabaseClient request_rest(). Extended feed_item.gd snapshot spawning to honor optional puff element/puff_class overrides for editor-authored puzzles. Verified with HOME=/tmp Godot --check-only across all src/scripts/*.gd, headless project boot, and a runtime smoke script (US017_SMOKE_OK).",
       "dependsOn": ["US-010", "US-011"]
     },
     {

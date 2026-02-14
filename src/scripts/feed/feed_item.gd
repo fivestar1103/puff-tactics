@@ -6,6 +6,7 @@ signal status_changed(status_text: String, swipe_unlocked: bool)
 
 const TURN_BATTLE_SCENE: PackedScene = preload("res://src/scenes/battle/TurnBattle.tscn")
 const PUFF_SCENE: PackedScene = preload("res://src/scenes/puffs/Puff.tscn")
+const PUFF_DATA_SCRIPT: GDScript = preload("res://src/scripts/puffs/puff_data.gd")
 
 const TEAM_PLAYER: StringName = &"player"
 const TEAM_ENEMY: StringName = &"enemy"
@@ -285,10 +286,12 @@ func _spawn_snapshot_puff(puff_config: Dictionary) -> void:
 
 	var team: StringName = _normalize_team(puff_config.get("team", TEAM_ENEMY))
 	var data_path: String = str(puff_config.get("data_path", ""))
+	var puff_data_resource: Resource = null
 	if not data_path.is_empty():
-		var puff_data_resource: Resource = _load_puff_data_for_team(data_path, team)
-		if puff_data_resource != null:
-			puff.set_puff_data(puff_data_resource)
+		puff_data_resource = _load_puff_data_for_team(data_path, team)
+	puff_data_resource = _apply_snapshot_puff_overrides(puff_data_resource, puff_config)
+	if puff_data_resource != null:
+		puff.set_puff_data(puff_data_resource)
 
 	var cell: Vector2i = _to_cell(puff_config.get("cell", Vector2i.ZERO))
 	puff.set_grid_cell(cell)
@@ -567,3 +570,33 @@ func _load_puff_data_for_team(data_path: String, team: StringName) -> Resource:
 				return runtime_data_variant
 
 	return load(data_path)
+
+
+func _apply_snapshot_puff_overrides(base_resource: Resource, puff_config: Dictionary) -> Resource:
+	var needs_override: bool = (
+		puff_config.has("element")
+		or puff_config.has("puff_class")
+		or puff_config.has("display_name")
+	)
+	if not needs_override:
+		return base_resource
+
+	var runtime_resource: Resource = null
+	if base_resource != null:
+		runtime_resource = base_resource.duplicate(true)
+	else:
+		var fallback_variant: Variant = PUFF_DATA_SCRIPT.new()
+		if fallback_variant is Resource:
+			runtime_resource = fallback_variant
+
+	if runtime_resource == null:
+		return null
+
+	if puff_config.has("element"):
+		runtime_resource.set("element", int(puff_config.get("element", Constants.Element.STAR)))
+	if puff_config.has("puff_class"):
+		runtime_resource.set("puff_class", int(puff_config.get("puff_class", Constants.PuffClass.STAR)))
+	if puff_config.has("display_name"):
+		runtime_resource.set("display_name", StringName(str(puff_config.get("display_name", ""))))
+
+	return runtime_resource
