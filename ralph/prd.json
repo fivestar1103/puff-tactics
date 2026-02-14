@@ -432,8 +432,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 22,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Updated src/scripts/puffs/puff.gd to size placeholder rendering at 128px with 48px radius, 3px team ring, kawaii eyes/mouth/blush, and element badge; accessory textures now scale from 72px coordinates; collision shape and offsets adjusted; added exported team field + set_team() and wired team assignment in turn_manager, feed_item, full_battle, and puzzle_editor spawn paths.",
       "dependsOn": ["US-021"]
     },
     {

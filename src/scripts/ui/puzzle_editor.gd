@@ -427,9 +427,13 @@ func _ensure_puff_node(puff_id: String) -> void:
 			puff_variant.queue_free()
 			return
 		puff_node = puff_variant
+		puff_node.set_team(_normalize_team(puff_state.get("team", TEAM_ENEMY)))
 		board_root.add_child(puff_node)
 		puff_state["node"] = puff_node
 		_puff_state_by_id[puff_id] = puff_state
+
+	if is_instance_valid(puff_node):
+		puff_node.set_team(_normalize_team(puff_state.get("team", TEAM_ENEMY)))
 
 	var puff_data: Resource = _build_runtime_puff_data(puff_state)
 	if puff_data != null:

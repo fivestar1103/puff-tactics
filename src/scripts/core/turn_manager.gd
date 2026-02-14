@@ -279,11 +279,12 @@ func _spawn_demo_puff(puff_config: Dictionary) -> void:
 		return
 
 	var puff: Puff = puff_instance
+	var team: StringName = puff_config.get("team", TEAM_ENEMY)
+	puff.set_team(team)
 	var puff_parent: Node = get_parent() if get_parent() != null else self
 	puff_parent.add_child(puff)
 
 	var puff_data_path: String = str(puff_config.get("data_path", ""))
-	var team: StringName = puff_config.get("team", TEAM_ENEMY)
 	var puff_data_resource: Resource = _load_puff_data_for_team(puff_data_path, team)
 	if puff_data_resource != null:
 		puff.set_puff_data(puff_data_resource)

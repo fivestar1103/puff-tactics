@@ -400,6 +400,7 @@ func _spawn_snapshot_puff(puff_config: Dictionary) -> void:
 	var puff_data_resource: Resource = null
 	if not data_path.is_empty():
 		puff_data_resource = _load_puff_data_for_team(data_path, team)
+	puff.set_team(team)
 	puff_data_resource = _apply_snapshot_puff_overrides(puff_data_resource, puff_config)
 	if puff_data_resource != null:
 		puff.set_puff_data(puff_data_resource)

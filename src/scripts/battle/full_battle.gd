@@ -644,6 +644,7 @@ func _spawn_unit(data_path: String, spawn_cell: Vector2i, team: StringName, unit
 		return null
 
 	var puff: Puff = puff_variant
+	puff.set_team(team)
 	add_child(puff)
 	puff.name = "%s_%s_%d" % [str(team).capitalize(), _name_slug_from_data_path(data_path), unit_index + 1]
 
