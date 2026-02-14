@@ -370,8 +370,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 19,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Implemented score/comparison overlay in src/scripts/feed/feed_item.gd with score components required by the story (enemies defeated, damage dealt, puffs surviving, turns used), animated count-up reveal, decisive-moment comparison text ('Did you do better than the original player?') driven by moment_meta snapshots, micro-puzzle community percentile ranking with metadata+sample fallback, and a Share button stub for future social integration. Re-ran HOME=/tmp Godot --headless --check-only across all src/scripts/*.gd.",
       "dependsOn": [
         "US-009"
       ]

@@ -16,9 +16,32 @@ const MIN_DECISION_SECONDS: float = 15.0
 const MAX_DECISION_SECONDS: float = 30.0
 const RESULT_PHASE_SECONDS: float = 3.0
 const SCORE_PHASE_SECONDS: float = 2.0
+const SCORE_REVEAL_DURATION: float = 1.1
 
 const SNAPSHOT_SCALE: Vector2 = Vector2(0.68, 0.68)
 const DEFAULT_TARGET_SCORE: int = 230
+const MOMENT_FEED_ITEM_PREFIX: String = "moment_"
+
+const SCORE_ENEMY_DEFEATED_POINTS: int = 140
+const SCORE_DAMAGE_POINTS_PER_HP: int = 5
+const SCORE_SURVIVAL_POINTS: int = 45
+const SCORE_TURN_EFFICIENCY_POINTS: int = 20
+const SCORE_TURN_BASELINE: int = 4
+
+const SCORE_FALLBACK_PERCENTILE_FACTOR: float = 0.36
+
+const ORIGINAL_SCORE_KEYS: Array = [
+	"original_player_score",
+	"original_score",
+	"benchmark_score",
+	"source_score"
+]
+
+const COMMUNITY_SCORE_KEYS: Array = [
+	"community_score_samples",
+	"community_scores",
+	"score_samples"
+]
 
 const DEFAULT_SNAPSHOT: Dictionary = {
 	"map_config": {
@@ -83,11 +106,21 @@ var _enemy_intent: EnemyIntent
 var _status_panel: ColorRect
 var _status_label: Label
 var _detail_label: Label
+var _score_panel: PanelContainer
+var _score_title_label: Label
+var _score_value_label: Label
+var _score_breakdown_label: Label
+var _score_comparison_label: Label
+var _share_button: Button
+var _share_stub_label: Label
 var _decision_timeout_timer: Timer
 
 var _puff_team_by_id: Dictionary = {}
 var _initial_enemy_count: int = 0
 var _initial_player_count: int = 0
+var _player_damage_dealt: int = 0
+var _player_turns_used: int = 0
+var _resolved_player_turn_numbers: Dictionary = {}
 
 var _is_active: bool = false
 var _decision_started: bool = false
@@ -166,10 +199,86 @@ func _build_status_overlay() -> void:
 	_detail_label.add_theme_color_override("font_color", Color(0.88, 0.93, 1.0, 0.92))
 	_status_panel.add_child(_detail_label)
 
+	_build_score_overlay()
+
 	_set_status(
 		"One-turn puzzle: choose move, attack, or bump",
 		"Play the tactical turn, then watch 3s resolve + 2s scoring."
 	)
+
+
+func _build_score_overlay() -> void:
+	_score_panel = PanelContainer.new()
+	_score_panel.name = "ScorePanel"
+	_score_panel.position = Vector2(-402.0, 220.0)
+	_score_panel.size = Vector2(804.0, 320.0)
+	_score_panel.visible = false
+	add_child(_score_panel)
+
+	var panel_style: StyleBoxFlat = StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.06, 0.09, 0.17, 0.82)
+	panel_style.corner_radius_top_left = 28
+	panel_style.corner_radius_top_right = 28
+	panel_style.corner_radius_bottom_right = 28
+	panel_style.corner_radius_bottom_left = 28
+	panel_style.border_width_left = 2
+	panel_style.border_width_top = 2
+	panel_style.border_width_right = 2
+	panel_style.border_width_bottom = 2
+	panel_style.border_color = Color(0.53, 0.74, 0.98, 0.9)
+	_score_panel.add_theme_stylebox_override("panel", panel_style)
+
+	var root_layout: VBoxContainer = VBoxContainer.new()
+	root_layout.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root_layout.offset_left = 20.0
+	root_layout.offset_top = 16.0
+	root_layout.offset_right = -20.0
+	root_layout.offset_bottom = -16.0
+	root_layout.add_theme_constant_override("separation", 8)
+	_score_panel.add_child(root_layout)
+
+	_score_title_label = Label.new()
+	_score_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_score_title_label.add_theme_font_size_override("font_size", 30)
+	_score_title_label.add_theme_color_override("font_color", Color(0.97, 0.98, 1.0, 1.0))
+	_score_title_label.text = "Score Breakdown"
+	root_layout.add_child(_score_title_label)
+
+	_score_value_label = Label.new()
+	_score_value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_score_value_label.add_theme_font_size_override("font_size", 56)
+	_score_value_label.add_theme_color_override("font_color", Color(0.99, 0.89, 0.59, 1.0))
+	_score_value_label.text = "0"
+	root_layout.add_child(_score_value_label)
+
+	_score_breakdown_label = Label.new()
+	_score_breakdown_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_score_breakdown_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_score_breakdown_label.add_theme_font_size_override("font_size", 20)
+	_score_breakdown_label.add_theme_color_override("font_color", Color(0.87, 0.93, 1.0, 0.95))
+	root_layout.add_child(_score_breakdown_label)
+
+	_score_comparison_label = Label.new()
+	_score_comparison_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_score_comparison_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_score_comparison_label.add_theme_font_size_override("font_size", 22)
+	_score_comparison_label.add_theme_color_override("font_color", Color(0.79, 0.97, 0.85, 1.0))
+	root_layout.add_child(_score_comparison_label)
+
+	_share_button = Button.new()
+	_share_button.text = "Share"
+	_share_button.focus_mode = Control.FOCUS_NONE
+	_share_button.custom_minimum_size = Vector2(180.0, 52.0)
+	root_layout.add_child(_share_button)
+	_connect_if_needed(_share_button, &"pressed", Callable(self, "_on_share_button_pressed"))
+
+	_share_stub_label = Label.new()
+	_share_stub_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_share_stub_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_share_stub_label.add_theme_font_size_override("font_size", 18)
+	_share_stub_label.add_theme_color_override("font_color", Color(0.95, 0.82, 0.58, 0.95))
+	_share_stub_label.text = ""
+	root_layout.add_child(_share_stub_label)
 
 
 func _setup_decision_timeout_timer() -> void:
@@ -237,6 +346,7 @@ func _connect_turn_manager_signals() -> void:
 	if _turn_manager == null:
 		return
 	_connect_if_needed(_turn_manager, &"phase_changed", Callable(self, "_on_turn_phase_changed"))
+	_connect_if_needed(_turn_manager, &"action_resolved", Callable(self, "_on_turn_manager_action_resolved"))
 
 
 func _apply_snapshot_map() -> void:
@@ -251,6 +361,7 @@ func _spawn_snapshot_puffs() -> void:
 	_puff_team_by_id.clear()
 	_initial_enemy_count = 0
 	_initial_player_count = 0
+	_reset_score_tracking()
 
 	if _turn_manager == null or _battle_root == null:
 		return
@@ -326,6 +437,7 @@ func _begin_decision_phase() -> void:
 	_decision_start_time_seconds = _now_seconds()
 	_decision_lock_time_seconds = 0.0
 	_cycle_completion_time_seconds = 0.0
+	_hide_score_overlay()
 	_decision_timeout_timer.start(MAX_DECISION_SECONDS)
 
 	_set_status(
@@ -345,6 +457,22 @@ func _on_turn_phase_changed(phase: StringName, active_side: StringName, _turn_nu
 	_decision_locked = true
 	_decision_lock_time_seconds = _now_seconds()
 	call_deferred("_run_completion_flow", true)
+
+
+func _on_turn_manager_action_resolved(side: StringName, action_payload: Dictionary) -> void:
+	if side != TEAM_PLAYER:
+		return
+
+	var direct_damage: int = maxi(0, int(action_payload.get("damage", 0)))
+	var swing_damage: int = maxi(0, int(action_payload.get("hp_swing", 0)))
+	_player_damage_dealt += maxi(direct_damage, swing_damage)
+
+	var turn_number: int = int(action_payload.get("turn_number", 0))
+	if turn_number <= 0:
+		turn_number = _resolved_player_turn_numbers.size() + 1
+	if not _resolved_player_turn_numbers.has(turn_number):
+		_resolved_player_turn_numbers[turn_number] = true
+	_player_turns_used = _resolved_player_turn_numbers.size()
 
 
 func _on_decision_timeout() -> void:
@@ -377,15 +505,21 @@ func _run_completion_flow(player_acted: bool) -> void:
 	)
 	await _play_result_animation()
 
-	var final_score: int = _calculate_score(player_acted)
-	var target_score: int = int(_snapshot.get("target_score", DEFAULT_TARGET_SCORE))
-	var delta: int = final_score - target_score
-	var comparison_label: String = "You outscored the benchmark by %d" % delta if delta >= 0 else "Benchmark leads by %d" % absi(delta)
+	var score_breakdown: Dictionary = _build_score_breakdown(player_acted)
+	var final_score: int = int(score_breakdown.get("final_score", 0))
+	var comparison_text: String = _build_score_comparison_text(final_score, score_breakdown)
+	_show_score_overlay(score_breakdown, comparison_text)
+
 	_set_status(
-		"Score: %d" % final_score,
-		"%s. Comparison screen (%.0f seconds)." % [comparison_label, SCORE_PHASE_SECONDS]
+		"Score reveal",
+		"%s Comparison screen (%.0f seconds)." % [comparison_text, SCORE_PHASE_SECONDS]
 	)
-	await get_tree().create_timer(SCORE_PHASE_SECONDS).timeout
+
+	var reveal_duration: float = minf(SCORE_REVEAL_DURATION, SCORE_PHASE_SECONDS)
+	await _animate_score_countup(final_score, reveal_duration)
+	var hold_duration: float = maxf(0.0, SCORE_PHASE_SECONDS - reveal_duration)
+	if hold_duration > 0.0:
+		await get_tree().create_timer(hold_duration).timeout
 
 	_cycle_done = true
 	_cycle_completion_time_seconds = _now_seconds()
@@ -413,19 +547,313 @@ func _play_result_animation() -> void:
 	await tween.finished
 
 
-func _calculate_score(player_acted: bool) -> int:
+func _build_score_breakdown(_player_acted: bool) -> Dictionary:
 	var counts: Dictionary = _count_alive_puffs_by_team()
 	var enemies_alive: int = int(counts.get(TEAM_ENEMY, 0))
 	var allies_alive: int = int(counts.get(TEAM_PLAYER, 0))
 
 	var enemies_defeated: int = maxi(0, _initial_enemy_count - enemies_alive)
 	var allies_surviving: int = maxi(0, allies_alive)
+	var damage_dealt: int = maxi(0, _player_damage_dealt)
+	var turns_used: int = maxi(1, _player_turns_used)
 
-	var decision_elapsed: float = clampf(_decision_elapsed_seconds(), 0.0, MAX_DECISION_SECONDS)
-	var speed_bonus: int = maxi(0, int(round((MAX_DECISION_SECONDS - decision_elapsed) * 3.0)))
-	var action_bonus: int = 35 if player_acted else 0
+	var enemies_points: int = enemies_defeated * SCORE_ENEMY_DEFEATED_POINTS
+	var damage_points: int = damage_dealt * SCORE_DAMAGE_POINTS_PER_HP
+	var survival_points: int = allies_surviving * SCORE_SURVIVAL_POINTS
+	var turn_points: int = maxi(0, SCORE_TURN_BASELINE - turns_used) * SCORE_TURN_EFFICIENCY_POINTS
+	var final_score: int = enemies_points + damage_points + survival_points + turn_points
 
-	return enemies_defeated * 140 + allies_surviving * 45 + speed_bonus + action_bonus
+	return {
+		"final_score": final_score,
+		"enemies_defeated": enemies_defeated,
+		"damage_dealt": damage_dealt,
+		"allies_surviving": allies_surviving,
+		"turns_used": turns_used,
+		"enemies_points": enemies_points,
+		"damage_points": damage_points,
+		"survival_points": survival_points,
+		"turn_points": turn_points
+	}
+
+
+func _compute_score_from_components(enemies_defeated: int, damage_dealt: int, allies_surviving: int, turns_used: int) -> int:
+	var clamped_turns: int = maxi(1, turns_used)
+	var turn_points: int = maxi(0, SCORE_TURN_BASELINE - clamped_turns) * SCORE_TURN_EFFICIENCY_POINTS
+	return maxi(0, enemies_defeated) * SCORE_ENEMY_DEFEATED_POINTS \
+		+ maxi(0, damage_dealt) * SCORE_DAMAGE_POINTS_PER_HP \
+		+ maxi(0, allies_surviving) * SCORE_SURVIVAL_POINTS \
+		+ turn_points
+
+
+func _build_score_breakdown_text(score_breakdown: Dictionary) -> String:
+	var enemies_defeated: int = int(score_breakdown.get("enemies_defeated", 0))
+	var damage_dealt: int = int(score_breakdown.get("damage_dealt", 0))
+	var allies_surviving: int = int(score_breakdown.get("allies_surviving", 0))
+	var turns_used: int = int(score_breakdown.get("turns_used", 1))
+	var enemies_points: int = int(score_breakdown.get("enemies_points", 0))
+	var damage_points: int = int(score_breakdown.get("damage_points", 0))
+	var survival_points: int = int(score_breakdown.get("survival_points", 0))
+	var turn_points: int = int(score_breakdown.get("turn_points", 0))
+
+	return "Enemies defeated: %d (+%d)\nDamage dealt: %d (+%d)\nPuffs surviving: %d (+%d)\nTurns used: %d (+%d)" % [
+		enemies_defeated,
+		enemies_points,
+		damage_dealt,
+		damage_points,
+		allies_surviving,
+		survival_points,
+		turns_used,
+		turn_points
+	]
+
+
+func _build_score_comparison_text(final_score: int, score_breakdown: Dictionary) -> String:
+	if _is_decisive_moment_snapshot():
+		var original_score: int = _resolve_original_player_score(score_breakdown)
+		return _build_decisive_comparison_text(final_score, original_score)
+
+	var percentile: int = _resolve_percentile_rank(final_score)
+	return _build_percentile_comparison_text(percentile)
+
+
+func _build_decisive_comparison_text(final_score: int, original_score: int) -> String:
+	var delta: int = final_score - original_score
+	if delta > 0:
+		return "Did you do better than the original player? Yes (+%d)." % delta
+	if delta < 0:
+		return "Did you do better than the original player? Not yet (%d behind)." % absi(delta)
+	return "Did you do better than the original player? You matched the original."
+
+
+func _build_percentile_comparison_text(percentile: int) -> String:
+	var top_percent: int = maxi(1, 100 - percentile)
+	return "Community ranking: %d%s percentile (top %d%%)." % [
+		percentile,
+		_ordinal_suffix(percentile),
+		top_percent
+	]
+
+
+func _ordinal_suffix(value: int) -> String:
+	var normalized: int = abs(value)
+	var mod_hundred: int = normalized % 100
+	if mod_hundred >= 11 and mod_hundred <= 13:
+		return "th"
+
+	match normalized % 10:
+		1:
+			return "st"
+		2:
+			return "nd"
+		3:
+			return "rd"
+		_:
+			return "th"
+
+
+func _is_decisive_moment_snapshot() -> bool:
+	var moment_meta_variant: Variant = _snapshot.get("moment_meta", null)
+	if moment_meta_variant is Dictionary:
+		return true
+
+	var feed_item_id: String = str(_snapshot.get("feed_item_id", "")).strip_edges().to_lower()
+	return feed_item_id.begins_with(MOMENT_FEED_ITEM_PREFIX)
+
+
+func _resolve_original_player_score(score_breakdown: Dictionary) -> int:
+	var fallback_score: int = int(_snapshot.get("target_score", DEFAULT_TARGET_SCORE))
+	var moment_meta_variant: Variant = _snapshot.get("moment_meta", null)
+	if not (moment_meta_variant is Dictionary):
+		return fallback_score
+
+	var moment_meta: Dictionary = moment_meta_variant
+	for key in ORIGINAL_SCORE_KEYS:
+		var score_variant: Variant = moment_meta.get(key, null)
+		if _is_numeric(score_variant):
+			return int(round(float(score_variant)))
+
+	var original_result_variant: Variant = moment_meta.get("original_result", {})
+	var original_action_variant: Variant = moment_meta.get("original_player_action", {})
+	var original_result: Dictionary = original_result_variant if original_result_variant is Dictionary else {}
+	var original_action: Dictionary = original_action_variant if original_action_variant is Dictionary else {}
+
+	var enemies_defeated: int = int(original_result.get("knockout_count", original_action.get("knockout_count", 0)))
+	if enemies_defeated <= 0 and (
+		bool(original_result.get("knockout_occurred", false))
+		or bool(original_action.get("knockout", false))
+	):
+		enemies_defeated = 1
+
+	var damage_dealt: int = maxi(
+		0,
+		maxi(
+			int(original_action.get("damage", 0)),
+			int(original_result.get("hp_swing", original_action.get("hp_swing", 0)))
+		)
+	)
+
+	var allies_surviving: int = int(score_breakdown.get("allies_surviving", _count_snapshot_player_units()))
+	if _is_numeric(moment_meta.get("original_allies_surviving", null)):
+		allies_surviving = maxi(0, int(round(float(moment_meta.get("original_allies_surviving", allies_surviving)))))
+	elif _is_numeric(original_result.get("allies_surviving", null)):
+		allies_surviving = maxi(0, int(round(float(original_result.get("allies_surviving", allies_surviving)))))
+
+	var turns_used: int = int(moment_meta.get("original_turns_used", original_action.get("turns_used", 1)))
+	if turns_used <= 0:
+		turns_used = maxi(1, int(original_action.get("turn_number", 1)))
+
+	return _compute_score_from_components(enemies_defeated, damage_dealt, allies_surviving, turns_used)
+
+
+func _resolve_percentile_rank(score: int) -> int:
+	var snapshot_percentile_variant: Variant = _snapshot.get("community_percentile", null)
+	if _is_numeric(snapshot_percentile_variant):
+		return clampi(int(round(float(snapshot_percentile_variant))), 1, 99)
+
+	var community_stats_variant: Variant = _snapshot.get("community_stats", null)
+	if community_stats_variant is Dictionary:
+		var community_stats: Dictionary = community_stats_variant
+		var stats_percentile_variant: Variant = community_stats.get("percentile", community_stats.get("player_percentile", null))
+		if _is_numeric(stats_percentile_variant):
+			return clampi(int(round(float(stats_percentile_variant))), 1, 99)
+
+	var community_samples: Array[int] = _extract_community_score_samples()
+	if not community_samples.is_empty():
+		return _resolve_percentile_from_samples(score, community_samples)
+
+	var target_score: int = int(_snapshot.get("target_score", DEFAULT_TARGET_SCORE))
+	var delta: int = score - target_score
+	var estimated_percentile: int = int(round(50.0 + float(delta) * SCORE_FALLBACK_PERCENTILE_FACTOR))
+	return clampi(estimated_percentile, 5, 99)
+
+
+func _extract_community_score_samples() -> Array[int]:
+	var samples: Array[int] = []
+	for key in COMMUNITY_SCORE_KEYS:
+		var raw_variant: Variant = _snapshot.get(String(key), null)
+		_append_numeric_samples(samples, raw_variant)
+
+	return samples
+
+
+func _append_numeric_samples(target_samples: Array[int], raw_samples_variant: Variant) -> void:
+	if raw_samples_variant is Array:
+		var raw_samples: Array = raw_samples_variant
+		for sample_variant in raw_samples:
+			if _is_numeric(sample_variant):
+				target_samples.append(int(round(float(sample_variant))))
+		return
+
+	if raw_samples_variant is Dictionary:
+		var sample_dict: Dictionary = raw_samples_variant
+		var nested_samples_variant: Variant = sample_dict.get("scores", sample_dict.get("values", []))
+		if nested_samples_variant is Array:
+			var nested_samples: Array = nested_samples_variant
+			for sample_variant in nested_samples:
+				if _is_numeric(sample_variant):
+					target_samples.append(int(round(float(sample_variant))))
+
+
+func _resolve_percentile_from_samples(score: int, samples: Array[int]) -> int:
+	if samples.is_empty():
+		return 50
+
+	var at_or_below_count: int = 0
+	for sample in samples:
+		if sample <= score:
+			at_or_below_count += 1
+
+	var percentile: int = int(round((float(at_or_below_count) / float(samples.size())) * 100.0))
+	return clampi(percentile, 1, 99)
+
+
+func _is_numeric(value: Variant) -> bool:
+	return value is int or value is float
+
+
+func _count_snapshot_player_units() -> int:
+	var puffs_variant: Variant = _snapshot.get("puffs", [])
+	if not (puffs_variant is Array):
+		return maxi(1, _initial_player_count)
+
+	var player_count: int = 0
+	var puffs: Array = puffs_variant
+	for puff_variant in puffs:
+		if not (puff_variant is Dictionary):
+			continue
+		var puff_config: Dictionary = puff_variant
+		if _normalize_team(puff_config.get("team", TEAM_ENEMY)) == TEAM_PLAYER:
+			player_count += 1
+
+	if player_count > 0:
+		return player_count
+	return maxi(1, _initial_player_count)
+
+
+func _show_score_overlay(score_breakdown: Dictionary, comparison_text: String) -> void:
+	if _score_panel == null:
+		return
+
+	var final_score: int = int(score_breakdown.get("final_score", 0))
+	_score_panel.visible = true
+	_score_title_label.text = "Score Breakdown"
+	_score_value_label.text = "0"
+	_score_breakdown_label.text = _build_score_breakdown_text(score_breakdown)
+	_score_comparison_label.text = comparison_text
+	_share_stub_label.text = "Share stub: social posting hook will be wired in a future story."
+	_share_button.disabled = false
+	_share_button.tooltip_text = "Stub action for future social sharing"
+
+	if final_score <= 0:
+		_set_score_display_value(0.0)
+
+
+func _hide_score_overlay() -> void:
+	if _score_panel == null:
+		return
+	_score_panel.visible = false
+	if _share_stub_label != null:
+		_share_stub_label.text = ""
+
+
+func _animate_score_countup(final_score: int, reveal_duration: float) -> void:
+	if _score_value_label == null:
+		if reveal_duration > 0.0:
+			await get_tree().create_timer(reveal_duration).timeout
+		return
+
+	_set_score_display_value(0.0)
+	if reveal_duration <= 0.0:
+		_set_score_display_value(float(final_score))
+		return
+
+	var tween: Tween = create_tween()
+	tween.set_trans(Tween.TRANS_QUART)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.tween_method(Callable(self, "_set_score_display_value"), 0.0, float(final_score), reveal_duration)
+	await tween.finished
+	_set_score_display_value(float(final_score))
+
+
+func _set_score_display_value(value: float) -> void:
+	if _score_value_label == null:
+		return
+	_score_value_label.text = "%d" % maxi(0, int(round(value)))
+
+
+func _on_share_button_pressed() -> void:
+	if _share_stub_label != null:
+		_share_stub_label.text = "Share tapped. Stub only: wire this button to iOS share sheets in a future story."
+	_set_status(
+		"Share action (stub)",
+		"Share endpoint is intentionally a placeholder for future social features."
+	)
+
+
+func _reset_score_tracking() -> void:
+	_player_damage_dealt = 0
+	_player_turns_used = 0
+	_resolved_player_turn_numbers.clear()
 
 
 func _count_alive_puffs_by_team() -> Dictionary:
@@ -467,9 +895,11 @@ func _clear_existing_battle_snapshot() -> void:
 	_puff_team_by_id.clear()
 	_initial_enemy_count = 0
 	_initial_player_count = 0
+	_reset_score_tracking()
 	_decision_started = false
 	_decision_locked = false
 	_cycle_done = false
+	_hide_score_overlay()
 
 	if _decision_timeout_timer != null and not _decision_timeout_timer.is_stopped():
 		_decision_timeout_timer.stop()
