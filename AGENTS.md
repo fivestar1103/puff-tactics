@@ -28,6 +28,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "Async PvP orchestration is centralized in `src/scripts/network/pvp_async.gd`; `full_battle.gd` calls it before match start to fetch nearest-ELO leaderboard opponents and apply ghost `team_paths` + AI weights, then calls it after battle end to upload the player's ghost and submit PvP result/ELO updates."
 - "Progression/accessories are centralized in `src/scripts/puffs/puff_progression.gd` (`PuffProgression` autoload); player puff spawns should use `build_runtime_puff_data(data_path)` so level/XP and equipped gear bonuses apply in feed and battle contexts."
 - "`src/scenes/puffs/Puff.tscn` includes `HatSprite`, `ScarfSprite`, and `RibbonSprite` overlay layers; `src/scripts/puffs/puff.gd` renders equipped accessory visuals from `PuffData.get_equipped_accessories()`."
+- "Puff animation feedback is centralized in `src/scripts/ui/puff_animator.gd`; `TurnManager` drives move/attack/bump/defeat/recovery tweens through this helper and uses `_is_action_locked` to block duplicate inputs during active action animations."
 - "`src/scenes/ui/PuzzleEditor.tscn` + `src/scripts/ui/puzzle_editor.gd` handle UGC authoring: drag terrain painting + puff drag/drop placement, per-puff team/element/class controls, template objective metadata, and FeedItem-gated test-play that must pass before Supabase `ugc_puzzles` publish is enabled."
 
 ## Gotchas
