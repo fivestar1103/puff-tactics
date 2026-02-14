@@ -113,6 +113,7 @@ var _battle_id: String = ""
 var _battle_log_path: String = ""
 var _battle_log_header: Dictionary = {}
 var _battle_log_events: Array[Dictionary] = []
+var _turn_context_by_number: Dictionary = {}
 
 
 func _ready() -> void:
@@ -157,6 +158,7 @@ func _apply_default_map_config() -> void:
 func _connect_signals() -> void:
 	if _turn_manager != null:
 		_connect_if_needed(_turn_manager, &"phase_changed", Callable(self, "_on_turn_phase_changed"))
+		_connect_if_needed(_turn_manager, &"action_resolved", Callable(self, "_on_turn_manager_action_resolved"))
 
 	if _signal_bus != null:
 		_connect_if_needed(_signal_bus, &"puff_moved", Callable(self, "_on_signal_bus_puff_moved"))
@@ -468,6 +470,9 @@ func _on_turn_phase_changed(phase: StringName, active_side: StringName, turn_num
 	})
 	_update_hud()
 
+	if phase == PHASE_PLAYER_SELECT and turn_number <= max_turns:
+		_capture_player_turn_snapshot(turn_number)
+
 	if phase == PHASE_PLAYER_SELECT and turn_number > max_turns:
 		_latest_tile_control = _calculate_tile_control_totals()
 		_battle_end_reason = &"turn_limit"
@@ -477,6 +482,25 @@ func _on_turn_phase_changed(phase: StringName, active_side: StringName, turn_num
 			"tile_control": _latest_tile_control
 		})
 		_turn_manager.end_battle(winner)
+
+
+func _on_turn_manager_action_resolved(side: StringName, action_payload: Dictionary) -> void:
+	if not _battle_started or _battle_finished:
+		return
+	if side != TEAM_PLAYER:
+		return
+
+	var current_turn_number: int = _turn_manager.turn_number if _turn_manager != null else 0
+	var turn_index: int = int(action_payload.get("turn_number", current_turn_number))
+	var action_copy: Dictionary = action_payload.duplicate(true)
+	var result_summary: Dictionary = _summarize_player_action_result(action_copy)
+	_upsert_turn_context(turn_index, {}, action_copy, result_summary)
+
+	_record_battle_event(&"player_action_result", {
+		"turn_number": turn_index,
+		"action": action_copy,
+		"result": result_summary
+	})
 
 
 func _on_signal_bus_puff_moved(puff_id: StringName, from_cell: Vector2i, to_cell: Vector2i) -> void:
@@ -729,13 +753,14 @@ func _initialize_battle_log() -> void:
 	var started_unix: int = Time.get_unix_time_from_system()
 	_battle_id = "full_battle_%d" % started_unix
 	_battle_log_events.clear()
+	_turn_context_by_number.clear()
 
 	_battle_log_header = {
 		"battle_id": _battle_id,
 		"mode": "full_match",
 		"started_at_unix": started_unix,
 		"max_turns": max_turns,
-		"map_config": DEFAULT_MAP_CONFIG.duplicate(true),
+		"map_config": _build_map_config_snapshot(),
 		"selected_player_team": _selected_roster_paths.duplicate(),
 		"enemy_team": _enemy_roster_paths.duplicate()
 	}
@@ -769,6 +794,7 @@ func _persist_battle_log(winner: StringName, rewards: Dictionary) -> String:
 	completed_log["rewards"] = _to_json_safe(rewards)
 	completed_log["units"] = _serialize_unit_states()
 	completed_log["events"] = _to_json_safe(_battle_log_events)
+	completed_log["turn_summaries"] = _to_json_safe(_build_turn_summaries_for_extraction())
 
 	var directory_absolute: String = ProjectSettings.globalize_path(LOG_DIRECTORY)
 	var mkdir_error: Error = DirAccess.make_dir_recursive_absolute(directory_absolute)
@@ -787,6 +813,153 @@ func _persist_battle_log(winner: StringName, rewards: Dictionary) -> String:
 	return file_path
 
 
+func _capture_player_turn_snapshot(turn_number: int) -> void:
+	var turn_snapshot: Dictionary = _build_turn_snapshot_payload(turn_number)
+	_upsert_turn_context(turn_number, turn_snapshot)
+	_record_battle_event(&"player_turn_snapshot", turn_snapshot)
+
+
+func _build_turn_snapshot_payload(turn_number: int) -> Dictionary:
+	return {
+		"turn_number": turn_number,
+		"map_state_before_turn": _build_map_config_snapshot(),
+		"puffs": _serialize_unit_states(),
+		"enemy_intents": _build_enemy_intent_snapshot_array(),
+		"team_hp": _calculate_team_hp_totals()
+	}
+
+
+func _build_map_config_snapshot() -> Dictionary:
+	if _battle_map == null:
+		return DEFAULT_MAP_CONFIG.duplicate(true)
+
+	var map_size: Vector2i = _battle_map.map_size
+	var rows: Array = []
+	for y in map_size.y:
+		var row: Array[String] = []
+		for x in map_size.x:
+			row.append(_battle_map.get_terrain_at(Vector2i(x, y)))
+		rows.append(row)
+
+	return {
+		"width": map_size.x,
+		"height": map_size.y,
+		"rows": rows
+	}
+
+
+func _build_enemy_intent_snapshot_array() -> Array[Dictionary]:
+	var intents: Array[Dictionary] = []
+	if _turn_manager == null:
+		return intents
+
+	var intents_variant: Variant = _turn_manager.get_enemy_intent_snapshot()
+	if not (intents_variant is Dictionary):
+		return intents
+
+	var intents_by_enemy_id: Dictionary = intents_variant
+	for intent_variant in intents_by_enemy_id.values():
+		if not (intent_variant is Dictionary):
+			continue
+		intents.append(intent_variant.duplicate(true))
+
+	return intents
+
+
+func _calculate_team_hp_totals() -> Dictionary:
+	var totals: Dictionary = {
+		TEAM_PLAYER: 0,
+		TEAM_ENEMY: 0
+	}
+	if _turn_manager == null:
+		return totals
+
+	for player_puff in _turn_manager.get_alive_team_snapshot(TEAM_PLAYER):
+		totals[TEAM_PLAYER] = int(totals.get(TEAM_PLAYER, 0)) + _turn_manager.get_current_hp(player_puff)
+	for enemy_puff in _turn_manager.get_alive_team_snapshot(TEAM_ENEMY):
+		totals[TEAM_ENEMY] = int(totals.get(TEAM_ENEMY, 0)) + _turn_manager.get_current_hp(enemy_puff)
+
+	return totals
+
+
+func _summarize_player_action_result(action_payload: Dictionary) -> Dictionary:
+	var hp_swing_ratio: float = float(action_payload.get("hp_swing_ratio", 0.0))
+	var knockout_count: int = int(action_payload.get("knockout_count", 0))
+	var knockout_occurred: bool = bool(action_payload.get("knockout", false)) or knockout_count > 0
+	var action_type: String = str(action_payload.get("action", ""))
+	var unique_skill_id: String = str(action_payload.get("skill_id", ""))
+	var unique_skill_changed_outcome: bool = (
+		action_type == "skill"
+		and not unique_skill_id.is_empty()
+		and (bool(action_payload.get("changed_outcome", false)) or knockout_occurred or hp_swing_ratio >= 0.3)
+	)
+
+	return {
+		"hp_swing": int(action_payload.get("hp_swing", 0)),
+		"hp_swing_ratio": hp_swing_ratio,
+		"meets_hp_swing_threshold": hp_swing_ratio >= 0.3,
+		"knockout_occurred": knockout_occurred,
+		"knockout_count": knockout_count,
+		"unique_skill_id": unique_skill_id,
+		"unique_skill_changed_outcome": unique_skill_changed_outcome
+	}
+
+
+func _upsert_turn_context(
+	turn_number: int,
+	before_snapshot: Dictionary = {},
+	player_action: Dictionary = {},
+	result: Dictionary = {}
+) -> void:
+	var context: Dictionary = _turn_context_by_number.get(turn_number, {
+		"turn_number": turn_number,
+		"before_snapshot": {},
+		"player_action": {},
+		"result": {}
+	})
+
+	if not before_snapshot.is_empty():
+		context["before_snapshot"] = before_snapshot.duplicate(true)
+	if not player_action.is_empty():
+		context["player_action"] = player_action.duplicate(true)
+	if not result.is_empty():
+		context["result"] = result.duplicate(true)
+
+	_turn_context_by_number[turn_number] = context
+
+
+func _build_turn_summaries_for_extraction() -> Array[Dictionary]:
+	var summaries: Array[Dictionary] = []
+	var turn_numbers: Array[int] = []
+
+	for turn_variant in _turn_context_by_number.keys():
+		turn_numbers.append(int(turn_variant))
+	turn_numbers.sort()
+
+	for turn_index in turn_numbers:
+		var context_variant: Variant = _turn_context_by_number.get(turn_index, null)
+		if not (context_variant is Dictionary):
+			continue
+		var context: Dictionary = context_variant
+		var before_snapshot_variant: Variant = context.get("before_snapshot", {})
+		var player_action_variant: Variant = context.get("player_action", {})
+		var result_variant: Variant = context.get("result", {})
+		var before_snapshot: Dictionary = before_snapshot_variant.duplicate(true) if before_snapshot_variant is Dictionary else {}
+		var player_action: Dictionary = player_action_variant.duplicate(true) if player_action_variant is Dictionary else {}
+		var result: Dictionary = result_variant.duplicate(true) if result_variant is Dictionary else {}
+
+		summaries.append(
+			{
+				"turn_number": turn_index,
+				"before_snapshot": before_snapshot,
+				"player_action": player_action,
+				"result": result
+			}
+		)
+
+	return summaries
+
+
 func _serialize_unit_states() -> Array[Dictionary]:
 	var units: Array[Dictionary] = []
 	for unit_name_variant in _unit_state_by_name.keys():
@@ -798,10 +971,17 @@ func _serialize_unit_states() -> Array[Dictionary]:
 			state["alive"] = true
 			state["visible"] = puff.visible
 			state["cell"] = _to_json_safe(puff.grid_cell)
+			var puff_data: PuffData = puff.puff_data as PuffData
+			if puff_data != null:
+				state["max_hp"] = puff_data.hp
+				state["unique_skill_id"] = str(puff_data.unique_skill_id)
 			if _turn_manager != null:
 				state["hp"] = _turn_manager.get_current_hp(puff)
 		else:
 			state["alive"] = false
+			state["visible"] = false
+			if not state.has("hp"):
+				state["hp"] = 0
 		units.append(state)
 	return units
 

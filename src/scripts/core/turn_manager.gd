@@ -3,6 +3,7 @@ class_name TurnManager
 
 signal phase_changed(phase: StringName, active_side: StringName, turn_number: int)
 signal puff_selected(puff: Puff)
+signal action_resolved(side: StringName, action_payload: Dictionary)
 
 const TEAM_PLAYER: StringName = &"player"
 const TEAM_ENEMY: StringName = &"enemy"
@@ -383,9 +384,17 @@ func _perform_move(actor: Puff, target_cell: Vector2i) -> void:
 		return
 	if not _is_puff_actionable(actor):
 		return
+
 	var from_cell: Vector2i = actor.grid_cell
 	actor.set_grid_cell(target_cell)
 	_emit_signal_bus("puff_moved", [StringName(actor.name), from_cell, target_cell])
+
+	var action_payload: Dictionary = _build_action_payload_base(actor, INTENT_ACTION_MOVE)
+	action_payload["actor_cell_before"] = from_cell
+	action_payload["actor_cell_after"] = target_cell
+	action_payload["target_cell"] = target_cell
+	_emit_action_resolved(action_payload)
+
 	_finish_current_action()
 
 
@@ -395,14 +404,39 @@ func _perform_attack(attacker: Puff, defender: Puff) -> void:
 	if not _is_puff_actionable(attacker) or not _is_puff_actionable(defender):
 		return
 
+	var defender_name: String = defender.name
+	var defender_cell: Vector2i = defender.grid_cell
+	var defending_team: StringName = get_puff_team(defender)
+	var opposing_team_hp_before: int = _compute_team_total_hp(defending_team)
+	var defender_hp_before: int = _resolve_current_hp(defender)
 	var defender_id: int = defender.get_instance_id()
 	var damage: int = _calculate_damage(attacker, defender)
-	var new_hp: int = _resolve_current_hp(defender) - damage
+	var new_hp: int = defender_hp_before - damage
 	_hp_by_puff_id[defender_id] = new_hp
 
+	var was_knocked_out: bool = new_hp <= 0
 	if new_hp <= 0:
 		_unregister_puff(defender)
 		defender.queue_free()
+
+	var opposing_team_hp_after: int = _compute_team_total_hp(defending_team)
+	var hp_swing: int = maxi(0, opposing_team_hp_before - opposing_team_hp_after)
+	var hp_swing_ratio: float = 0.0
+	if opposing_team_hp_before > 0:
+		hp_swing_ratio = float(hp_swing) / float(opposing_team_hp_before)
+
+	var action_payload: Dictionary = _build_action_payload_base(attacker, INTENT_ACTION_ATTACK)
+	action_payload["target_id"] = defender_name
+	action_payload["target_cell"] = defender_cell
+	action_payload["damage"] = damage
+	action_payload["target_hp_before"] = defender_hp_before
+	action_payload["target_hp_after"] = maxi(0, new_hp)
+	action_payload["hp_swing"] = hp_swing
+	action_payload["hp_swing_ratio"] = hp_swing_ratio
+	action_payload["knockout"] = was_knocked_out
+	action_payload["knockout_count"] = 1 if was_knocked_out else 0
+	action_payload["changed_outcome"] = was_knocked_out or hp_swing_ratio >= 0.3
+	_emit_action_resolved(action_payload)
 
 	_finish_current_action()
 
@@ -430,14 +464,30 @@ func _perform_bump(attacker: Puff, defender: Puff) -> bool:
 		return false
 
 	var direction: Vector2i = bump_result.get("direction", Vector2i.ZERO)
+	var cliff_falls: int = _count_cliff_falls(pushes)
+	var bump_action_payload: Dictionary = _build_action_payload_base(attacker, INTENT_ACTION_SKILL)
+	bump_action_payload["target_id"] = str(defender.name)
+	bump_action_payload["target_cell"] = defender.grid_cell
+	bump_action_payload["push_count"] = pushes.size()
+	bump_action_payload["direction"] = direction
+	bump_action_payload["cliff_falls"] = cliff_falls
+	bump_action_payload["knockout"] = cliff_falls > 0
+	bump_action_payload["knockout_count"] = cliff_falls
+	bump_action_payload["knocked_out_ids"] = _collect_cliff_fall_puff_names(pushes)
+	bump_action_payload["changed_outcome"] = cliff_falls > 0 or pushes.size() > 1
+	if str(bump_action_payload.get("skill_id", "")).is_empty():
+		bump_action_payload["skill_id"] = "core_bump"
+
 	_is_resolving_bump = true
-	call_deferred("_run_bump_resolution", pushes, direction)
+	call_deferred("_run_bump_resolution", pushes, direction, bump_action_payload)
 	return true
 
 
-func _run_bump_resolution(pushes: Array, direction: Vector2i) -> void:
+func _run_bump_resolution(pushes: Array, direction: Vector2i, action_payload: Dictionary = {}) -> void:
 	await _animate_bump_pushes(pushes, direction)
 	_apply_bump_pushes(pushes, direction)
+	if not action_payload.is_empty():
+		_emit_action_resolved(action_payload)
 	_is_resolving_bump = false
 	_finish_current_action()
 
@@ -758,6 +808,26 @@ func _count_cliff_falls(pushes: Array) -> int:
 	return cliff_falls
 
 
+func _collect_cliff_fall_puff_names(pushes: Array) -> Array[String]:
+	var puff_names: Array[String] = []
+	for push_variant in pushes:
+		if not (push_variant is Dictionary):
+			continue
+		var push: Dictionary = push_variant
+		if not bool(push.get("fell_from_cliff", false)):
+			continue
+
+		var puff_variant: Variant = push.get("puff")
+		if not (puff_variant is Puff):
+			continue
+		var puff: Puff = puff_variant
+		if not is_instance_valid(puff):
+			continue
+		puff_names.append(str(puff.name))
+
+	return puff_names
+
+
 func _build_utility_ai_context() -> Dictionary:
 	return {
 		"player_targets": _get_actionable_team_puffs(TEAM_PLAYER),
@@ -892,6 +962,72 @@ func _resolve_current_hp(puff: Puff) -> int:
 	if not _hp_by_puff_id.has(puff_id):
 		_hp_by_puff_id[puff_id] = _resolve_max_hp(puff)
 	return int(_hp_by_puff_id[puff_id])
+
+
+func _compute_team_total_hp(team: StringName) -> int:
+	var total_hp: int = 0
+	for puff in _get_alive_team_puffs(team):
+		total_hp += maxi(0, _resolve_current_hp(puff))
+	return maxi(0, total_hp)
+
+
+func _resolve_unique_skill_id(puff: Puff) -> String:
+	if puff == null:
+		return ""
+	var puff_data: PuffData = puff.puff_data as PuffData
+	if puff_data == null:
+		return ""
+	return str(puff_data.unique_skill_id)
+
+
+func _build_action_payload_base(actor: Puff, action: StringName) -> Dictionary:
+	var actor_team: StringName = _active_side()
+	var actor_name: String = ""
+	var actor_cell: Vector2i = Vector2i.ZERO
+	var skill_id: String = ""
+
+	if actor != null:
+		actor_name = str(actor.name)
+		actor_cell = actor.grid_cell
+		var mapped_team: StringName = get_puff_team(actor)
+		if mapped_team == TEAM_PLAYER or mapped_team == TEAM_ENEMY:
+			actor_team = mapped_team
+		skill_id = _resolve_unique_skill_id(actor)
+
+	return {
+		"turn_number": turn_number,
+		"phase": str(current_phase),
+		"action": str(action),
+		"actor_id": actor_name,
+		"actor_team": str(actor_team),
+		"actor_cell_before": actor_cell,
+		"actor_cell_after": actor_cell,
+		"target_id": "",
+		"target_cell": actor_cell,
+		"damage": 0,
+		"target_hp_before": 0,
+		"target_hp_after": 0,
+		"hp_swing": 0,
+		"hp_swing_ratio": 0.0,
+		"knockout": false,
+		"knockout_count": 0,
+		"cliff_falls": 0,
+		"skill_id": skill_id,
+		"changed_outcome": false
+	}
+
+
+func _emit_action_resolved(action_payload: Dictionary) -> void:
+	if action_payload.is_empty():
+		return
+
+	var payload: Dictionary = action_payload.duplicate(true)
+	var side: StringName = StringName(str(payload.get("actor_team", str(_active_side()))))
+	if side != TEAM_PLAYER and side != TEAM_ENEMY:
+		side = _active_side()
+		payload["actor_team"] = str(side)
+
+	emit_signal("action_resolved", side, payload)
 
 
 func _resolve_tile_map_layer() -> TileMapLayer:

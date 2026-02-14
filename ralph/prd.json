@@ -241,8 +241,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 14,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Added src/scripts/utils/moment_extractor.gd to analyze FullBattle logs and score decisive turns using HP swing >=30%, knockout occurrence, and unique-skill outcome impact criteria. Extended full_battle.gd turn logging with per-turn pre-action snapshots (map state + puff positions + enemy intents) and player action/result summaries sourced from new turn_manager.gd action_resolved telemetry. Verified all src/scripts/*.gd via headless Godot --check-only and validated extraction output with a headless smoke test that builds a feed-compatible decisive-moment snapshot.",
       "dependsOn": ["US-013"]
     },
     {

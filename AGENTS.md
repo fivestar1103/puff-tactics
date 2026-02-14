@@ -24,6 +24,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "Supabase network/auth access is centralized in `src/scripts/network/supabase_client.gd` as the `SupabaseClient` autoload; configure `puff_tactics/supabase/url` and `puff_tactics/supabase/publishable_key` in `project.godot`."
 - "`src/scripts/network/feed_sync.gd` handles `feed_items` batch sync (limit 50), JSON cache + pending score queue files in `user://feed_cache/`, and `feed_main.gd` now renders cached snapshots first then fetches the next batch in the background."
 - "`src/scenes/battle/FullBattle.tscn` uses `TurnManager.auto_begin_turn_cycle = false` and starts turn flow with `begin_turn_cycle()` only after roster selection; tile-control victories call `TurnManager.end_battle()` and logs persist to `user://battle_logs/*.json` for downstream moment extraction."
+- "`TurnManager` emits `action_resolved(side, action_payload)` for move/attack/skill outcomes; `full_battle.gd` records per-turn `player_turn_snapshot` + `player_action_result` and stores `turn_summaries` so `src/scripts/utils/moment_extractor.gd` can build feed-ready decisive-moment snapshots."
 
 ## Gotchas
 
