@@ -139,8 +139,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 8,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Added FeedMain as the app entry scene with vertical swipe up/down gesture handling, tweened snap transitions between stacked feed cards, and bottom profile/create/leaderboard FABs. Each card instantiates TurnBattle snapshots (BattleMap + demo puffs + EnemyIntent overlay) with TurnManager input disabled so cards behave as feed snapshots. Verified script syntax with headless Godot --check-only across src/scripts/*.gd and verified project startup parses via headless Godot --quit.",
       "dependsOn": ["US-002", "US-003"]
     },
     {

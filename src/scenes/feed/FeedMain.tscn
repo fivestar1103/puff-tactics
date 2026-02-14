@@ -1,0 +1,87 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/scripts/feed/feed_main.gd" id="1_jckv1"]
+
+[node name="FeedMain" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_jckv1")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.949, 0.929, 0.901, 1)
+
+[node name="FeedTrack" type="Node2D" parent="."]
+
+[node name="Hud" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="TopMargin" type="MarginContainer" parent="Hud"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 26.0
+offset_bottom = 172.0
+grow_horizontal = 2
+theme_override_constants/margin_left = 52
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 52
+theme_override_constants/margin_bottom = 6
+
+[node name="TopStack" type="VBoxContainer" parent="Hud/TopMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="Hud/TopMargin/TopStack"]
+layout_mode = 2
+text = "Puff Tactics Feed"
+horizontal_alignment = 1
+
+[node name="SubtitleLabel" type="Label" parent="Hud/TopMargin/TopStack"]
+layout_mode = 2
+text = "Swipe up for the next tactical snapshot"
+horizontal_alignment = 1
+
+[node name="FabRow" type="HBoxContainer" parent="Hud"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -364.0
+offset_top = -164.0
+offset_right = 364.0
+offset_bottom = -36.0
+grow_horizontal = 2
+grow_vertical = 0
+alignment = 1
+theme_override_constants/separation = 20
+
+[node name="ProfileButton" type="Button" parent="Hud/FabRow"]
+layout_mode = 2
+text = "Profile"
+
+[node name="CreateButton" type="Button" parent="Hud/FabRow"]
+layout_mode = 2
+text = "Create"
+
+[node name="LeaderboardButton" type="Button" parent="Hud/FabRow"]
+layout_mode = 2
+text = "Leaderboard"
