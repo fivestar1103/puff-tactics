@@ -34,6 +34,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "`src/scenes/ui/PuzzleEditor.tscn` + `src/scripts/ui/puzzle_editor.gd` handle UGC authoring: drag terrain painting + puff drag/drop placement, per-puff team/element/class controls, template objective metadata, and FeedItem-gated test-play that must pass before Supabase `ugc_puzzles` publish is enabled."
 - "Story campaign flow is orchestrated by `src/scripts/story/story_chapter_1.gd`, which runs scripted `FullBattle.start_scripted_battle(...)` scenarios and advances dialogue/tutorial beats from `battle_completed` + `player_action_resolved`."
 - "Register `VisualTheme` as an autoload and use its StyleBox helpers for consistent label/button/panel styling across feed, battle, story, and editor screens."
+- "BattleMap builds terrain tile art in `src/scripts/core/battle_map.gd::_create_terrain_texture()` via direct `Image` drawing: base gradient fill plus per-terrain symbols and cliff-specific border treatment are applied at atlas generation time."
 
 ## Gotchas
 

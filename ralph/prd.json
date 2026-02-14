@@ -447,8 +447,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 23,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Updated src/scripts/core/battle_map.gd to add gradient shading in tile diamonds and per-terrain center pixel-art symbols (cloud puff, high-cloud upward arrow, cotton-candy swirl, puddle wavy lines, cliff downward triangle, mushroom silhouette). Cliff tiles now use a darker, thicker border threshold for danger emphasis.",
       "dependsOn": ["US-021"]
     },
     {

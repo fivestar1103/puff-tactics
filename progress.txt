@@ -29,3 +29,4 @@
 [2026-02-14] US-021: Added global VisualTheme singleton with StyleBox helpers (panel, button styles, label/separator styling), registered it in project.godot autoload, and added required GDD palette/font/UI constants to constants.gd.
 
 [2026-02-14] US-022: Increased Puff placeholder sprite to 128px with kawaii face features (eyes, curved mouth, blush), added 3px team-colored ring controlled by `team` on Puff, added bottom-right diamond element badge, scaled accessory textures to new placeholder size, and updated collision/sprite offsets and team assignments at spawn points so rings render correctly in turn feed, full battle, and editor contexts.
+[2026-02-14] US-023: Added terrain indicator symbols and gradient shading in BattleMap tile atlas generation for all terrain types (cloud puff, high cloud arrow, candy swirl, puddle waves, cliff triangle, mushroom cap) plus thicker cliff border emphasis.

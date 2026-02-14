@@ -190,15 +190,22 @@ func _create_terrain_texture() -> Texture2D:
 	for terrain_index in TERRAIN_TYPES.size():
 		var terrain_type: String = TERRAIN_TYPES[terrain_index]
 		var terrain_color: Color = TERRAIN_COLORS[terrain_type]
-		_draw_isometric_diamond(image, terrain_index * TILE_PIXEL_SIZE.x, terrain_color)
+		_draw_isometric_diamond(image, terrain_index * TILE_PIXEL_SIZE.x, terrain_color, terrain_type)
 
 	return ImageTexture.create_from_image(image)
 
 
-func _draw_isometric_diamond(image: Image, offset_x: int, fill_color: Color) -> void:
+
+func _draw_isometric_diamond(image: Image, offset_x: int, fill_color: Color, terrain_type: String) -> void:
+	var light_tint: Color = fill_color.lerp(Color(1.0, 1.0, 1.0, 1.0), 0.2)
+	var dark_tint: Color = fill_color.lerp(Color(0.0, 0.0, 0.0, 1.0), 0.2)
 	var half_width: float = float(TILE_PIXEL_SIZE.x) * 0.5
 	var half_height: float = float(TILE_PIXEL_SIZE.y) * 0.5
-	var border_color: Color = fill_color.darkened(0.2)
+	var border_limit: float = 0.96
+	var border_darkness: float = 0.22
+	if terrain_type == "cliff":
+		border_limit = 0.90
+		border_darkness = 0.35
 
 	for y in TILE_PIXEL_SIZE.y:
 		for x in TILE_PIXEL_SIZE.x:
@@ -206,8 +213,132 @@ func _draw_isometric_diamond(image: Image, offset_x: int, fill_color: Color) -> 
 			var normalized_y: float = absf((float(y) + 0.5 - half_height) / half_height)
 			var distance_to_center: float = normalized_x + normalized_y
 			if distance_to_center <= 1.0:
-				var pixel_color: Color = fill_color if distance_to_center <= 0.9 else border_color
-				image.set_pixel(offset_x + x, y, pixel_color)
+				var gradient_t: float = float(y) / float(TILE_PIXEL_SIZE.y - 1)
+				var tile_color: Color = fill_color
+				if gradient_t < 0.5:
+					tile_color = fill_color.lerp(light_tint, (0.5 - gradient_t) * 0.35)
+				else:
+					tile_color = fill_color.lerp(dark_tint, (gradient_t - 0.5) * 0.35)
+
+				if distance_to_center > border_limit:
+					tile_color = tile_color.darkened(border_darkness)
+
+				image.set_pixel(offset_x + x, y, tile_color)
+
+	_draw_terrain_symbol(image, offset_x, terrain_type, fill_color)
+
+
+func _draw_terrain_symbol(image: Image, offset_x: int, terrain_type: String, fill_color: Color) -> void:
+	var center_x: int = offset_x + int(TILE_PIXEL_SIZE.x / 2)
+	var center_y: int = int(TILE_PIXEL_SIZE.y / 2)
+
+	match terrain_type:
+		"cloud":
+			_draw_cloud_symbol(image, center_x, center_y)
+		"high_cloud":
+			_draw_high_cloud_symbol(image, center_x, center_y)
+		"cotton_candy":
+			_draw_cotton_candy_symbol(image, center_x, center_y)
+		"puddle":
+			_draw_puddle_symbol(image, center_x, center_y)
+		"cliff":
+			_draw_cliff_symbol(image, center_x, center_y, fill_color)
+		"mushroom":
+			_draw_mushroom_symbol(image, center_x, center_y)
+		_:
+			pass
+
+
+func _set_terrain_pixel(image: Image, x: int, y: int, color: Color) -> void:
+	if x < 0 or y < 0:
+		return
+	if x >= image.get_width() or y >= image.get_height():
+		return
+	image.set_pixel(x, y, color)
+
+
+func _draw_disk(image: Image, center_x: int, center_y: int, radius: int, color: Color) -> void:
+	var radius_squared: int = radius * radius
+	for local_y in range(-radius, radius + 1):
+		for local_x in range(-radius, radius + 1):
+			if local_x * local_x + local_y * local_y <= radius_squared:
+				_set_terrain_pixel(image, center_x + local_x, center_y + local_y, color)
+
+
+func _draw_cloud_symbol(image: Image, center_x: int, center_y: int) -> void:
+	var color: Color = Color(1.0, 1.0, 1.0, 0.94)
+	_draw_disk(image, center_x, center_y - 2, 4, color)
+	_draw_disk(image, center_x - 6, center_y + 1, 3, color)
+	_draw_disk(image, center_x + 6, center_y + 1, 3, color)
+	_draw_disk(image, center_x - 1, center_y + 4, 2, color)
+	_set_terrain_pixel(image, center_x + 2, center_y - 5, Color(1.0, 1.0, 1.0, 0.85))
+
+
+func _draw_high_cloud_symbol(image: Image, center_x: int, center_y: int) -> void:
+	var color: Color = Color(1.0, 0.95, 0.5, 0.95)
+	var base_x: int = center_x - 1
+	var base_y: int = center_y + 11
+	for local_y in range(14):
+		var y: int = base_y - local_y
+		_set_terrain_pixel(image, base_x, y, color)
+		_set_terrain_pixel(image, base_x + 1, y, color)
+
+	for row in range(0, 5):
+		for column in range(-4, 5):
+			if abs(column) + row <= 4:
+				_set_terrain_pixel(image, center_x + column, center_y - 7 - row, color)
+
+
+func _draw_cotton_candy_symbol(image: Image, center_x: int, center_y: int) -> void:
+	var color: Color = Color(1.0, 0.8, 0.95, 0.95)
+	for i in range(48):
+		var t: float = float(i) / 47.0
+		var angle: float = t * 6.28318 * 2.0
+		var radius: float = t * 13.0
+		var px: int = center_x + int(radius * cos(angle))
+		var py: int = center_y + int(radius * sin(angle) * 0.6)
+		_set_terrain_pixel(image, px, py, color)
+		_set_terrain_pixel(image, px + 1, py, color)
+		if i % 3 == 0:
+			_set_terrain_pixel(image, px - 1, py + 1, Color(1.0, 0.73, 0.93, 0.75))
+
+
+func _draw_puddle_symbol(image: Image, center_x: int, center_y: int) -> void:
+	var color: Color = Color(0.95, 1.0, 1.0, 0.95)
+	for line in range(3):
+		var line_y: int = center_y - 4 + line * 6
+		for x in range(-18, 19):
+			var wave: int = int(round(sin(float(x) / 3.4 + float(line) * 0.7) * 2.0))
+			_set_terrain_pixel(image, center_x + x, line_y + wave, color)
+			_set_terrain_pixel(image, center_x + x, line_y + wave + 1, Color(color.r, color.g, color.b, 0.65))
+
+
+func _draw_cliff_symbol(image: Image, center_x: int, center_y: int, fill_color: Color) -> void:
+	var symbol_color: Color = fill_color.lerp(Color(1.0, 1.0, 1.0, 1.0), 0.3)
+	var start_y: int = center_y - 11
+	var total_rows: int = 16
+	for row in range(total_rows):
+		var progress: float = float(row) / float(total_rows - 1)
+		var half_width: int = int(lerp(15.0, 2.0, progress))
+		var row_y: int = start_y + row
+		for dx in range(-half_width, half_width + 1):
+			_set_terrain_pixel(image, center_x + dx, row_y, symbol_color)
+
+	_set_terrain_pixel(image, center_x, start_y + total_rows - 1, symbol_color.lerp(Color(0.0, 0.0, 0.0, 1.0), 0.5))
+
+
+func _draw_mushroom_symbol(image: Image, center_x: int, center_y: int) -> void:
+	var cap_color: Color = Color(1.0, 0.78, 0.95, 0.95)
+	var stem_color: Color = Color(0.88, 0.72, 0.46, 0.95)
+	for local_y in range(-13, 1):
+		var half_width: int = 9 - int(abs(float(local_y)) * 0.55)
+		for dx in range(-half_width, half_width + 1):
+			_set_terrain_pixel(image, center_x + dx, center_y + local_y, cap_color)
+
+	for stem_y in range(1, 12):
+		_set_terrain_pixel(image, center_x, center_y + stem_y, stem_color)
+		if stem_y % 2 == 0:
+			_set_terrain_pixel(image, center_x + 1, center_y + stem_y, Color(stem_color.r, stem_color.g, stem_color.b, 0.74))
 
 
 func _render_map() -> void:
