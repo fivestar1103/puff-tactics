@@ -225,8 +225,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 13,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Added src/scenes/battle/FullBattle.tscn and src/scripts/battle/full_battle.gd for multi-turn (up to 8-turn) battle flow with roster selection (3-4 puffs), tile-control majority and elimination win checks, persisted JSON battle logs in user://battle_logs for downstream decisive-moment extraction, and a victory/defeat overlay with reward summary. Extended turn_manager.gd with auto_begin_turn_cycle plus begin_turn_cycle()/end_battle() hooks so FullBattle can run pre-battle selection and external objective-based endings cleanly. Verified by headless scene instantiation, a log-persistence smoke run, and HOME=/tmp Godot --check-only across all src/scripts/*.gd files.",
       "dependsOn": ["US-009"]
     },
     {

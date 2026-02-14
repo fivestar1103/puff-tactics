@@ -66,6 +66,7 @@ const DEMO_PUFFS: Array[Dictionary] = [
 @export var battle_map_path: NodePath
 @export var puff_scene: PackedScene = preload("res://src/scenes/puffs/Puff.tscn")
 @export var auto_spawn_demo_puffs: bool = true
+@export var auto_begin_turn_cycle: bool = true
 @export_range(0.0, 5.0, 0.05) var ai_attack_value_weight: float = 1.2
 @export_range(0.0, 5.0, 0.05) var ai_survival_risk_weight: float = 1.0
 @export_range(0.0, 5.0, 0.05) var ai_positional_advantage_weight: float = 0.8
@@ -92,6 +93,7 @@ var _stun_state_by_puff_id: Dictionary = {}
 var _bump_system: RefCounted = BUMP_SYSTEM_SCRIPT.new()
 var _utility_ai: RefCounted = UTILITY_AI_SCRIPT.new()
 var _is_resolving_bump: bool = false
+var _battle_has_ended: bool = false
 
 
 func _ready() -> void:
@@ -104,10 +106,16 @@ func _ready() -> void:
 		return
 
 	if auto_spawn_demo_puffs and _puffs_by_id.is_empty():
-		call_deferred("_spawn_demo_puffs_and_begin_turn")
+		if auto_begin_turn_cycle:
+			call_deferred("_spawn_demo_puffs_and_begin_turn")
+		else:
+			call_deferred("_spawn_demo_puffs")
 		return
 
-	_begin_player_turn(true)
+	if auto_begin_turn_cycle:
+		begin_turn_cycle(true)
+	else:
+		set_process_unhandled_input(false)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -192,6 +200,46 @@ func register_puff(puff: Puff, team: StringName) -> void:
 	puff.tree_exited.connect(_on_registered_puff_exited.bind(puff_id), CONNECT_ONE_SHOT)
 
 
+func begin_turn_cycle(force: bool = true) -> void:
+	if _battle_map == null:
+		return
+	_battle_has_ended = false
+	set_process_unhandled_input(true)
+	_begin_player_turn(force)
+
+
+func end_battle(winner: StringName) -> void:
+	if winner != TEAM_PLAYER and winner != TEAM_ENEMY:
+		push_warning("Unsupported winner '%s' for battle end." % winner)
+		return
+	if _battle_has_ended:
+		return
+
+	_battle_has_ended = true
+	_emit_signal_bus("battle_ended", [winner])
+	set_process_unhandled_input(false)
+	_clear_selection()
+
+
+func get_alive_team_snapshot(team: StringName) -> Array[Puff]:
+	var team_snapshot: Array[Puff] = []
+	for puff in _get_alive_team_puffs(team):
+		team_snapshot.append(puff)
+	return team_snapshot
+
+
+func get_current_hp(puff: Puff) -> int:
+	if puff == null:
+		return 0
+	return _resolve_current_hp(puff)
+
+
+func get_puff_team(puff: Puff) -> StringName:
+	if puff == null:
+		return &""
+	return _team_by_puff_id.get(puff.get_instance_id(), &"")
+
+
 func _resolve_battle_map() -> BattleMap:
 	var candidate: Node
 	if battle_map_path.is_empty():
@@ -247,6 +295,8 @@ func _build_demo_puff_name(puff_config: Dictionary) -> String:
 
 
 func _begin_player_turn(force: bool = false) -> void:
+	if _battle_has_ended:
+		return
 	active_side_index = turn_order.find(TEAM_PLAYER)
 	_increment_team_turn(TEAM_PLAYER)
 	_recover_stunned_puffs_for_team(TEAM_PLAYER)
@@ -256,6 +306,8 @@ func _begin_player_turn(force: bool = false) -> void:
 
 
 func _begin_enemy_turn() -> void:
+	if _battle_has_ended:
+		return
 	active_side_index = turn_order.find(TEAM_ENEMY)
 	_increment_team_turn(TEAM_ENEMY)
 	_recover_stunned_puffs_for_team(TEAM_ENEMY)
@@ -475,6 +527,8 @@ func _resolve_phase() -> void:
 		return
 
 	_emit_signal_bus("turn_ended", [turn_number])
+	if _battle_has_ended:
+		return
 
 	if _active_side() == TEAM_PLAYER:
 		_begin_enemy_turn()
@@ -485,6 +539,9 @@ func _resolve_phase() -> void:
 
 
 func _check_for_battle_end() -> bool:
+	if _battle_has_ended:
+		return true
+
 	var player_alive: bool = _has_alive_members(TEAM_PLAYER)
 	var enemy_alive: bool = _has_alive_members(TEAM_ENEMY)
 
@@ -492,9 +549,7 @@ func _check_for_battle_end() -> bool:
 		return false
 
 	var winner: StringName = TEAM_PLAYER if player_alive else TEAM_ENEMY
-	_emit_signal_bus("battle_ended", [winner])
-	set_process_unhandled_input(false)
-	_clear_selection()
+	end_battle(winner)
 	return true
 
 

@@ -1,0 +1,24 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="PackedScene" path="res://src/scenes/maps/BattleMap.tscn" id="1_yswlh"]
+[ext_resource type="Script" path="res://src/scripts/core/turn_manager.gd" id="2_0tvbm"]
+[ext_resource type="Script" path="res://src/scripts/ai/enemy_intent.gd" id="3_17frh"]
+[ext_resource type="Script" path="res://src/scripts/battle/full_battle.gd" id="4_sq0nn"]
+
+[node name="FullBattle" type="Node2D"]
+script = ExtResource("4_sq0nn")
+
+[node name="BattleMap" parent="." instance=ExtResource("1_yswlh")]
+
+[node name="TurnManager" type="Node2D" parent="."]
+script = ExtResource("2_0tvbm")
+battle_map_path = NodePath("../BattleMap")
+auto_spawn_demo_puffs = false
+auto_begin_turn_cycle = false
+
+[node name="EnemyIntent" type="Node2D" parent="."]
+script = ExtResource("3_17frh")
+battle_map_path = NodePath("../BattleMap")
+turn_manager_path = NodePath("../TurnManager")
+
+[node name="UiLayer" type="CanvasLayer" parent="."]
