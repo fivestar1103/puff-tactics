@@ -25,6 +25,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "`src/scripts/network/feed_sync.gd` handles `feed_items` batch sync (limit 50), JSON cache + pending score queue files in `user://feed_cache/`, and `feed_main.gd` now renders cached snapshots first then fetches the next batch in the background."
 - "`src/scenes/battle/FullBattle.tscn` uses `TurnManager.auto_begin_turn_cycle = false` and starts turn flow with `begin_turn_cycle()` only after roster selection; tile-control victories call `TurnManager.end_battle()` and logs persist to `user://battle_logs/*.json` for downstream moment extraction."
 - "`TurnManager` emits `action_resolved(side, action_payload)` for move/attack/skill outcomes; `full_battle.gd` records per-turn `player_turn_snapshot` + `player_action_result` and stores `turn_summaries` so `src/scripts/utils/moment_extractor.gd` can build feed-ready decisive-moment snapshots."
+- "Async PvP orchestration is centralized in `src/scripts/network/pvp_async.gd`; `full_battle.gd` calls it before match start to fetch nearest-ELO leaderboard opponents and apply ghost `team_paths` + AI weights, then calls it after battle end to upload the player's ghost and submit PvP result/ELO updates."
 
 ## Gotchas
 
@@ -55,6 +56,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "Battle map terrain system: src/scripts/core/battle_map.gd"
 - "Battle map scene: src/scenes/maps/BattleMap.tscn"
 - "Bump logic: src/scripts/battle/bump_system.gd"
+- "Async PvP sync/matchmaking: src/scripts/network/pvp_async.gd"
 
 ## Supabase Notes
 

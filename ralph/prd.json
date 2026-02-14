@@ -258,8 +258,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 15,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Added src/scripts/network/pvp_async.gd for async PvP ghost upload, ELO-window matchmaking from leaderboards, Supabase result posting, and ELO updates. Integrated src/scripts/battle/full_battle.gd with pre-battle matchmaking to load opponent ghost team + AI weights for local execution, and post-battle sync to upload player ghost and submit PvP result updates while preserving battle-log persistence for moment extraction. Verified all src/scripts/*.gd via HOME=/tmp Godot --headless --check-only and validated async matchmaking roster resolution with a headless FullBattle smoke script.",
       "dependsOn": ["US-013", "US-011"]
     },
     {

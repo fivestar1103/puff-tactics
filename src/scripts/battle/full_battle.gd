@@ -2,6 +2,7 @@ extends Node2D
 class_name FullBattle
 
 const PUFF_SCENE: PackedScene = preload("res://src/scenes/puffs/Puff.tscn")
+const PVP_ASYNC_SCRIPT: GDScript = preload("res://src/scripts/network/pvp_async.gd")
 
 const TEAM_PLAYER: StringName = &"player"
 const TEAM_ENEMY: StringName = &"enemy"
@@ -114,6 +115,11 @@ var _battle_log_path: String = ""
 var _battle_log_header: Dictionary = {}
 var _battle_log_events: Array[Dictionary] = []
 var _turn_context_by_number: Dictionary = {}
+var _pvp_async: Node
+var _match_context: Dictionary = {}
+var _opponent_ghost_payload: Dictionary = {}
+var _player_ai_weights_for_match: Dictionary = {}
+var _pvp_status_message: String = ""
 
 
 func _ready() -> void:
@@ -128,6 +134,7 @@ func _ready() -> void:
 
 	_apply_default_map_config()
 	_connect_signals()
+	_setup_async_pvp()
 	_build_ui()
 	_refresh_selection_ui()
 	_update_hud()
@@ -347,6 +354,13 @@ func _refresh_selection_ui() -> void:
 func _on_start_battle_pressed() -> void:
 	if _selected_roster_paths.size() < 3 or _selected_roster_paths.size() > 4:
 		return
+
+	_start_battle_button.disabled = true
+	_start_battle_button.text = "Matchmaking..."
+	await _prepare_async_match_context()
+	_start_battle_button.text = "Start Full Battle"
+	_start_battle_button.disabled = false
+
 	_start_full_battle()
 
 
@@ -358,9 +372,12 @@ func _start_full_battle() -> void:
 	_battle_finished = false
 	_battle_winner = &""
 	_battle_end_reason = &""
+	if _player_ai_weights_for_match.is_empty():
+		_player_ai_weights_for_match = _capture_turn_manager_ai_weights()
 
 	_clear_spawned_units()
-	_enemy_roster_paths = _build_enemy_roster_for_match(_selected_roster_paths)
+	_enemy_roster_paths = _resolve_enemy_roster_for_match(_selected_roster_paths)
+	_apply_enemy_ghost_ai_weights()
 	_spawn_match_units(_selected_roster_paths, _enemy_roster_paths)
 	_initialize_battle_log()
 	_latest_tile_control = _calculate_tile_control_totals()
@@ -393,6 +410,140 @@ func _build_enemy_roster_for_match(player_roster_paths: Array[String]) -> Array[
 	for index in range(ENEMY_SPAWN_CELLS.size()):
 		enemy_team.append(candidates[index])
 	return enemy_team
+
+
+func _setup_async_pvp() -> void:
+	var pvp_async_variant: Variant = PVP_ASYNC_SCRIPT.new()
+	if not (pvp_async_variant is Node):
+		return
+	_pvp_async = pvp_async_variant
+	_pvp_async.name = "AsyncPvp"
+	add_child(_pvp_async)
+
+
+func _prepare_async_match_context() -> void:
+	_match_context.clear()
+	_opponent_ghost_payload.clear()
+	_player_ai_weights_for_match = _capture_turn_manager_ai_weights()
+	_pvp_status_message = ""
+	if _pvp_async == null:
+		return
+	if not _pvp_async.has_method("find_match_for_player"):
+		return
+
+	var matchmaking_result_variant: Variant = await _pvp_async.call(
+		"find_match_for_player",
+		_selected_roster_paths.duplicate(),
+		_player_ai_weights_for_match.duplicate(true)
+	)
+	if not (matchmaking_result_variant is Dictionary):
+		_pvp_status_message = "Async PvP matchmaking unavailable."
+		_update_hud()
+		return
+
+	var matchmaking_result: Dictionary = matchmaking_result_variant
+	if not bool(matchmaking_result.get("ok", false)):
+		_pvp_status_message = "Async PvP unavailable: %s" % str(matchmaking_result.get("error", "network unavailable"))
+		_update_hud()
+		return
+
+	_match_context = matchmaking_result.duplicate(true)
+	var opponent_ghost_variant: Variant = matchmaking_result.get("opponent_ghost", {})
+	if opponent_ghost_variant is Dictionary:
+		_opponent_ghost_payload = opponent_ghost_variant.duplicate(true)
+
+	var opponent_profile_variant: Variant = matchmaking_result.get("opponent_profile", {})
+	if opponent_profile_variant is Dictionary:
+		var opponent_profile: Dictionary = opponent_profile_variant
+		var opponent_elo: int = int(round(float(opponent_profile.get("elo", 0.0))))
+		_pvp_status_message = "Matched async ghost around ELO %d." % opponent_elo
+	else:
+		_pvp_status_message = "Matched async ghost."
+	_update_hud()
+
+
+func _resolve_enemy_roster_for_match(player_roster_paths: Array[String]) -> Array[String]:
+	var fallback_team: Array[String] = _build_enemy_roster_for_match(player_roster_paths)
+	if _opponent_ghost_payload.is_empty():
+		return fallback_team
+
+	var team_paths_variant: Variant = _opponent_ghost_payload.get("team_paths", [])
+	if not (team_paths_variant is Array):
+		return fallback_team
+
+	var raw_team_paths: Array = team_paths_variant
+	var normalized_team: Array[String] = []
+	for data_path_variant in raw_team_paths:
+		var data_path: String = str(data_path_variant).strip_edges()
+		if data_path.is_empty():
+			continue
+		normalized_team.append(data_path)
+
+	if normalized_team.is_empty():
+		return fallback_team
+
+	var fill_index: int = 0
+	while normalized_team.size() < ENEMY_SPAWN_CELLS.size():
+		normalized_team.append(fallback_team[fill_index % fallback_team.size()])
+		fill_index += 1
+
+	while normalized_team.size() > ENEMY_SPAWN_CELLS.size():
+		normalized_team.remove_at(normalized_team.size() - 1)
+
+	return normalized_team
+
+
+func _apply_enemy_ghost_ai_weights() -> void:
+	if _turn_manager == null:
+		return
+
+	var ai_weights: Dictionary = _player_ai_weights_for_match.duplicate(true)
+	var ai_weights_variant: Variant = _opponent_ghost_payload.get("ai_weights", {})
+	if ai_weights_variant is Dictionary:
+		ai_weights = _normalize_ai_weights(ai_weights_variant, ai_weights)
+
+	_apply_turn_manager_ai_weights(ai_weights)
+
+
+func _capture_turn_manager_ai_weights() -> Dictionary:
+	if _turn_manager == null:
+		return {}
+
+	return {
+		"attack_value": _turn_manager.ai_attack_value_weight,
+		"survival_risk": _turn_manager.ai_survival_risk_weight,
+		"positional_advantage": _turn_manager.ai_positional_advantage_weight,
+		"bump_opportunity": _turn_manager.ai_bump_opportunity_weight
+	}
+
+
+func _apply_turn_manager_ai_weights(weights: Dictionary) -> void:
+	if _turn_manager == null:
+		return
+	if weights.is_empty():
+		return
+
+	_turn_manager.ai_attack_value_weight = maxf(0.0, float(weights.get("attack_value", _turn_manager.ai_attack_value_weight)))
+	_turn_manager.ai_survival_risk_weight = maxf(0.0, float(weights.get("survival_risk", _turn_manager.ai_survival_risk_weight)))
+	_turn_manager.ai_positional_advantage_weight = maxf(0.0, float(weights.get("positional_advantage", _turn_manager.ai_positional_advantage_weight)))
+	_turn_manager.ai_bump_opportunity_weight = maxf(0.0, float(weights.get("bump_opportunity", _turn_manager.ai_bump_opportunity_weight)))
+
+
+func _normalize_ai_weights(raw_weights_variant: Variant, fallback_weights: Dictionary) -> Dictionary:
+	var normalized: Dictionary = fallback_weights.duplicate(true)
+	if normalized.is_empty():
+		normalized = _capture_turn_manager_ai_weights()
+
+	if not (raw_weights_variant is Dictionary):
+		return normalized
+
+	var raw_weights: Dictionary = raw_weights_variant
+	for key in ["attack_value", "survival_risk", "positional_advantage", "bump_opportunity"]:
+		if not raw_weights.has(key):
+			continue
+		normalized[key] = maxf(0.0, float(raw_weights.get(key, normalized[key])))
+
+	return normalized
 
 
 func _spawn_match_units(player_roster_paths: Array[String], enemy_roster_paths: Array[String]) -> void:
@@ -560,7 +711,71 @@ func _on_signal_bus_battle_ended(result: StringName) -> void:
 	})
 
 	_battle_log_path = _persist_battle_log(result, rewards)
+	_restore_player_ai_weights()
+	call_deferred("_sync_async_pvp_after_battle", result, rewards)
 	_show_result_overlay(result, rewards)
+	_update_hud()
+
+
+func _restore_player_ai_weights() -> void:
+	if _player_ai_weights_for_match.is_empty():
+		return
+	_apply_turn_manager_ai_weights(_player_ai_weights_for_match)
+
+
+func _sync_async_pvp_after_battle(result: StringName, rewards: Dictionary) -> void:
+	if _pvp_async == null:
+		return
+
+	var battle_context: Dictionary = {
+		"battle_id": _battle_id,
+		"battle_log_path": _battle_log_path,
+		"winner": str(result),
+		"win_reason": str(_battle_end_reason),
+		"turn_number": _turn_manager.turn_number if _turn_manager != null else 0,
+		"rewards": rewards
+	}
+
+	if _pvp_async.has_method("upload_player_ghost"):
+		var upload_result_variant: Variant = await _pvp_async.call(
+			"upload_player_ghost",
+			_selected_roster_paths.duplicate(),
+			_player_ai_weights_for_match.duplicate(true),
+			battle_context
+		)
+		if upload_result_variant is Dictionary:
+			var upload_result: Dictionary = upload_result_variant
+			if bool(upload_result.get("ok", false)):
+				_record_battle_event(&"pvp_ghost_uploaded", {
+					"player_team_count": _selected_roster_paths.size()
+				})
+			else:
+				_record_battle_event(&"pvp_ghost_upload_failed", {
+					"error": str(upload_result.get("error", "upload_failed"))
+				})
+
+	if _pvp_async.has_method("record_battle_result"):
+		var sync_result_variant: Variant = await _pvp_async.call(
+			"record_battle_result",
+			_match_context.duplicate(true),
+			result == TEAM_PLAYER,
+			battle_context
+		)
+		if sync_result_variant is Dictionary:
+			var sync_result: Dictionary = sync_result_variant
+			if bool(sync_result.get("ok", false)):
+				var elo_delta: int = int(sync_result.get("elo_delta", 0))
+				_record_battle_event(&"pvp_result_synced", {
+					"elo_delta": elo_delta,
+					"player_elo_after": int(round(float(sync_result.get("player_elo_after", 0.0))))
+				})
+				_pvp_status_message = "Async PvP synced. ELO %+d." % elo_delta
+			else:
+				_pvp_status_message = "Async PvP sync pending: %s" % str(sync_result.get("error", "network unavailable"))
+				_record_battle_event(&"pvp_result_sync_failed", {
+					"error": str(sync_result.get("error", "sync_failed"))
+				})
+
 	_update_hud()
 
 
@@ -727,7 +942,10 @@ func _update_hud() -> void:
 		return
 
 	if not _battle_started:
-		_hud_label.text = "Select 3-4 puffs from roster.\nWin by eliminating all enemies or controlling 13/25 tiles.\nFull match runs up to %d turns." % max_turns
+		var pre_battle_text: String = "Select 3-4 puffs from roster.\nWin by eliminating all enemies or controlling 13/25 tiles.\nFull match runs up to %d turns." % max_turns
+		if not _pvp_status_message.is_empty():
+			pre_battle_text += "\nPvP: %s" % _pvp_status_message
+		_hud_label.text = pre_battle_text
 		return
 
 	var turn_number: int = _turn_manager.turn_number if _turn_manager != null else 0
@@ -738,7 +956,7 @@ func _update_hud() -> void:
 	if _battle_finished:
 		status_text = "Finished (%s via %s)" % [str(_battle_winner), str(_battle_end_reason)]
 
-	_hud_label.text = "Turn %d / %d\nStatus: %s\nTile Control: player %d, enemy %d, neutral %d\nMajority target: %d tiles" % [
+	var hud_text: String = "Turn %d / %d\nStatus: %s\nTile Control: player %d, enemy %d, neutral %d\nMajority target: %d tiles" % [
 		turn_number,
 		max_turns,
 		status_text,
@@ -747,6 +965,10 @@ func _update_hud() -> void:
 		neutral_control,
 		_majority_tile_count()
 	]
+	if not _pvp_status_message.is_empty():
+		hud_text += "\nPvP: %s" % _pvp_status_message
+
+	_hud_label.text = hud_text
 
 
 func _initialize_battle_log() -> void:
@@ -762,7 +984,8 @@ func _initialize_battle_log() -> void:
 		"max_turns": max_turns,
 		"map_config": _build_map_config_snapshot(),
 		"selected_player_team": _selected_roster_paths.duplicate(),
-		"enemy_team": _enemy_roster_paths.duplicate()
+		"enemy_team": _enemy_roster_paths.duplicate(),
+		"pvp_match": _build_pvp_match_snapshot()
 	}
 
 
@@ -845,6 +1068,19 @@ func _build_map_config_snapshot() -> Dictionary:
 		"width": map_size.x,
 		"height": map_size.y,
 		"rows": rows
+	}
+
+
+func _build_pvp_match_snapshot() -> Dictionary:
+	var opponent_profile: Dictionary = {}
+	var opponent_profile_variant: Variant = _match_context.get("opponent_profile", {})
+	if opponent_profile_variant is Dictionary:
+		opponent_profile = opponent_profile_variant.duplicate(true)
+
+	return {
+		"opponent_profile": opponent_profile,
+		"opponent_ghost": _opponent_ghost_payload.duplicate(true),
+		"player_ai_weights": _player_ai_weights_for_match.duplicate(true)
 	}
 
 
