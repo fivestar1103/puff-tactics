@@ -2,6 +2,7 @@ extends Node2D
 class_name TurnManager
 
 signal phase_changed(phase: StringName, active_side: StringName, turn_number: int)
+signal battle_ended(winner: StringName)
 signal puff_selected(puff: Puff)
 signal action_resolved(side: StringName, action_payload: Dictionary)
 
@@ -224,6 +225,7 @@ func end_battle(winner: StringName) -> void:
 	_battle_has_ended = true
 	_is_action_locked = false
 	_is_resolving_bump = false
+	emit_signal("battle_ended", winner)
 	_emit_signal_bus("battle_ended", [winner])
 	set_process_unhandled_input(false)
 	_clear_selection()

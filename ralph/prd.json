@@ -480,8 +480,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 25,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Added HUD to TurnBattle.tscn with CanvasLayer/HudLayer and TurnBanner, ScorePanel, ResultOverlay nodes. Created src/scripts/ui/battle_hud.gd on HudLayer to drive UI from TurnManager phase_changed and battle_ended signals, showing turn banners ('Your Turn', 'Enemy Turn', 'Resolving...') and victory/defeat result overlay. Styled HUD elements via VisualTheme helpers and GDD palette constants, and added TurnManager.battle_ended(StringName) signal to support battle completion HUD state.",
       "dependsOn": ["US-021"]
     },
     {

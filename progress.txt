@@ -32,3 +32,4 @@
 [2026-02-14] US-023: Added terrain indicator symbols and gradient shading in BattleMap tile atlas generation for all terrain types (cloud puff, high cloud arrow, candy swirl, puddle waves, cliff triangle, mushroom cap) plus thicker cliff border emphasis.
 
 [2026-02-14] US-024: Redesigned the FeedMain UI by applying VisualTheme label/button styling: title/subtitle use themed fonts/colors, FAB buttons use PALETTE_SKY/PEACH/MINT with shared button theme helper, and added SwipeHintLabel at bottom center to indicate upward swipe progression.
+[2026-02-14] US-025: Added HUD Layer to TurnBattle with TurnBanner/ScorePanel/ResultOverlay and new battle_hud.gd. HUD now updates on TurnManager phase changes, shows player/enemy turn banner states and displays semi-transparent victory/defeat overlay at battle end.

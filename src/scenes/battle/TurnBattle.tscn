@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="PackedScene" path="res://src/scenes/maps/BattleMap.tscn" id="1_nj67n"]
 [ext_resource type="Script" path="res://src/scripts/core/turn_manager.gd" id="2_58ceu"]
 [ext_resource type="Script" path="res://src/scripts/ai/enemy_intent.gd" id="3_s4lgc"]
+[ext_resource type="Script" path="res://src/scripts/ui/battle_hud.gd" id="4_1g5h4"]
 
 [node name="TurnBattle" type="Node2D"]
 
@@ -16,3 +17,20 @@ battle_map_path = NodePath("../BattleMap")
 script = ExtResource("3_s4lgc")
 battle_map_path = NodePath("../BattleMap")
 turn_manager_path = NodePath("../TurnManager")
+
+[node name="HudLayer" type="CanvasLayer" parent="."]
+script = ExtResource("4_1g5h4")
+turn_manager_path = NodePath("../TurnManager")
+
+[node name="TurnBanner" type="Label" parent="HudLayer"]
+
+[node name="ScorePanel" type="PanelContainer" parent="HudLayer"]
+
+[node name="ScoreLabel" type="Label" parent="ScorePanel"]
+text = "Turn 1"
+
+[node name="ResultOverlay" type="ColorRect" parent="HudLayer"]
+visible = false
+color = Color(0, 0, 0, 0.45)
+
+[node name="ResultLabel" type="Label" parent="ResultOverlay"]
