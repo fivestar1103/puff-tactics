@@ -1,0 +1,7 @@
+# Puff Tactics — Progress Log
+# Each entry records what was completed per Ralph loop iteration.
+# Format: [date] US-XXX: summary
+
+# --- Project initialized ---
+# [2026-02-14] Project structure created. Godot 4 project.godot configured.
+# PRD with 20 user stories covering M1-M6 scope. Ralph loop ready.

@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sudo apt install:*)",
+      "Bash(git config:*)",
+      "Bash(python3:*)",
+      "Bash(pip3 install:*)",
+      "Bash(sudo apt-get install:*)",
+      "Bash(node --version:*)",
+      "Bash(npx:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)",
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "Bash(chmod:*)",
+      "Bash(cat:*)",
+      "Bash(./ralph/ralph.sh:*)",
+      "WebSearch",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__get-library-docs",
+      "mcp__godot-mcp__*",
+      "mcp__supabase__*",
+      "mcp__github__*",
+      "mcp__serena__*",
+      "Bash(eza:*)",
+      "Bash(git -C /home/fives/projects/puff-tactics status)",
+      "Bash(git -C /home/fives/projects/puff-tactics log --oneline -5)",
+      "Bash(gh auth status:*)",
+      "Bash(gh auth login:*)",
+      "Bash(git -C /home/fives/projects/puff-tactics add .gitignore CLAUDE.md AGENTS.md project.godot export_presets.cfg.example progress.txt ralph/prd.json ralph/prompt.md ralph/ralph.sh .mcp.json .claude/settings.local.json Puff_Tactics_GDD.docx)"
+    ]
+  }
+}

@@ -1,0 +1,46 @@
+# AGENTS.md — Puff Tactics
+
+Learnings and patterns discovered during development. Updated after each Ralph loop iteration.
+AI coding agents read this file automatically. Keep entries concise and actionable.
+
+## Codebase Patterns
+
+<!-- Add patterns as they are discovered during development -->
+<!-- Examples:
+- "Use SignalBus.emit('feed_item_completed', score) for cross-system events"
+- "Tilemap coordinates use Vector2i, world positions use Vector2"
+- "All Supabase responses must be checked for .error before using .data"
+-->
+
+## Gotchas
+
+<!-- Add gotchas as they are discovered -->
+<!-- Examples:
+- "Godot 4 TileMap uses layers, not separate TileMap nodes"
+- "GDScript await requires the signal, not the function: await signal_name (not await func())"
+- "Supabase Edge Functions need CORS headers for Godot HTTPRequest"
+-->
+
+## Conventions
+
+- GDScript: snake_case functions/variables, PascalCase classes/nodes
+- Signals over direct references; use SignalBus autoload
+- Type hints on all function signatures
+- One story per commit, atomic changes
+- Test scenes in `src/scenes/test/` (not committed to main)
+
+## File Reference
+
+<!-- Add key file locations as the project grows -->
+<!-- Examples:
+- "Game state machine: src/scripts/core/game_state.gd"
+- "Feed controller: src/scripts/feed/feed_controller.gd"
+-->
+
+## Supabase Notes
+
+<!-- Add Supabase-specific learnings -->
+<!-- Examples:
+- "RLS policies require auth.uid() check on all user-scoped tables"
+- "Edge Functions timeout at 60s — keep puzzle generation batches small"
+-->

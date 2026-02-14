@@ -1,0 +1,9 @@
+; Copy this to export_presets.cfg and fill in your signing credentials
+; DO NOT commit export_presets.cfg — it contains secrets
+
+[preset.0]
+name="iOS"
+platform="iOS"
+runnable=true
+custom_features=""
+export_filter="all_resources"

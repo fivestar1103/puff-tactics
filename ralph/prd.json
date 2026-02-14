@@ -1,0 +1,353 @@
+{
+  "name": "Puff Tactics",
+  "branchName": "main",
+  "description": "Tactical feed game for iOS. Feed-first micro-puzzle gameplay with bump mechanics, async PvP, and procedural content generation. Built in Godot 4 with Supabase backend.",
+  "qualityGates": [
+    "All .gd scripts have no syntax errors",
+    "Scene files have no broken references",
+    "Commits are atomic (one story each)"
+  ],
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Core constants and autoloads",
+      "description": "As a developer, I want a constants file and signal bus autoload so that all systems share common definitions.",
+      "acceptanceCriteria": [
+        "src/scripts/core/constants.gd exists with element enum (FIRE, WATER, GRASS, WIND, STAR), puff class enum, grid size constants, and color palette constants",
+        "src/scripts/core/signal_bus.gd exists as an autoload with signals for feed_item_completed, puff_moved, puff_bumped, turn_ended, battle_ended",
+        "Both are registered as autoloads in project.godot",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "",
+      "dependsOn": []
+    },
+    {
+      "id": "US-002",
+      "title": "Isometric tilemap with terrain types",
+      "description": "As a player, I want to see a 5x5 isometric tilemap with different terrain types so that I can understand the battlefield.",
+      "acceptanceCriteria": [
+        "src/scenes/maps/BattleMap.tscn exists with a TileMapLayer node using isometric tiles",
+        "src/scripts/core/battle_map.gd handles tile data: terrain type (cloud, high_cloud, cotton_candy, puddle, cliff, mushroom) stored per cell",
+        "Terrain effects defined per type matching GDD (high ground +1 attack, cliff = knockout on fall, etc.)",
+        "Placeholder colored tiles distinguish each terrain type visually",
+        "Map can be loaded from a dictionary/JSON config for procedural generation",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-001"]
+    },
+    {
+      "id": "US-003",
+      "title": "Puff entity and class system",
+      "description": "As a developer, I want puff entities with stats, elements, and classes so that gameplay can reference them.",
+      "acceptanceCriteria": [
+        "src/scripts/puffs/puff_data.gd resource class with: element, puff_class, move_range, attack_range, hp, attack, defense, unique_skill_id",
+        "src/scripts/puffs/puff.gd scene script that displays a puff on the tilemap with placeholder sprite",
+        "All 6 base puff classes defined as resources: Cloud(tank), Flame(melee), Droplet(ranged), Leaf(healer), Whirl(mobility), Star(wildcard)",
+        "Element affinity system: damage multiplier lookup for element matchups",
+        "src/scenes/puffs/Puff.tscn scene with Sprite2D + collision shape",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-001"]
+    },
+    {
+      "id": "US-004",
+      "title": "Turn system and action selection",
+      "description": "As a player, I want to select a puff and choose move/attack/skill actions during my turn so that I can make tactical decisions.",
+      "acceptanceCriteria": [
+        "src/scripts/core/turn_manager.gd manages turn order and phase (player_select, player_action, enemy_action, resolve)",
+        "Tap a friendly puff to select it; show movement range as highlighted tiles",
+        "Tap a valid tile to move; tap an enemy in attack range to attack",
+        "After player acts, turn resolves and advances",
+        "Turn state machine handles transitions cleanly",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-002", "US-003"]
+    },
+    {
+      "id": "US-005",
+      "title": "Bump mechanic (core push physics)",
+      "description": "As a player, I want to push adjacent puffs so that chain bumps and cliff knockouts create tactical depth.",
+      "acceptanceCriteria": [
+        "src/scripts/battle/bump_system.gd handles bump logic",
+        "Any puff can bump an adjacent opponent 1 tile away from the bumper",
+        "Chain bumps: if A bumps B into C, C is also pushed",
+        "Cliff knockout: puff pushed off a cliff tile gets 1-turn stun (removed from play for 1 turn)",
+        "Bump direction follows grid adjacency rules for isometric layout",
+        "Visual feedback: pushed puffs animate along the path",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-004"]
+    },
+    {
+      "id": "US-006",
+      "title": "Enemy intent display (Into the Breach style)",
+      "description": "As a player, I want to see what enemies plan to do next so that I make strategic decisions, not guesses.",
+      "acceptanceCriteria": [
+        "src/scripts/ai/enemy_intent.gd calculates and stores each enemy's planned action",
+        "Semi-transparent overlay shows: move destination arrow, attack target highlight, skill area preview",
+        "Intents update when player actions change the board state (reactive recalc)",
+        "Visual style: ghosted/transparent icons on tiles matching GDD tone",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-004"]
+    },
+    {
+      "id": "US-007",
+      "title": "Basic Utility AI for enemies",
+      "description": "As the game, I want enemies to choose smart actions via utility scoring so that puzzles feel fair and challenging.",
+      "acceptanceCriteria": [
+        "src/scripts/ai/utility_ai.gd scores candidate actions per puff",
+        "Scoring factors: attack value, survival risk, positional advantage, bump opportunity",
+        "Each enemy evaluates all legal actions and picks highest score",
+        "AI difficulty can be tuned via weight multipliers",
+        "AI decisions feed into the enemy intent display system",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-006"]
+    },
+    {
+      "id": "US-008",
+      "title": "Vertical swipe feed UI",
+      "description": "As a player, I want to swipe up through tactical snapshots like a social media feed so that the UX feels instant and addictive.",
+      "acceptanceCriteria": [
+        "src/scenes/feed/FeedMain.tscn is the main scene (app entry point)",
+        "Vertical swipe gesture detection: swipe up = next item, swipe down = previous",
+        "Feed items snap into place with smooth animation",
+        "Each feed item contains a battle snapshot (map + puffs + enemy intents)",
+        "Bottom FAB buttons for profile/create/leaderboard",
+        "Portrait orientation locked",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-002", "US-003"]
+    },
+    {
+      "id": "US-009",
+      "title": "Feed item: micro-puzzle gameplay loop",
+      "description": "As a player, I want to play a 1-turn micro-puzzle from the feed, see results, get scored, and swipe to the next one.",
+      "acceptanceCriteria": [
+        "src/scripts/feed/feed_item.gd loads a puzzle snapshot (map config + puff positions + enemy intents)",
+        "Player makes 1 turn of decisions (move/attack/bump for each friendly puff)",
+        "Turn resolves with result animation (3 seconds per GDD)",
+        "Score/comparison screen shown (2 seconds per GDD)",
+        "Swipe up transitions to next feed item",
+        "Full cycle: 20-35 seconds as specified in GDD",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-005", "US-007", "US-008"]
+    },
+    {
+      "id": "US-010",
+      "title": "Procedural puzzle generator",
+      "description": "As the system, I want to auto-generate micro-puzzles from templates so that content never runs out.",
+      "acceptanceCriteria": [
+        "src/scripts/utils/puzzle_generator.gd creates puzzles from templates",
+        "Templates: bump-to-cliff-kill, defeat-N-in-1-turn, heal-all-allies, minimum-moves",
+        "Generator places puffs and terrain according to template + difficulty params",
+        "Auto-validation: simulates to confirm puzzle is solvable",
+        "Output: JSON-serializable puzzle snapshot ready for feed",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-005", "US-007"]
+    },
+    {
+      "id": "US-011",
+      "title": "Supabase client and authentication",
+      "description": "As a player, I want to sign in (or play as guest) so that my progress is saved.",
+      "acceptanceCriteria": [
+        "src/scripts/network/supabase_client.gd wraps HTTPRequest for Supabase REST API",
+        "Guest mode: generates anonymous UUID, stores locally",
+        "Apple Sign-In integration stub (ready for iOS export)",
+        "Auth token stored securely and refreshed automatically",
+        "All API calls include auth headers",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-001"]
+    },
+    {
+      "id": "US-012",
+      "title": "Feed data sync with Supabase",
+      "description": "As the system, I want to fetch feed items from Supabase and cache them locally so that app open = 0-second load.",
+      "acceptanceCriteria": [
+        "src/scripts/network/feed_sync.gd fetches feed_items from Supabase in batches of 50",
+        "Local cache: feed items stored as JSON in user://feed_cache/",
+        "On app open: render from cache instantly, background-fetch next batch",
+        "Feed results (scores) posted back to Supabase after each item",
+        "Offline fallback: cached items playable without network",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-009", "US-011"]
+    },
+    {
+      "id": "US-013",
+      "title": "Full match battle mode",
+      "description": "As a player, I want to play a full 5-8 turn battle with my own puff team so that I get deeper tactical engagement.",
+      "acceptanceCriteria": [
+        "src/scenes/battle/FullBattle.tscn extends the 1-turn system to multi-turn battles",
+        "Team selection screen: pick 3-4 puffs from roster",
+        "Win condition: eliminate all enemy puffs or control majority of tiles",
+        "Battle log recorded as JSON for 'decisive moment' extraction",
+        "Victory/defeat screen with rewards summary",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-009"]
+    },
+    {
+      "id": "US-014",
+      "title": "Decisive moment extraction",
+      "description": "As the system, I want to identify the most impactful turn from a full battle so that it becomes a feed item for other players.",
+      "acceptanceCriteria": [
+        "src/scripts/utils/moment_extractor.gd analyzes battle logs",
+        "Extraction criteria: HP swing >= 30%, unit knockout occurred, unique skill changed outcome",
+        "Extracted moment is packaged as a feed-compatible snapshot",
+        "Snapshot includes: map state before the turn, all puff positions, enemy intents, original player's action and result",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-013"]
+    },
+    {
+      "id": "US-015",
+      "title": "Async PvP system",
+      "description": "As a player, I want to challenge other players' AI ghosts so that I get competitive gameplay without real-time networking.",
+      "acceptanceCriteria": [
+        "Opponent team + AI weights uploaded to Supabase after each battle",
+        "Matchmaking: fetch opponents near player's ELO from leaderboards table",
+        "Battle runs locally against opponent's AI ghost",
+        "Results posted to Supabase, ELO updated",
+        "Battle log available for decisive moment extraction",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-013", "US-011"]
+    },
+    {
+      "id": "US-016",
+      "title": "Puff accessory and growth system",
+      "description": "As a player, I want to level up my puffs and equip accessories so that I have progression goals.",
+      "acceptanceCriteria": [
+        "Puff XP and level system: XP from feed + battles, stat growth per level",
+        "Accessory system: hat/scarf/ribbon slots with bonus effects",
+        "Accessory visually changes puff sprite (overlay layer)",
+        "Accessories stored as resources, equipped via puff_data",
+        "Collection screen showing owned accessories",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-003"]
+    },
+    {
+      "id": "US-017",
+      "title": "UGC puzzle editor",
+      "description": "As a player, I want to create my own puzzle scenarios and share them so that the community generates content.",
+      "acceptanceCriteria": [
+        "src/scenes/ui/PuzzleEditor.tscn with drag-and-drop puff/terrain placement",
+        "Place puffs on any tile, set their element/class/team",
+        "Set win condition from templates",
+        "Test-play before publishing",
+        "Serialize to JSON and upload to ugc_puzzles table on Supabase",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-010", "US-011"]
+    },
+    {
+      "id": "US-018",
+      "title": "Squash & stretch animations",
+      "description": "As a player, I want puffs to bounce, squish, and stretch during movement and combat so that the game feels alive and cute.",
+      "acceptanceCriteria": [
+        "src/scripts/ui/puff_animator.gd with squash_and_stretch tween functions",
+        "Move: puff bounces along path tiles",
+        "Attack: puff inflates briefly then squishes on impact",
+        "Bump: pushed puff stretches in direction of push, bounces on landing",
+        "Defeat: puff deflates (ppyu~ shrink) and fades out",
+        "Heal: gentle glow + slight float-up",
+        "All animations use Godot Tween system, configurable duration",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 18,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-003"]
+    },
+    {
+      "id": "US-019",
+      "title": "Score and comparison overlay",
+      "description": "As a player, I want to see my score compared to the original player (for decisive moments) or community average so that I feel competitive.",
+      "acceptanceCriteria": [
+        "Score calculated from: enemies defeated, damage dealt, puffs surviving, turns used",
+        "For decisive moments: 'Did you do better than the original player?' comparison",
+        "For micro-puzzles: percentile ranking vs other players",
+        "Animated score reveal (numbers counting up)",
+        "Share button stub for future social features",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 19,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-009"]
+    },
+    {
+      "id": "US-020",
+      "title": "Story mode chapter 1",
+      "description": "As a player, I want a guided story campaign to learn the game and meet puff characters.",
+      "acceptanceCriteria": [
+        "5-8 scripted battles with dialogue between them",
+        "Introduces each puff class one at a time across battles",
+        "Tutorial integrated: first 2 battles teach move/attack, 3rd teaches bump, 4th teaches terrain",
+        "Simple dialogue system with character portraits",
+        "Chapter completion rewards: unlock puffs + accessories",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 20,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-013", "US-018"]
+    }
+  ]
+}
