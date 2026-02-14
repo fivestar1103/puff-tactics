@@ -29,6 +29,10 @@ const CARDINAL_OFFSETS: Array[Vector2i] = [
 const DEFAULT_TILE_SIZE: Vector2 = Vector2(128.0, 64.0)
 const MOVE_HIGHLIGHT_COLOR: Color = Color(0.5, 0.87, 0.64, 0.38)
 const MOVE_HIGHLIGHT_BORDER_COLOR: Color = Color(0.18, 0.56, 0.32, 0.9)
+const BUMP_SYSTEM_SCRIPT: GDScript = preload("res://src/scripts/battle/bump_system.gd")
+const BUMP_PUSH_DURATION: float = 0.16
+const BUMP_FALL_DURATION: float = 0.22
+const BUMP_FALL_DROP_OFFSET: Vector2 = Vector2(0.0, 36.0)
 
 const DEMO_PUFFS: Array[Dictionary] = [
 	{
@@ -70,6 +74,13 @@ var _highlighted_move_cells: Array[Vector2i] = []
 var _puffs_by_id: Dictionary = {}
 var _team_by_puff_id: Dictionary = {}
 var _hp_by_puff_id: Dictionary = {}
+var _team_turn_index: Dictionary = {
+	TEAM_PLAYER: 0,
+	TEAM_ENEMY: 0
+}
+var _stun_state_by_puff_id: Dictionary = {}
+var _bump_system: RefCounted = BUMP_SYSTEM_SCRIPT.new()
+var _is_resolving_bump: bool = false
 
 
 func _ready() -> void:
@@ -88,6 +99,8 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _is_resolving_bump:
+		return
 	var tap_screen_position: Variant = _extract_tap_screen_position(event)
 	if tap_screen_position == null:
 		return
@@ -112,9 +125,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		if _is_team_member(tapped_puff, TEAM_PLAYER):
 			_select_player_puff(tapped_puff)
 			return
-		if _is_team_member(tapped_puff, TEAM_ENEMY) and _can_attack(_selected_puff, tapped_puff):
-			_perform_attack(_selected_puff, tapped_puff)
-			return
+		if _is_team_member(tapped_puff, TEAM_ENEMY):
+			if _can_bump(_selected_puff, tapped_puff):
+				if _perform_bump(_selected_puff, tapped_puff):
+					return
+			if _can_attack(_selected_puff, tapped_puff):
+				_perform_attack(_selected_puff, tapped_puff)
+				return
 
 	var tapped_cell: Vector2i = _world_to_cell(world_position)
 	if _can_move_to_cell(tapped_cell):
@@ -219,22 +236,27 @@ func _build_demo_puff_name(puff_config: Dictionary) -> String:
 
 func _begin_player_turn(force: bool = false) -> void:
 	active_side_index = turn_order.find(TEAM_PLAYER)
+	_increment_team_turn(TEAM_PLAYER)
+	_recover_stunned_puffs_for_team(TEAM_PLAYER)
 	_clear_selection()
-	_set_phase(PHASE_PLAYER_SELECT, force)
+	if _set_phase(PHASE_PLAYER_SELECT, force) and _get_actionable_team_puffs(TEAM_PLAYER).is_empty():
+		call_deferred("_skip_player_turn_without_actions")
 
 
 func _begin_enemy_turn() -> void:
 	active_side_index = turn_order.find(TEAM_ENEMY)
+	_increment_team_turn(TEAM_ENEMY)
+	_recover_stunned_puffs_for_team(TEAM_ENEMY)
 	_clear_selection()
 	if _set_phase(PHASE_ENEMY_ACTION):
 		call_deferred("_execute_enemy_action")
 
 
 func _execute_enemy_action() -> void:
-	if current_phase != PHASE_ENEMY_ACTION:
+	if current_phase != PHASE_ENEMY_ACTION or _is_resolving_bump:
 		return
 
-	var enemy_units: Array[Puff] = _get_alive_team_puffs(TEAM_ENEMY)
+	var enemy_units: Array[Puff] = _get_actionable_team_puffs(TEAM_ENEMY)
 	if enemy_units.is_empty():
 		_finish_current_action()
 		return
@@ -244,6 +266,10 @@ func _execute_enemy_action() -> void:
 	if player_target == null:
 		_finish_current_action()
 		return
+
+	if _can_bump(enemy_actor, player_target):
+		if _perform_bump(enemy_actor, player_target):
+			return
 
 	if _can_attack(enemy_actor, player_target):
 		_perform_attack(enemy_actor, player_target)
@@ -262,6 +288,8 @@ func _select_player_puff(puff: Puff) -> void:
 		return
 	if not _is_team_member(puff, TEAM_PLAYER):
 		return
+	if not _is_puff_actionable(puff):
+		return
 
 	_selected_puff = puff
 	var move_range: int = _resolve_move_range(puff)
@@ -278,6 +306,8 @@ func _select_player_puff(puff: Puff) -> void:
 func _perform_move(actor: Puff, target_cell: Vector2i) -> void:
 	if actor == null:
 		return
+	if not _is_puff_actionable(actor):
+		return
 	var from_cell: Vector2i = actor.grid_cell
 	actor.set_grid_cell(target_cell)
 	_emit_signal_bus("puff_moved", [StringName(actor.name), from_cell, target_cell])
@@ -286,6 +316,8 @@ func _perform_move(actor: Puff, target_cell: Vector2i) -> void:
 
 func _perform_attack(attacker: Puff, defender: Puff) -> void:
 	if attacker == null or defender == null:
+		return
+	if not _is_puff_actionable(attacker) or not _is_puff_actionable(defender):
 		return
 
 	var defender_id: int = defender.get_instance_id()
@@ -300,10 +332,119 @@ func _perform_attack(attacker: Puff, defender: Puff) -> void:
 	_finish_current_action()
 
 
+func _perform_bump(attacker: Puff, defender: Puff) -> bool:
+	if attacker == null or defender == null:
+		return false
+	if _is_resolving_bump:
+		return false
+	if not _is_puff_actionable(attacker) or not _is_puff_actionable(defender):
+		return false
+
+	var bump_result: Dictionary = _bump_system.resolve_bump(
+		attacker,
+		defender,
+		Callable(self, "_get_actionable_puff_at_cell"),
+		Callable(self, "_is_cell_in_bounds"),
+		Callable(self, "_is_cliff_cell")
+	)
+	if not bool(bump_result.get("valid", false)):
+		return false
+
+	var pushes: Array = bump_result.get("pushes", [])
+	if pushes.is_empty():
+		return false
+
+	var direction: Vector2i = bump_result.get("direction", Vector2i.ZERO)
+	_is_resolving_bump = true
+	call_deferred("_run_bump_resolution", pushes, direction)
+	return true
+
+
+func _run_bump_resolution(pushes: Array, direction: Vector2i) -> void:
+	await _animate_bump_pushes(pushes, direction)
+	_apply_bump_pushes(pushes, direction)
+	_is_resolving_bump = false
+	_finish_current_action()
+
+
+func _animate_bump_pushes(pushes: Array, direction: Vector2i) -> void:
+	var tween: Tween = create_tween()
+	tween.set_parallel(true)
+	var has_animation: bool = false
+
+	for push_variant in pushes:
+		if not (push_variant is Dictionary):
+			continue
+		var push: Dictionary = push_variant
+		var puff_variant: Variant = push.get("puff")
+		if not (puff_variant is Puff):
+			continue
+		var puff: Puff = puff_variant
+		if not is_instance_valid(puff):
+			continue
+
+		var from_cell: Vector2i = push.get("from_cell", puff.grid_cell)
+		var fell_from_cliff: bool = bool(push.get("fell_from_cliff", false))
+		if fell_from_cliff:
+			var from_world: Vector2 = _cell_to_world(from_cell)
+			var step_world: Vector2 = _cell_to_world(from_cell + direction) - from_world
+			var fall_target: Vector2 = from_world + step_world + BUMP_FALL_DROP_OFFSET
+			tween.tween_property(puff, "global_position", fall_target, BUMP_FALL_DURATION).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+			tween.tween_property(puff, "modulate:a", 0.0, BUMP_FALL_DURATION)
+			has_animation = true
+			continue
+
+		var to_cell: Vector2i = push.get("to_cell", from_cell)
+		var target_world: Vector2 = _cell_to_world(to_cell)
+		tween.tween_property(puff, "global_position", target_world, BUMP_PUSH_DURATION).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		has_animation = true
+
+	if has_animation:
+		await tween.finished
+
+
+func _apply_bump_pushes(pushes: Array, direction: Vector2i) -> void:
+	for push_variant in pushes:
+		if not (push_variant is Dictionary):
+			continue
+		var push: Dictionary = push_variant
+		var puff_variant: Variant = push.get("puff")
+		if not (puff_variant is Puff):
+			continue
+		var puff: Puff = puff_variant
+		if not is_instance_valid(puff):
+			continue
+
+		var puff_name: StringName = StringName(puff.name)
+		var from_cell: Vector2i = push.get("from_cell", puff.grid_cell)
+		var fell_from_cliff: bool = bool(push.get("fell_from_cliff", false))
+		_emit_signal_bus("puff_bumped", [puff_name, direction])
+
+		if fell_from_cliff:
+			_apply_cliff_stun(puff, from_cell)
+			continue
+
+		var to_cell: Vector2i = push.get("to_cell", from_cell)
+		puff.modulate.a = 1.0
+		puff.set_grid_cell(to_cell)
+		_emit_signal_bus("puff_moved", [puff_name, from_cell, to_cell])
+
+
 func _finish_current_action() -> void:
 	if not _set_phase(PHASE_RESOLVE):
 		return
 	_resolve_phase()
+
+
+func _skip_player_turn_without_actions() -> void:
+	if _active_side() != TEAM_PLAYER:
+		return
+	if current_phase != PHASE_PLAYER_SELECT:
+		return
+	if not _get_actionable_team_puffs(TEAM_PLAYER).is_empty():
+		return
+	if _set_phase(PHASE_PLAYER_ACTION):
+		_finish_current_action()
 
 
 func _resolve_phase() -> void:
@@ -385,6 +526,8 @@ func _get_puff_at_world_position(world_position: Vector2) -> Puff:
 func _can_move_to_cell(target_cell: Vector2i) -> bool:
 	if _selected_puff == null:
 		return false
+	if not _is_puff_actionable(_selected_puff):
+		return false
 	if not _is_cell_in_bounds(target_cell):
 		return false
 	if target_cell == _selected_puff.grid_cell:
@@ -392,10 +535,22 @@ func _can_move_to_cell(target_cell: Vector2i) -> bool:
 	return _reachable_cells.has(target_cell)
 
 
+func _can_bump(attacker: Puff, defender: Puff) -> bool:
+	if attacker == null or defender == null:
+		return false
+	if attacker == defender:
+		return false
+	if not _is_puff_actionable(attacker) or not _is_puff_actionable(defender):
+		return false
+	return _bump_system.can_bump(attacker.grid_cell, defender.grid_cell)
+
+
 func _can_attack(attacker: Puff, defender: Puff) -> bool:
 	if attacker == null or defender == null:
 		return false
 	if attacker == defender:
+		return false
+	if not _is_puff_actionable(attacker) or not _is_puff_actionable(defender):
 		return false
 	if not _is_cell_in_bounds(attacker.grid_cell) or not _is_cell_in_bounds(defender.grid_cell):
 		return false
@@ -452,7 +607,7 @@ func _find_next_step_toward(origin: Vector2i, target: Vector2i, max_steps: int, 
 
 
 func _find_closest_target(actor: Puff, target_team: StringName) -> Puff:
-	var targets: Array[Puff] = _get_alive_team_puffs(target_team)
+	var targets: Array[Puff] = _get_actionable_team_puffs(target_team)
 	if targets.is_empty():
 		return null
 
@@ -536,10 +691,24 @@ func _resolve_tile_size(tile_map_layer: TileMapLayer) -> Vector2:
 	return Vector2(tile_map_layer.tile_set.tile_size)
 
 
+func _cell_to_world(cell: Vector2i) -> Vector2:
+	var tile_map_layer: TileMapLayer = _resolve_tile_map_layer()
+	if tile_map_layer == null:
+		return Vector2.ZERO
+	var cell_local: Vector2 = tile_map_layer.map_to_local(cell)
+	return tile_map_layer.to_global(cell_local)
+
+
 func _is_cell_in_bounds(cell: Vector2i) -> bool:
 	if _battle_map == null:
 		return false
 	return cell.x >= 0 and cell.y >= 0 and cell.x < _battle_map.map_size.x and cell.y < _battle_map.map_size.y
+
+
+func _is_cliff_cell(cell: Vector2i) -> bool:
+	if _battle_map == null:
+		return false
+	return _battle_map.get_terrain_at(cell) == "cliff"
 
 
 func _is_cell_occupied(cell: Vector2i, ignored_puff: Puff = null) -> bool:
@@ -548,6 +717,8 @@ func _is_cell_occupied(cell: Vector2i, ignored_puff: Puff = null) -> bool:
 		if puff == null or not is_instance_valid(puff):
 			continue
 		if puff == ignored_puff:
+			continue
+		if _is_puff_stunned(puff):
 			continue
 		if puff.grid_cell == cell:
 			return true
@@ -582,6 +753,38 @@ func _get_alive_team_puffs(team: StringName) -> Array[Puff]:
 	return team_puffs
 
 
+func _get_actionable_team_puffs(team: StringName) -> Array[Puff]:
+	var team_puffs: Array[Puff] = []
+	for puff in _get_alive_team_puffs(team):
+		if _is_puff_actionable(puff):
+			team_puffs.append(puff)
+	return team_puffs
+
+
+func _get_actionable_puff_at_cell(cell: Vector2i) -> Puff:
+	for puff_variant in _puffs_by_id.values():
+		var puff: Puff = puff_variant
+		if puff == null or not is_instance_valid(puff):
+			continue
+		if not _is_puff_actionable(puff):
+			continue
+		if puff.grid_cell == cell:
+			return puff
+	return null
+
+
+func _is_puff_actionable(puff: Puff) -> bool:
+	if puff == null or not is_instance_valid(puff):
+		return false
+	return not _is_puff_stunned(puff)
+
+
+func _is_puff_stunned(puff: Puff) -> bool:
+	if puff == null:
+		return false
+	return _stun_state_by_puff_id.has(puff.get_instance_id())
+
+
 func _grid_distance(a: Vector2i, b: Vector2i) -> int:
 	return absi(a.x - b.x) + absi(a.y - b.y)
 
@@ -590,6 +793,95 @@ func _active_side() -> StringName:
 	if active_side_index < 0 or active_side_index >= turn_order.size():
 		return TEAM_PLAYER
 	return turn_order[active_side_index]
+
+
+func _increment_team_turn(team: StringName) -> void:
+	var current_index: int = int(_team_turn_index.get(team, 0))
+	_team_turn_index[team] = current_index + 1
+
+
+func _apply_cliff_stun(puff: Puff, return_cell: Vector2i) -> void:
+	if puff == null or not is_instance_valid(puff):
+		return
+	var puff_id: int = puff.get_instance_id()
+	var team: StringName = _team_by_puff_id.get(puff_id, &"")
+	if team != TEAM_PLAYER and team != TEAM_ENEMY:
+		return
+
+	var current_team_turn: int = int(_team_turn_index.get(team, 0))
+	_stun_state_by_puff_id[puff_id] = {
+		"team": team,
+		"recover_on_team_turn": current_team_turn + 2,
+		"return_cell": return_cell
+	}
+
+	puff.monitoring = false
+	puff.monitorable = false
+	puff.visible = false
+	puff.modulate.a = 1.0
+	puff.set_grid_cell(return_cell)
+
+
+func _recover_stunned_puffs_for_team(team: StringName) -> void:
+	var current_team_turn: int = int(_team_turn_index.get(team, 0))
+	var recovered_ids: Array[int] = []
+
+	for puff_id_variant in _stun_state_by_puff_id.keys():
+		var puff_id: int = int(puff_id_variant)
+		var stun_state: Dictionary = _stun_state_by_puff_id[puff_id]
+		if stun_state.get("team", &"") != team:
+			continue
+
+		var recover_on_turn: int = int(stun_state.get("recover_on_team_turn", current_team_turn))
+		if current_team_turn < recover_on_turn:
+			continue
+
+		var puff_variant: Variant = _puffs_by_id.get(puff_id)
+		if not (puff_variant is Puff):
+			recovered_ids.append(puff_id)
+			continue
+
+		var puff: Puff = puff_variant
+		if not is_instance_valid(puff):
+			recovered_ids.append(puff_id)
+			continue
+
+		var return_cell: Vector2i = stun_state.get("return_cell", puff.grid_cell)
+		puff.set_grid_cell(_find_reentry_cell(return_cell, puff))
+		puff.monitoring = true
+		puff.monitorable = true
+		puff.visible = true
+		puff.modulate.a = 1.0
+		recovered_ids.append(puff_id)
+
+	for recovered_id in recovered_ids:
+		_stun_state_by_puff_id.erase(recovered_id)
+
+
+func _find_reentry_cell(preferred_cell: Vector2i, reentering_puff: Puff) -> Vector2i:
+	if _is_cell_in_bounds(preferred_cell) and not _is_cell_occupied(preferred_cell, reentering_puff):
+		return preferred_cell
+
+	var queue: Array[Vector2i] = [preferred_cell]
+	var visited: Dictionary = {preferred_cell: true}
+
+	while not queue.is_empty():
+		var cell: Vector2i = queue.pop_front()
+		for offset in CARDINAL_OFFSETS:
+			var candidate: Vector2i = cell + offset
+			if visited.has(candidate):
+				continue
+			if not _is_cell_in_bounds(candidate):
+				continue
+
+			visited[candidate] = true
+			if not _is_cell_occupied(candidate, reentering_puff):
+				return candidate
+			queue.append(candidate)
+
+	if _is_cell_in_bounds(preferred_cell):
+		return preferred_cell
+	return Vector2i.ZERO
 
 
 func _clear_selection() -> void:
@@ -613,6 +905,7 @@ func _unregister_puff_id(puff_id: int) -> void:
 	_puffs_by_id.erase(puff_id)
 	_team_by_puff_id.erase(puff_id)
 	_hp_by_puff_id.erase(puff_id)
+	_stun_state_by_puff_id.erase(puff_id)
 
 
 func _emit_signal_bus(signal_name: StringName, args: Array = []) -> void:

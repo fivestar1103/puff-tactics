@@ -16,6 +16,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "`BattleMap` terrain data is loaded via `load_map_from_config()` (`rows` or `cells`) or `load_map_from_json()` for procedural snapshots."
 - "Base puff archetypes are `PuffData` `.tres` files in `src/resources/puffs/base/`; `src/scripts/puffs/puff.gd` reads these resources to render placeholder puffs."
 - "`TurnManager` phase flow is `player_select -> player_action -> resolve -> enemy_action -> resolve -> player_select`; movement range overlays are drawn in `_draw()` from tilemap cell centers."
+- "`src/scripts/battle/bump_system.gd` resolves bump chains from tail to head; `TurnManager` applies pushes and treats any pushed puff standing on `cliff` terrain as a 1-turn stun using `_stun_state_by_puff_id` + team-turn recovery."
 
 ## Gotchas
 
@@ -24,6 +25,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "Godot 4.3 is available as `godot`; for syntax checks in this repo use `godot --headless --path /home/fives/projects/puff-tactics --check-only --script <gd_file>` per script (main scene is not present yet)."
 - "GDScript `const` dictionaries must use literal arrays; constructor calls like `PackedStringArray()` are not valid constant expressions."
 - "When instantiating children from a node's `_ready()`, adding to a parent/sibling can hit `Parent node is busy setting up children`; use `call_deferred()` for spawn/setup."
+- "`godot --check-only --script` can fail to resolve cross-file `class_name` references in isolation; preload helper scripts (e.g. `const X_SCRIPT = preload(...); X_SCRIPT.new()`) for deterministic syntax checks."
 
 ## Conventions
 
@@ -44,6 +46,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "Global signals: src/scripts/core/signal_bus.gd"
 - "Battle map terrain system: src/scripts/core/battle_map.gd"
 - "Battle map scene: src/scenes/maps/BattleMap.tscn"
+- "Bump logic: src/scripts/battle/bump_system.gd"
 
 ## Supabase Notes
 

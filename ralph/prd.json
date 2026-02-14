@@ -88,8 +88,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Added src/scripts/battle/bump_system.gd to resolve adjacency-based bump direction, chained pushes, and cliff-fall outcomes. Integrated bump actions into turn_manager.gd for player and enemy turns with animated push/fall feedback, SignalBus puff_bumped emissions, and 1-turn cliff stun removal/recovery handling. Verified behavior with a headless runtime script for chain and cliff cases and re-ran Godot --check-only across all src/scripts/*.gd files.",
       "dependsOn": ["US-004"]
     },
     {
