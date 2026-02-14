@@ -121,8 +121,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 7,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Added src/scripts/ai/utility_ai.gd for utility-based enemy decision scoring with tunable weight multipliers (attack_value, survival_risk, positional_advantage, bump_opportunity). Refactored TurnManager enemy planning to enumerate legal wait/move/attack/skill candidates per enemy, score all candidates, and pick the highest-utility intent for both enemy execution and get_enemy_intent_snapshot() overlay parity. Verified via headless Godot --check-only across all src/scripts/*.gd files and a runtime headless TurnBattle check confirming legal-candidate evaluation and selected-intent/utility-score parity.",
       "dependsOn": ["US-006"]
     },
     {

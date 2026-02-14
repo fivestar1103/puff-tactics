@@ -35,6 +35,7 @@ const DEFAULT_TILE_SIZE: Vector2 = Vector2(128.0, 64.0)
 const MOVE_HIGHLIGHT_COLOR: Color = Color(0.5, 0.87, 0.64, 0.38)
 const MOVE_HIGHLIGHT_BORDER_COLOR: Color = Color(0.18, 0.56, 0.32, 0.9)
 const BUMP_SYSTEM_SCRIPT: GDScript = preload("res://src/scripts/battle/bump_system.gd")
+const UTILITY_AI_SCRIPT: GDScript = preload("res://src/scripts/ai/utility_ai.gd")
 const BUMP_PUSH_DURATION: float = 0.16
 const BUMP_FALL_DURATION: float = 0.22
 const BUMP_FALL_DROP_OFFSET: Vector2 = Vector2(0.0, 36.0)
@@ -65,6 +66,10 @@ const DEMO_PUFFS: Array[Dictionary] = [
 @export var battle_map_path: NodePath
 @export var puff_scene: PackedScene = preload("res://src/scenes/puffs/Puff.tscn")
 @export var auto_spawn_demo_puffs: bool = true
+@export_range(0.0, 5.0, 0.05) var ai_attack_value_weight: float = 1.2
+@export_range(0.0, 5.0, 0.05) var ai_survival_risk_weight: float = 1.0
+@export_range(0.0, 5.0, 0.05) var ai_positional_advantage_weight: float = 0.8
+@export_range(0.0, 5.0, 0.05) var ai_bump_opportunity_weight: float = 1.35
 
 var turn_order: Array[StringName] = [TEAM_PLAYER, TEAM_ENEMY]
 var active_side_index: int = 0
@@ -85,11 +90,13 @@ var _team_turn_index: Dictionary = {
 }
 var _stun_state_by_puff_id: Dictionary = {}
 var _bump_system: RefCounted = BUMP_SYSTEM_SCRIPT.new()
+var _utility_ai: RefCounted = UTILITY_AI_SCRIPT.new()
 var _is_resolving_bump: bool = false
 
 
 func _ready() -> void:
 	z_index = 10
+	_sync_utility_ai_weights()
 	_battle_map = _resolve_battle_map()
 	if _battle_map == null:
 		push_warning("TurnManager requires a BattleMap reference via battle_map_path.")
@@ -258,6 +265,7 @@ func _begin_enemy_turn() -> void:
 
 
 func get_enemy_intent_snapshot() -> Dictionary:
+	_sync_utility_ai_weights()
 	var intents_by_enemy_id: Dictionary = {}
 	for enemy_puff in _get_actionable_team_puffs(TEAM_ENEMY):
 		var puff_id: int = enemy_puff.get_instance_id()
@@ -269,6 +277,7 @@ func _execute_enemy_action() -> void:
 	if current_phase != PHASE_ENEMY_ACTION or _is_resolving_bump:
 		return
 
+	_sync_utility_ai_weights()
 	var enemy_units: Array[Puff] = _get_actionable_team_puffs(TEAM_ENEMY)
 	if enemy_units.is_empty():
 		_finish_current_action()
@@ -603,76 +612,108 @@ func _compute_reachable_cells(origin: Vector2i, max_steps: int, moving_puff: Puf
 	return reachable
 
 
-func _find_next_step_toward(origin: Vector2i, target: Vector2i, max_steps: int, moving_puff: Puff) -> Vector2i:
-	if origin == target or max_steps <= 0:
-		return origin
-
-	var reachable: Array[Vector2i] = _compute_reachable_cells(origin, max_steps, moving_puff)
-	var best_cell: Vector2i = origin
-	var best_distance: int = _grid_distance(origin, target)
-
-	for cell in reachable:
-		var candidate_distance: int = _grid_distance(cell, target)
-		if candidate_distance < best_distance:
-			best_distance = candidate_distance
-			best_cell = cell
-
-	return best_cell
-
-
-func _find_closest_target(actor: Puff, target_team: StringName) -> Puff:
-	var targets: Array[Puff] = _get_actionable_team_puffs(target_team)
-	if targets.is_empty():
-		return null
-
-	var closest_target: Puff = targets[0]
-	var closest_distance: int = _grid_distance(actor.grid_cell, closest_target.grid_cell)
-
-	for target in targets:
-		var candidate_distance: int = _grid_distance(actor.grid_cell, target.grid_cell)
-		if candidate_distance < closest_distance:
-			closest_target = target
-			closest_distance = candidate_distance
-
-	return closest_target
-
-
 func _build_enemy_intent(enemy_actor: Puff) -> Dictionary:
 	var wait_intent: Dictionary = _build_wait_intent(enemy_actor)
 	if enemy_actor == null or not _is_puff_actionable(enemy_actor):
 		return wait_intent
 
-	var player_target: Puff = _find_closest_target(enemy_actor, TEAM_PLAYER)
-	if player_target == null:
+	var candidate_intents: Array[Dictionary] = _build_enemy_candidate_intents(enemy_actor)
+	if candidate_intents.is_empty():
 		return wait_intent
 
-	wait_intent["target_puff_id"] = player_target.get_instance_id()
-	wait_intent["target_cell"] = player_target.grid_cell
-
-	if _can_bump(enemy_actor, player_target):
-		var bump_preview: Dictionary = _bump_system.resolve_bump(
-			enemy_actor,
-			player_target,
-			Callable(self, "_get_actionable_puff_at_cell"),
-			Callable(self, "_is_cell_in_bounds"),
-			Callable(self, "_is_cliff_cell")
-		)
-		wait_intent["action"] = INTENT_ACTION_SKILL
-		wait_intent["skill_cells"] = _collect_bump_preview_cells(bump_preview)
-		wait_intent["direction"] = bump_preview.get("direction", Vector2i.ZERO)
+	var ai_context: Dictionary = _build_utility_ai_context()
+	var selected_intent: Dictionary = _utility_ai.pick_best_intent(enemy_actor, candidate_intents, ai_context)
+	if selected_intent.is_empty():
 		return wait_intent
+	return selected_intent
 
-	if _can_attack(enemy_actor, player_target):
-		wait_intent["action"] = INTENT_ACTION_ATTACK
-		return wait_intent
+
+func _build_enemy_candidate_intents(enemy_actor: Puff) -> Array[Dictionary]:
+	var candidate_intents: Array[Dictionary] = []
+	var wait_intent: Dictionary = _build_wait_intent(enemy_actor)
+	candidate_intents.append(wait_intent)
+
+	if enemy_actor == null or not _is_puff_actionable(enemy_actor):
+		return candidate_intents
+
+	var player_targets: Array[Puff] = _get_actionable_team_puffs(TEAM_PLAYER)
+	if player_targets.is_empty():
+		return candidate_intents
 
 	var move_range: int = _resolve_move_range(enemy_actor)
-	var next_step: Vector2i = _find_next_step_toward(enemy_actor.grid_cell, player_target.grid_cell, move_range, enemy_actor)
-	if next_step != enemy_actor.grid_cell:
-		wait_intent["action"] = INTENT_ACTION_MOVE
-		wait_intent["move_cell"] = next_step
+	var reachable_cells: Array[Vector2i] = _compute_reachable_cells(enemy_actor.grid_cell, move_range, enemy_actor)
+	for reachable_cell in reachable_cells:
+		if reachable_cell == enemy_actor.grid_cell:
+			continue
+		var move_intent: Dictionary = wait_intent.duplicate(true)
+		move_intent["action"] = INTENT_ACTION_MOVE
+		move_intent["move_cell"] = reachable_cell
+		candidate_intents.append(move_intent)
 
-	return wait_intent
+	for player_target in player_targets:
+		if _can_attack(enemy_actor, player_target):
+			var attack_intent: Dictionary = wait_intent.duplicate(true)
+			attack_intent["action"] = INTENT_ACTION_ATTACK
+			attack_intent["target_puff_id"] = player_target.get_instance_id()
+			attack_intent["target_cell"] = player_target.grid_cell
+			candidate_intents.append(attack_intent)
+
+		if not _can_bump(enemy_actor, player_target):
+			continue
+
+		var bump_preview: Dictionary = _build_bump_preview(enemy_actor, player_target)
+		if not bool(bump_preview.get("valid", false)):
+			continue
+
+		var pushes: Array = bump_preview.get("pushes", [])
+		if pushes.is_empty():
+			continue
+
+		var skill_intent: Dictionary = wait_intent.duplicate(true)
+		skill_intent["action"] = INTENT_ACTION_SKILL
+		skill_intent["target_puff_id"] = player_target.get_instance_id()
+		skill_intent["target_cell"] = player_target.grid_cell
+		skill_intent["skill_cells"] = _collect_bump_preview_cells(bump_preview)
+		skill_intent["direction"] = bump_preview.get("direction", Vector2i.ZERO)
+		skill_intent["bump_push_count"] = pushes.size()
+		skill_intent["bump_cliff_falls"] = _count_cliff_falls(pushes)
+		candidate_intents.append(skill_intent)
+
+	return candidate_intents
+
+
+func _build_bump_preview(attacker: Puff, defender: Puff) -> Dictionary:
+	return _bump_system.resolve_bump(
+		attacker,
+		defender,
+		Callable(self, "_get_actionable_puff_at_cell"),
+		Callable(self, "_is_cell_in_bounds"),
+		Callable(self, "_is_cliff_cell")
+	)
+
+
+func _count_cliff_falls(pushes: Array) -> int:
+	var cliff_falls: int = 0
+	for push_variant in pushes:
+		if not (push_variant is Dictionary):
+			continue
+		var push: Dictionary = push_variant
+		if bool(push.get("fell_from_cliff", false)):
+			cliff_falls += 1
+	return cliff_falls
+
+
+func _build_utility_ai_context() -> Dictionary:
+	return {
+		"player_targets": _get_actionable_team_puffs(TEAM_PLAYER),
+		"lookup_puff_by_id": Callable(self, "_lookup_actionable_puff_by_id"),
+		"grid_distance": Callable(self, "_grid_distance"),
+		"resolve_damage": Callable(self, "_calculate_damage"),
+		"resolve_current_hp": Callable(self, "_resolve_current_hp"),
+		"resolve_attack_range": Callable(self, "_resolve_attack_range"),
+		"resolve_terrain_effect_at": Callable(self, "_resolve_terrain_effect_at"),
+		"is_cliff_cell": Callable(self, "_is_cliff_cell")
+	}
 
 
 func _build_wait_intent(actor: Puff) -> Dictionary:
@@ -724,10 +765,14 @@ func _collect_bump_preview_cells(bump_preview: Dictionary) -> Array[Vector2i]:
 
 func _resolve_intent_target_puff(intent: Dictionary) -> Puff:
 	var target_id: int = int(intent.get("target_puff_id", -1))
-	if target_id < 0:
+	return _lookup_actionable_puff_by_id(target_id)
+
+
+func _lookup_actionable_puff_by_id(puff_id: int) -> Puff:
+	if puff_id < 0:
 		return null
 
-	var target_variant: Variant = _puffs_by_id.get(target_id)
+	var target_variant: Variant = _puffs_by_id.get(puff_id)
 	if not (target_variant is Puff):
 		return null
 
@@ -824,6 +869,14 @@ func _is_cliff_cell(cell: Vector2i) -> bool:
 	if _battle_map == null:
 		return false
 	return _battle_map.get_terrain_at(cell) == "cliff"
+
+
+func _resolve_terrain_effect_at(cell: Vector2i) -> Dictionary:
+	if _battle_map == null:
+		return {}
+	if not _is_cell_in_bounds(cell):
+		return {}
+	return _battle_map.get_terrain_effect_at(cell)
 
 
 func _is_cell_occupied(cell: Vector2i, ignored_puff: Puff = null) -> bool:
@@ -1030,3 +1083,14 @@ func _emit_signal_bus(signal_name: StringName, args: Array = []) -> void:
 	var emit_args: Array = [signal_name]
 	emit_args.append_array(args)
 	signal_bus.callv("emit_signal", emit_args)
+
+
+func _sync_utility_ai_weights() -> void:
+	if _utility_ai == null:
+		return
+	_utility_ai.set_weights(
+		ai_attack_value_weight,
+		ai_survival_risk_weight,
+		ai_positional_advantage_weight,
+		ai_bump_opportunity_weight
+	)
