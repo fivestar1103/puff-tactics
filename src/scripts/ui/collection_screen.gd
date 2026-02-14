@@ -3,8 +3,10 @@ class_name CollectionScreen
 
 @export var progression_path: NodePath = NodePath("/root/PuffProgression")
 
+@onready var panel: PanelContainer = $Panel
 @onready var close_button: Button = $Panel/RootLayout/Header/CloseButton
 @onready var subtitle_label: Label = $Panel/RootLayout/Subtitle
+@onready var title_label: Label = $Panel/RootLayout/Header/Title
 @onready var puff_list: VBoxContainer = $Panel/RootLayout/Body/PuffColumn/PuffScroll/PuffList
 @onready var accessory_list: VBoxContainer = $Panel/RootLayout/Body/AccessoryColumn/AccessoryScroll/AccessoryList
 
@@ -14,11 +16,21 @@ var _progression: Node
 func _ready() -> void:
 	visible = false
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_apply_themed_styles()
 	_resolve_progression()
 	if close_button != null:
 		_connect_if_needed(close_button, &"pressed", Callable(self, "hide_collection"))
 	if _progression != null:
 		_connect_if_needed(_progression, &"progression_updated", Callable(self, "_on_progression_updated"))
+
+
+func _apply_themed_styles() -> void:
+	if panel != null:
+		panel.add_theme_stylebox_override("panel", VisualTheme.create_panel_stylebox(Constants.COLOR_BG_CREAM, 22, Constants.COLOR_TEXT_DARK))
+	if title_label != null:
+		VisualTheme.apply_label_theme(title_label, Constants.FONT_SIZE_TITLE, Constants.PALETTE_LAVENDER)
+	if close_button != null:
+		VisualTheme.apply_button_theme(close_button, Constants.PALETTE_PINK, Color.WHITE, Vector2(150.0, 56.0), Constants.FONT_SIZE_BUTTON)
 
 
 func show_collection() -> void:

@@ -37,6 +37,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "BattleMap builds terrain tile art in `src/scripts/core/battle_map.gd::_create_terrain_texture()` via direct `Image` drawing: base gradient fill plus per-terrain symbols and cliff-specific border treatment are applied at atlas generation time."
 - "`TurnManager` now emits `battle_ended(winner)` in addition to `SignalBus` bus events; hook HUD-layer result UI to this signal for scene-local outcome updates."
 - "`src/scripts/ai/enemy_intent.gd` should render movement/skill intents with actor->target arrows and attack intents with crosshair/X overlays to keep intent direction and impact clear."
+- "CollectionScreen and PuzzleEditor UI style is driven from script with VisualTheme helpers (`create_panel_stylebox`, `apply_button_theme`, `apply_label_theme`) in `_ready()`-time setup for consistent button and panel treatment."
 
 ## Gotchas
 
@@ -69,6 +70,8 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "Battle map scene: src/scenes/maps/BattleMap.tscn"
 - "Bump logic: src/scripts/battle/bump_system.gd"
 - "Async PvP sync/matchmaking: src/scripts/network/pvp_async.gd"
+- "Collection UI styling: src/scripts/ui/collection_screen.gd"
+- "UGC editor styling: src/scripts/ui/puzzle_editor.gd"
 
 ## Supabase Notes
 

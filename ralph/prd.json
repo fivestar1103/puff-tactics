@@ -514,8 +514,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 27,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Added _apply_themed_styles() in src/scripts/ui/collection_screen.gd and src/scripts/ui/puzzle_editor.gd. Collection now applies themed cream panel, lavender title text, and pink CloseButton; PuzzleEditor applies themed panel and Apply/Remove/Clear/TestPlay/Publish button colors via VisualTheme helpers.",
       "dependsOn": ["US-021"]
     },
     {

@@ -119,6 +119,7 @@ const DEFAULT_TARGET_SCORE: int = 240
 @onready var test_play_layer: Control = $TestPlayLayer
 @onready var test_play_root: Node2D = $TestPlayLayer/TestPlayRoot
 @onready var exit_test_play_button: Button = $TestPlayLayer/ExitTestPlayButton
+@onready var editor_panel: PanelContainer = $Panel
 
 var _battle_map: BattleMap
 var _puff_state_by_id: Dictionary = {}
@@ -137,6 +138,7 @@ var _last_tested_snapshot_json: String = ""
 func _ready() -> void:
 	visible = false
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_apply_themed_styles()
 
 	_setup_option_buttons()
 	_setup_board()
@@ -144,6 +146,22 @@ func _ready() -> void:
 	_update_selection_label()
 	_set_status("Drag to paint terrain or place puffs. Run test-play before publishing.")
 	_set_publish_status("Test-play required before publishing.")
+
+
+func _apply_themed_styles() -> void:
+	if editor_panel != null:
+		editor_panel.add_theme_stylebox_override("panel", VisualTheme.create_panel_stylebox(Constants.COLOR_BG_CREAM, 22, Constants.COLOR_TEXT_DARK))
+
+	if apply_puff_button != null:
+		VisualTheme.apply_button_theme(apply_puff_button, Constants.PALETTE_SKY, Color.WHITE, Vector2(220.0, 56.0), Constants.FONT_SIZE_BUTTON)
+	if remove_puff_button != null:
+		VisualTheme.apply_button_theme(remove_puff_button, Constants.PALETTE_PINK, Color.WHITE, Vector2(220.0, 56.0), Constants.FONT_SIZE_BUTTON)
+	if clear_board_button != null:
+		VisualTheme.apply_button_theme(clear_board_button, Constants.PALETTE_PEACH, Color.WHITE, Vector2(220.0, 56.0), Constants.FONT_SIZE_BUTTON)
+	if test_play_button != null:
+		VisualTheme.apply_button_theme(test_play_button, Constants.PALETTE_MINT, Color.WHITE, Vector2(220.0, 56.0), Constants.FONT_SIZE_BUTTON)
+	if publish_button != null:
+		VisualTheme.apply_button_theme(publish_button, Constants.PALETTE_LAVENDER, Color.WHITE, Vector2(220.0, 56.0), Constants.FONT_SIZE_BUTTON)
 
 
 func _notification(what: int) -> void:
