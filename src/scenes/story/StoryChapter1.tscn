@@ -1,0 +1,111 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/scripts/story/story_chapter_1.gd" id="1_ufm1g"]
+
+[node name="StoryChapter1" type="Node2D"]
+script = ExtResource("1_ufm1g")
+
+[node name="BattleHost" type="Node2D" parent="."]
+
+[node name="UiLayer" type="CanvasLayer" parent="."]
+
+[node name="DialogueOverlay" type="ColorRect" parent="UiLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.04, 0.06, 0.12, 0.78)
+
+[node name="DialoguePanel" type="PanelContainer" parent="UiLayer/DialogueOverlay"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 120.0
+offset_top = -380.0
+offset_right = -120.0
+offset_bottom = -72.0
+grow_vertical = 0
+
+[node name="DialogueRow" type="HBoxContainer" parent="UiLayer/DialogueOverlay/DialoguePanel"]
+theme_override_constants/separation = 20
+
+[node name="Portrait" type="TextureRect" parent="UiLayer/DialogueOverlay/DialoguePanel/DialogueRow"]
+custom_minimum_size = Vector2(128, 128)
+stretch_mode = 5
+
+[node name="DialogueColumn" type="VBoxContainer" parent="UiLayer/DialogueOverlay/DialoguePanel/DialogueRow"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="SpeakerLabel" type="Label" parent="UiLayer/DialogueOverlay/DialoguePanel/DialogueRow/DialogueColumn"]
+theme_override_font_sizes/font_size = 30
+text = "Speaker"
+
+[node name="LineLabel" type="Label" parent="UiLayer/DialogueOverlay/DialoguePanel/DialogueRow/DialogueColumn"]
+size_flags_vertical = 3
+autowrap_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Dialogue text"
+
+[node name="NextButton" type="Button" parent="UiLayer/DialogueOverlay/DialoguePanel/DialogueRow/DialogueColumn"]
+custom_minimum_size = Vector2(180, 64)
+text = "Continue"
+
+[node name="TutorialPanel" type="PanelContainer" parent="UiLayer"]
+anchors_preset = 10
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -420.0
+offset_top = 24.0
+offset_right = 420.0
+offset_bottom = 150.0
+
+[node name="TutorialLabel" type="Label" parent="UiLayer/TutorialPanel"]
+autowrap_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Tutorial"
+
+[node name="ChapterCompleteOverlay" type="ColorRect" parent="UiLayer"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.03, 0.06, 0.11, 0.86)
+
+[node name="ChapterPanel" type="PanelContainer" parent="UiLayer/ChapterCompleteOverlay"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -420.0
+offset_top = -250.0
+offset_right = 420.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ChapterLayout" type="VBoxContainer" parent="UiLayer/ChapterCompleteOverlay/ChapterPanel"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="TitleLabel" type="Label" parent="UiLayer/ChapterCompleteOverlay/ChapterPanel/ChapterLayout"]
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 42
+text = "Chapter Complete"
+
+[node name="SummaryLabel" type="Label" parent="UiLayer/ChapterCompleteOverlay/ChapterPanel/ChapterLayout"]
+size_flags_vertical = 3
+autowrap_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Summary"
+
+[node name="CompleteButton" type="Button" parent="UiLayer/ChapterCompleteOverlay/ChapterPanel/ChapterLayout"]
+custom_minimum_size = Vector2(240, 72)
+text = "Back to Feed"

@@ -5,6 +5,7 @@ const FEED_ITEM_SCRIPT: GDScript = preload("res://src/scripts/feed/feed_item.gd"
 const FEED_SYNC_SCRIPT: GDScript = preload("res://src/scripts/network/feed_sync.gd")
 const COLLECTION_SCREEN_SCENE: PackedScene = preload("res://src/scenes/ui/CollectionScreen.tscn")
 const PUZZLE_EDITOR_SCENE: PackedScene = preload("res://src/scenes/ui/PuzzleEditor.tscn")
+const STORY_CHAPTER_1_SCENE_PATH: String = "res://src/scenes/story/StoryChapter1.tscn"
 
 const SNAP_DURATION: float = 0.28
 const SWIPE_THRESHOLD_PX: float = 120.0
@@ -590,7 +591,9 @@ func _on_create_button_pressed() -> void:
 
 
 func _on_leaderboard_button_pressed() -> void:
-	subtitle_label.text = "Leaderboard tab is wired for async PvP updates."
+	var scene_change_error: Error = get_tree().change_scene_to_file(STORY_CHAPTER_1_SCENE_PATH)
+	if scene_change_error != OK:
+		subtitle_label.text = "Story mode is unavailable in this build."
 
 
 func _is_collection_visible() -> bool:

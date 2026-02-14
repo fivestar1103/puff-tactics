@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="AccessoryData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/scripts/puffs/accessory_data.gd" id="1_5dgxr"]
+
+[resource]
+script = ExtResource("1_5dgxr")
+accessory_id = &"chapter_crown"
+display_name = &"Chapter Crown"
+slot = 0
+bonus_hp = 3
+bonus_defense = 1
+tint_color = Color(0.94, 0.83, 0.4, 1)

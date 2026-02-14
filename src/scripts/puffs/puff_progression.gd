@@ -16,6 +16,11 @@ const PLAYER_BASE_PUFF_PATHS: Array[String] = [
 	"res://src/resources/puffs/base/star_wildcard.tres"
 ]
 
+const INITIAL_STORY_UNLOCKED_PUFF_PATHS: Array[String] = [
+	"res://src/resources/puffs/base/cloud_tank.tres",
+	"res://src/resources/puffs/base/flame_melee.tres"
+]
+
 const STARTING_ACCESSORY_PATHS: Array[String] = [
 	"res://src/resources/accessories/hats/candy_cap.tres",
 	"res://src/resources/accessories/hats/moss_hood.tres",
@@ -67,6 +72,8 @@ var _signal_bus: Node
 var _roster_by_path: Dictionary = {}
 var _owned_accessory_paths: PackedStringArray = []
 var _accessory_cache: Dictionary = {}
+var _story_reward_claims: Dictionary = {}
+var _story_unlocked_puff_paths: PackedStringArray = []
 
 
 func _ready() -> void:
@@ -133,10 +140,74 @@ func equip_accessory_for_puff(puff_data_path: String, accessory_path: String) ->
 	return true
 
 
+func is_story_chapter_reward_claimed(chapter_id: StringName) -> bool:
+	if chapter_id == &"":
+		return false
+	return bool(_story_reward_claims.get(str(chapter_id), false))
+
+
+func grant_story_chapter_rewards(chapter_id: StringName, reward_payload: Dictionary) -> Dictionary:
+	var chapter_key: String = str(chapter_id)
+	if chapter_key.is_empty():
+		return {
+			"granted": false,
+			"already_claimed": false,
+			"unlocked_puffs": [],
+			"unlocked_accessories": []
+		}
+	if bool(_story_reward_claims.get(chapter_key, false)):
+		return {
+			"granted": false,
+			"already_claimed": true,
+			"unlocked_puffs": [],
+			"unlocked_accessories": []
+		}
+
+	var unlocked_puffs: Array[String] = []
+	var puff_paths_variant: Variant = reward_payload.get("puffs", [])
+	if puff_paths_variant is Array:
+		var puff_paths: Array = puff_paths_variant
+		for puff_path_variant in puff_paths:
+			var puff_path: String = str(puff_path_variant).strip_edges()
+			if _unlock_story_puff_path(puff_path):
+				unlocked_puffs.append(puff_path)
+
+	var unlocked_accessories: Array[String] = []
+	var accessory_paths_variant: Variant = reward_payload.get("accessories", [])
+	if accessory_paths_variant is Array:
+		var accessory_paths: Array = accessory_paths_variant
+		for accessory_path_variant in accessory_paths:
+			var accessory_path: String = str(accessory_path_variant).strip_edges()
+			if _unlock_story_accessory_path(accessory_path):
+				unlocked_accessories.append(accessory_path)
+
+	_story_reward_claims[chapter_key] = true
+	var result_payload: Dictionary = {
+		"chapter_id": chapter_key,
+		"unlocked_puffs": unlocked_puffs.duplicate(),
+		"unlocked_accessories": unlocked_accessories.duplicate(),
+		"already_claimed": false
+	}
+	emit_signal("progression_updated", &"story_rewards_unlocked", result_payload)
+
+	return {
+		"granted": true,
+		"already_claimed": false,
+		"unlocked_puffs": unlocked_puffs,
+		"unlocked_accessories": unlocked_accessories
+	}
+
+
 func _initialize_roster() -> void:
 	_roster_by_path.clear()
 	_accessory_cache.clear()
 	_owned_accessory_paths = []
+	_story_reward_claims.clear()
+	_story_unlocked_puff_paths = []
+	for unlocked_path in INITIAL_STORY_UNLOCKED_PUFF_PATHS:
+		if _story_unlocked_puff_paths.has(unlocked_path):
+			continue
+		_story_unlocked_puff_paths.append(unlocked_path)
 
 	for accessory_path in STARTING_ACCESSORY_PATHS:
 		_add_owned_accessory_path(accessory_path)
@@ -164,7 +235,8 @@ func _initialize_roster() -> void:
 
 	emit_signal("progression_updated", &"initialized", {
 		"puff_count": _roster_by_path.size(),
-		"owned_accessory_count": _owned_accessory_paths.size()
+		"owned_accessory_count": _owned_accessory_paths.size(),
+		"story_unlocked_puff_count": _story_unlocked_puff_paths.size()
 	})
 
 
@@ -242,6 +314,59 @@ func _grant_roster_xp(xp_gain: int, source: StringName, context: Dictionary = {}
 	emit_signal("progression_updated", &"xp_awarded", payload)
 
 
+func _unlock_story_puff_path(puff_path: String) -> bool:
+	if puff_path.is_empty():
+		return false
+
+	var unlocked_now: bool = false
+	if not _story_unlocked_puff_paths.has(puff_path):
+		_story_unlocked_puff_paths.append(puff_path)
+		unlocked_now = true
+
+	if _roster_by_path.has(puff_path):
+		return unlocked_now
+
+	var base_data: Resource = load(puff_path)
+	if base_data == null:
+		return unlocked_now
+
+	var runtime_data: Resource = base_data.duplicate(true)
+	if runtime_data == null:
+		return unlocked_now
+	if runtime_data.get_script() != PUFF_DATA_SCRIPT and not runtime_data.has_method("add_xp"):
+		return unlocked_now
+
+	runtime_data.set("level", maxi(1, int(runtime_data.get("level"))))
+	runtime_data.set("xp", maxi(0, int(runtime_data.get("xp"))))
+	for accessory_path in _owned_accessory_paths:
+		if runtime_data.has_method("add_owned_accessory_path"):
+			runtime_data.call("add_owned_accessory_path", accessory_path)
+
+	_roster_by_path[puff_path] = runtime_data
+	return true
+
+
+func _unlock_story_accessory_path(accessory_path: String) -> bool:
+	if accessory_path.is_empty():
+		return false
+	var accessory: Resource = _load_accessory(accessory_path)
+	if accessory == null:
+		return false
+
+	var unlocked_now: bool = not _owned_accessory_paths.has(accessory_path)
+	_add_owned_accessory_path(accessory_path)
+	if not unlocked_now:
+		return false
+
+	for puff_data_variant in _roster_by_path.values():
+		if not (puff_data_variant is Resource):
+			continue
+		var puff_data: Resource = puff_data_variant
+		if puff_data.has_method("add_owned_accessory_path"):
+			puff_data.call("add_owned_accessory_path", accessory_path)
+	return true
+
+
 func _build_puff_entry(data_path: String, puff_data: Resource) -> Dictionary:
 	var equipped_names: Dictionary = {
 		SLOT_HAT: "None",
@@ -279,6 +404,7 @@ func _build_puff_entry(data_path: String, puff_data: Resource) -> Dictionary:
 		"level": maxi(1, level_value),
 		"xp": maxi(0, xp_value),
 		"xp_to_next": maxi(0, xp_to_next),
+		"story_unlocked": _story_unlocked_puff_paths.has(data_path),
 		"equipped": equipped_names,
 		"effective_stats": effective_stats
 	}

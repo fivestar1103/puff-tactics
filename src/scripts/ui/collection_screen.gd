@@ -65,14 +65,18 @@ func _populate_puff_entries(puffs: Array) -> void:
 		if not (puff_variant is Dictionary):
 			continue
 		var puff: Dictionary = puff_variant
+		var unlock_label: String = "Unlocked"
+		if not bool(puff.get("story_unlocked", true)):
+			unlock_label = "Locked (Story)"
 		var equipped_variant: Variant = puff.get("equipped", {})
 		var equipped: Dictionary = equipped_variant if equipped_variant is Dictionary else {}
 
 		var effective_stats_variant: Variant = puff.get("effective_stats", {})
 		var effective_stats: Dictionary = effective_stats_variant if effective_stats_variant is Dictionary else {}
 
-		var line: String = "%s Lv.%d  XP %d/%d\nStats: HP %d | ATK %d | DEF %d | MOV %d | RNG %d\nGear: Hat %s | Scarf %s | Ribbon %s" % [
+		var line: String = "%s [%s] Lv.%d  XP %d/%d\nStats: HP %d | ATK %d | DEF %d | MOV %d | RNG %d\nGear: Hat %s | Scarf %s | Ribbon %s" % [
 			str(puff.get("display_name", "Puff")),
+			unlock_label,
 			int(puff.get("level", 1)),
 			int(puff.get("xp", 0)),
 			int(puff.get("xp_to_next", 0)),

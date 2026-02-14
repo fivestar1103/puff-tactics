@@ -389,8 +389,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 20,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Added src/scenes/story/StoryChapter1.tscn + src/scripts/story/story_chapter_1.gd with a 6-battle scripted Chapter 1 campaign, inter-battle dialogue with portrait cards, tutorial objectives in battles 1-4 (move/attack/bump/terrain), and chapter-complete reward flow that unlocks additional puff classes and new accessory resources via PuffProgression story reward claims. Extended FullBattle with start_scripted_battle(), battle_completed/player_action_resolved signals, and scripted-mode toggles for map/enemy roster overrides and async/result-overlay suppression; wired FeedMain leaderboard FAB to open StoryChapter1. Added chapter reward accessories (chapter_crown, story_sash), surfaced story lock status in collection snapshot/UI, and validated modified scripts/scenes via headless Godot checks.",
       "dependsOn": [
         "US-013",
         "US-018"

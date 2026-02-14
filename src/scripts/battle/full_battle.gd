@@ -1,6 +1,9 @@
 extends Node2D
 class_name FullBattle
 
+signal battle_completed(result: StringName, summary: Dictionary)
+signal player_action_resolved(action_payload: Dictionary)
+
 const PUFF_SCENE: PackedScene = preload("res://src/scenes/puffs/Puff.tscn")
 const PVP_ASYNC_SCRIPT: GDScript = preload("res://src/scripts/network/pvp_async.gd")
 
@@ -120,6 +123,10 @@ var _match_context: Dictionary = {}
 var _opponent_ghost_payload: Dictionary = {}
 var _player_ai_weights_for_match: Dictionary = {}
 var _pvp_status_message: String = ""
+var _scripted_enemy_roster_paths: Array[String] = []
+var _scripted_map_config: Dictionary = {}
+var _scripted_suppress_result_overlay: bool = false
+var _scripted_disable_async_pvp_sync: bool = false
 
 
 func _ready() -> void:
@@ -138,6 +145,44 @@ func _ready() -> void:
 	_build_ui()
 	_refresh_selection_ui()
 	_update_hud()
+
+
+func start_scripted_battle(scripted_config: Dictionary) -> bool:
+	if _battle_map == null or _turn_manager == null:
+		return false
+	if _battle_started and not _battle_finished:
+		return false
+
+	var player_roster: Array[String] = _normalize_roster_paths(scripted_config.get("player_roster", []))
+	if player_roster.is_empty():
+		return false
+
+	_selected_roster_paths = player_roster
+	_scripted_enemy_roster_paths = _normalize_roster_paths(scripted_config.get("enemy_roster", []))
+
+	var map_config_variant: Variant = scripted_config.get("map_config", {})
+	if map_config_variant is Dictionary:
+		_scripted_map_config = map_config_variant.duplicate(true)
+	else:
+		_scripted_map_config = {}
+
+	max_turns = maxi(5, int(scripted_config.get("max_turns", max_turns)))
+	_scripted_suppress_result_overlay = bool(scripted_config.get("suppress_internal_result_overlay", true))
+	_scripted_disable_async_pvp_sync = bool(scripted_config.get("disable_async_pvp_sync", true))
+
+	_match_context.clear()
+	_opponent_ghost_payload.clear()
+	_pvp_status_message = ""
+	_player_ai_weights_for_match = _capture_turn_manager_ai_weights()
+	_update_hud()
+	_start_full_battle()
+	return true
+
+
+func get_terrain_at_cell(cell: Vector2i) -> String:
+	if _battle_map == null:
+		return ""
+	return _battle_map.get_terrain_at(cell)
 
 
 func _resolve_scene_references() -> void:
@@ -355,6 +400,11 @@ func _on_start_battle_pressed() -> void:
 	if _selected_roster_paths.size() < 3 or _selected_roster_paths.size() > 4:
 		return
 
+	_scripted_enemy_roster_paths.clear()
+	_scripted_map_config.clear()
+	_scripted_suppress_result_overlay = false
+	_scripted_disable_async_pvp_sync = false
+
 	_start_battle_button.disabled = true
 	_start_battle_button.text = "Matchmaking..."
 	await _prepare_async_match_context()
@@ -375,8 +425,16 @@ func _start_full_battle() -> void:
 	if _player_ai_weights_for_match.is_empty():
 		_player_ai_weights_for_match = _capture_turn_manager_ai_weights()
 
+	if _scripted_map_config.is_empty():
+		_apply_default_map_config()
+	else:
+		_battle_map.load_map_from_config(_scripted_map_config)
+
 	_clear_spawned_units()
-	_enemy_roster_paths = _resolve_enemy_roster_for_match(_selected_roster_paths)
+	if _scripted_enemy_roster_paths.is_empty():
+		_enemy_roster_paths = _resolve_enemy_roster_for_match(_selected_roster_paths)
+	else:
+		_enemy_roster_paths = _scripted_enemy_roster_paths.duplicate()
 	_apply_enemy_ghost_ai_weights()
 	_spawn_match_units(_selected_roster_paths, _enemy_roster_paths)
 	_initialize_battle_log()
@@ -491,6 +549,21 @@ func _resolve_enemy_roster_for_match(player_roster_paths: Array[String]) -> Arra
 		normalized_team.remove_at(normalized_team.size() - 1)
 
 	return normalized_team
+
+
+func _normalize_roster_paths(raw_roster_variant: Variant) -> Array[String]:
+	var normalized: Array[String] = []
+	if not (raw_roster_variant is Array):
+		return normalized
+
+	var raw_roster: Array = raw_roster_variant
+	for data_path_variant in raw_roster:
+		var data_path: String = str(data_path_variant).strip_edges()
+		if data_path.is_empty():
+			continue
+		normalized.append(data_path)
+
+	return normalized
 
 
 func _apply_enemy_ghost_ai_weights() -> void:
@@ -652,6 +725,7 @@ func _on_turn_manager_action_resolved(side: StringName, action_payload: Dictiona
 		"action": action_copy,
 		"result": result_summary
 	})
+	emit_signal("player_action_resolved", action_copy)
 
 
 func _on_signal_bus_puff_moved(puff_id: StringName, from_cell: Vector2i, to_cell: Vector2i) -> void:
@@ -712,9 +786,19 @@ func _on_signal_bus_battle_ended(result: StringName) -> void:
 
 	_battle_log_path = _persist_battle_log(result, rewards)
 	_restore_player_ai_weights()
-	call_deferred("_sync_async_pvp_after_battle", result, rewards)
-	_show_result_overlay(result, rewards)
+	if not _scripted_disable_async_pvp_sync:
+		call_deferred("_sync_async_pvp_after_battle", result, rewards)
+	if not _scripted_suppress_result_overlay:
+		_show_result_overlay(result, rewards)
 	_update_hud()
+	emit_signal("battle_completed", result, {
+		"winner": str(result),
+		"win_reason": str(_battle_end_reason),
+		"turn_number": _turn_manager.turn_number if _turn_manager != null else 0,
+		"rewards": rewards.duplicate(true),
+		"tile_control": _latest_tile_control.duplicate(true),
+		"battle_log_path": _battle_log_path
+	})
 
 
 func _restore_player_ai_weights() -> void:
