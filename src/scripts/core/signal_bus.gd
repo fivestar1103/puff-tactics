@@ -1,5 +1,4 @@
 extends Node
-class_name SignalBus
 
 signal feed_item_completed(score: int)
 signal puff_moved(puff_id: StringName, from_cell: Vector2i, to_cell: Vector2i)

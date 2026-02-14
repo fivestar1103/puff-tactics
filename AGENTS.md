@@ -17,12 +17,9 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 
 ## Gotchas
 
-<!-- Add gotchas as they are discovered -->
-<!-- Examples:
-- "Godot 4 TileMap uses layers, not separate TileMap nodes"
-- "GDScript await requires the signal, not the function: await signal_name (not await func())"
-- "Supabase Edge Functions need CORS headers for Godot HTTPRequest"
--->
+- "NEVER use `class_name X` on autoload scripts — it conflicts with the singleton name. Autoloads are already accessible globally (e.g. `Constants.FIRE`, `SignalBus.emit(...)`) without class_name."
+- "Godot 4 TileMap uses layers (TileMapLayer), not separate TileMap nodes"
+- "Godot 4.3 is installed and available as `godot` in PATH. Use `godot --headless --path /home/fives/projects/puff-tactics --check-only --quit` to validate GDScript syntax after implementing a story."
 
 ## Conventions
 
