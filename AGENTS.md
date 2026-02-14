@@ -17,6 +17,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "Base puff archetypes are `PuffData` `.tres` files in `src/resources/puffs/base/`; `src/scripts/puffs/puff.gd` reads these resources to render placeholder puffs."
 - "`TurnManager` phase flow is `player_select -> player_action -> resolve -> enemy_action -> resolve -> player_select`; movement range overlays are drawn in `_draw()` from tilemap cell centers."
 - "`src/scripts/battle/bump_system.gd` resolves bump chains from tail to head; `TurnManager` applies pushes and treats any pushed puff standing on `cliff` terrain as a 1-turn stun using `_stun_state_by_puff_id` + team-turn recovery."
+- "Enemy intent overlays use `TurnManager.get_enemy_intent_snapshot()` (same plan logic used by enemy execution) and refresh from `phase_changed` plus `SignalBus` board-state events (`puff_moved`, `puff_bumped`, `turn_ended`)."
 
 ## Gotchas
 

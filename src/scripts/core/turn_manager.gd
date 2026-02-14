@@ -12,6 +12,11 @@ const PHASE_PLAYER_ACTION: StringName = &"player_action"
 const PHASE_ENEMY_ACTION: StringName = &"enemy_action"
 const PHASE_RESOLVE: StringName = &"resolve"
 
+const INTENT_ACTION_WAIT: StringName = &"wait"
+const INTENT_ACTION_MOVE: StringName = &"move"
+const INTENT_ACTION_ATTACK: StringName = &"attack"
+const INTENT_ACTION_SKILL: StringName = &"skill"
+
 const VALID_PHASE_TRANSITIONS: Dictionary = {
 	PHASE_PLAYER_SELECT: [PHASE_PLAYER_ACTION],
 	PHASE_PLAYER_ACTION: [PHASE_RESOLVE],
@@ -252,6 +257,14 @@ func _begin_enemy_turn() -> void:
 		call_deferred("_execute_enemy_action")
 
 
+func get_enemy_intent_snapshot() -> Dictionary:
+	var intents_by_enemy_id: Dictionary = {}
+	for enemy_puff in _get_actionable_team_puffs(TEAM_ENEMY):
+		var puff_id: int = enemy_puff.get_instance_id()
+		intents_by_enemy_id[puff_id] = _build_enemy_intent(enemy_puff)
+	return intents_by_enemy_id
+
+
 func _execute_enemy_action() -> void:
 	if current_phase != PHASE_ENEMY_ACTION or _is_resolving_bump:
 		return
@@ -262,25 +275,26 @@ func _execute_enemy_action() -> void:
 		return
 
 	var enemy_actor: Puff = enemy_units[0]
-	var player_target: Puff = _find_closest_target(enemy_actor, TEAM_PLAYER)
-	if player_target == null:
-		_finish_current_action()
-		return
+	var planned_intent: Dictionary = _build_enemy_intent(enemy_actor)
+	var action_type: StringName = planned_intent.get("action", INTENT_ACTION_WAIT)
+	var target_puff: Puff = _resolve_intent_target_puff(planned_intent)
 
-	if _can_bump(enemy_actor, player_target):
-		if _perform_bump(enemy_actor, player_target):
-			return
+	match action_type:
+		INTENT_ACTION_SKILL:
+			if target_puff != null and _can_bump(enemy_actor, target_puff):
+				if _perform_bump(enemy_actor, target_puff):
+					return
+		INTENT_ACTION_ATTACK:
+			if target_puff != null and _can_attack(enemy_actor, target_puff):
+				_perform_attack(enemy_actor, target_puff)
+				return
+		INTENT_ACTION_MOVE:
+			var move_cell: Vector2i = planned_intent.get("move_cell", enemy_actor.grid_cell)
+			if move_cell != enemy_actor.grid_cell:
+				_perform_move(enemy_actor, move_cell)
+				return
 
-	if _can_attack(enemy_actor, player_target):
-		_perform_attack(enemy_actor, player_target)
-		return
-
-	var move_range: int = _resolve_move_range(enemy_actor)
-	var next_step: Vector2i = _find_next_step_toward(enemy_actor.grid_cell, player_target.grid_cell, move_range, enemy_actor)
-	if next_step != enemy_actor.grid_cell:
-		_perform_move(enemy_actor, next_step)
-	else:
-		_finish_current_action()
+	_finish_current_action()
 
 
 func _select_player_puff(puff: Puff) -> void:
@@ -621,6 +635,107 @@ func _find_closest_target(actor: Puff, target_team: StringName) -> Puff:
 			closest_distance = candidate_distance
 
 	return closest_target
+
+
+func _build_enemy_intent(enemy_actor: Puff) -> Dictionary:
+	var wait_intent: Dictionary = _build_wait_intent(enemy_actor)
+	if enemy_actor == null or not _is_puff_actionable(enemy_actor):
+		return wait_intent
+
+	var player_target: Puff = _find_closest_target(enemy_actor, TEAM_PLAYER)
+	if player_target == null:
+		return wait_intent
+
+	wait_intent["target_puff_id"] = player_target.get_instance_id()
+	wait_intent["target_cell"] = player_target.grid_cell
+
+	if _can_bump(enemy_actor, player_target):
+		var bump_preview: Dictionary = _bump_system.resolve_bump(
+			enemy_actor,
+			player_target,
+			Callable(self, "_get_actionable_puff_at_cell"),
+			Callable(self, "_is_cell_in_bounds"),
+			Callable(self, "_is_cliff_cell")
+		)
+		wait_intent["action"] = INTENT_ACTION_SKILL
+		wait_intent["skill_cells"] = _collect_bump_preview_cells(bump_preview)
+		wait_intent["direction"] = bump_preview.get("direction", Vector2i.ZERO)
+		return wait_intent
+
+	if _can_attack(enemy_actor, player_target):
+		wait_intent["action"] = INTENT_ACTION_ATTACK
+		return wait_intent
+
+	var move_range: int = _resolve_move_range(enemy_actor)
+	var next_step: Vector2i = _find_next_step_toward(enemy_actor.grid_cell, player_target.grid_cell, move_range, enemy_actor)
+	if next_step != enemy_actor.grid_cell:
+		wait_intent["action"] = INTENT_ACTION_MOVE
+		wait_intent["move_cell"] = next_step
+
+	return wait_intent
+
+
+func _build_wait_intent(actor: Puff) -> Dictionary:
+	var actor_id: int = -1
+	var actor_name: StringName = &""
+	var actor_cell: Vector2i = Vector2i.ZERO
+	if actor != null:
+		actor_id = actor.get_instance_id()
+		actor_name = StringName(actor.name)
+		actor_cell = actor.grid_cell
+
+	return {
+		"actor_id": actor_id,
+		"actor_name": actor_name,
+		"actor_cell": actor_cell,
+		"action": INTENT_ACTION_WAIT,
+		"move_cell": actor_cell,
+		"target_cell": actor_cell,
+		"target_puff_id": -1,
+		"skill_cells": [],
+		"direction": Vector2i.ZERO
+	}
+
+
+func _collect_bump_preview_cells(bump_preview: Dictionary) -> Array[Vector2i]:
+	var preview_cells: Array[Vector2i] = []
+	if not bool(bump_preview.get("valid", false)):
+		return preview_cells
+
+	var pushes: Array = bump_preview.get("pushes", [])
+	for push_variant in pushes:
+		if not (push_variant is Dictionary):
+			continue
+		var push: Dictionary = push_variant
+		var from_cell: Vector2i = push.get("from_cell", Vector2i.ZERO)
+		if _is_cell_in_bounds(from_cell) and not preview_cells.has(from_cell):
+			preview_cells.append(from_cell)
+
+		var fell_from_cliff: bool = bool(push.get("fell_from_cliff", false))
+		if fell_from_cliff:
+			continue
+
+		var to_cell: Vector2i = push.get("to_cell", from_cell)
+		if _is_cell_in_bounds(to_cell) and not preview_cells.has(to_cell):
+			preview_cells.append(to_cell)
+
+	return preview_cells
+
+
+func _resolve_intent_target_puff(intent: Dictionary) -> Puff:
+	var target_id: int = int(intent.get("target_puff_id", -1))
+	if target_id < 0:
+		return null
+
+	var target_variant: Variant = _puffs_by_id.get(target_id)
+	if not (target_variant is Puff):
+		return null
+
+	var target_puff: Puff = target_variant
+	if not _is_puff_actionable(target_puff):
+		return null
+
+	return target_puff
 
 
 func _calculate_damage(attacker: Puff, defender: Puff) -> int:

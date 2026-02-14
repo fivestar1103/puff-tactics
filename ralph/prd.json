@@ -104,8 +104,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 6,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Added src/scripts/ai/enemy_intent.gd and wired it into TurnBattle.tscn as a ghosted overlay layer. TurnManager now exposes get_enemy_intent_snapshot() so intents are calculated/stored per enemy and reused by enemy action execution for parity. Overlay draws semi-transparent move arrows, attack target highlights, and skill-area previews (bump chain tiles), and intents recalc reactively on phase changes plus SignalBus board-state events. Verified with headless Godot --check-only across all src/scripts/*.gd files and a runtime script confirming intent updates after a player-position board change.",
       "dependsOn": ["US-004"]
     },
     {

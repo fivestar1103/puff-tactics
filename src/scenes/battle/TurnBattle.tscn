@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="PackedScene" path="res://src/scenes/maps/BattleMap.tscn" id="1_nj67n"]
 [ext_resource type="Script" path="res://src/scripts/core/turn_manager.gd" id="2_58ceu"]
+[ext_resource type="Script" path="res://src/scripts/ai/enemy_intent.gd" id="3_s4lgc"]
 
 [node name="TurnBattle" type="Node2D"]
 
@@ -10,3 +11,8 @@
 [node name="TurnManager" type="Node2D" parent="."]
 script = ExtResource("2_58ceu")
 battle_map_path = NodePath("../BattleMap")
+
+[node name="EnemyIntent" type="Node2D" parent="."]
+script = ExtResource("3_s4lgc")
+battle_map_path = NodePath("../BattleMap")
+turn_manager_path = NodePath("../TurnManager")
