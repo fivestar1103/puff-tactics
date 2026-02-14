@@ -85,3 +85,19 @@ text = "Create"
 [node name="LeaderboardButton" type="Button" parent="Hud/FabRow"]
 layout_mode = 2
 text = "Leaderboard"
+
+[node name="SwipeHintLabel" type="Label" parent="Hud"]
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -220.0
+offset_top = -84.0
+offset_right = 220.0
+offset_bottom = -42.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "↑ Swipe up for the next puzzle"
+horizontal_alignment = 1

@@ -76,3 +76,5 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "Edge Functions timeout at 60s — keep puzzle generation batches small"
 -->
 - "Supabase auth state is encrypted in `user://auth/supabase_auth.dat`; token refresh is scheduled ~60s before expiry and also checked before each API request."
+
+- "FeedMain UI uses VisualTheme.apply_label_theme() for title/subtitle/small labels and VisualTheme.apply_button_theme() for profile/create/leaderboard FABs to keep feed styling consistent."

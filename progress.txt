@@ -30,3 +30,5 @@
 
 [2026-02-14] US-022: Increased Puff placeholder sprite to 128px with kawaii face features (eyes, curved mouth, blush), added 3px team-colored ring controlled by `team` on Puff, added bottom-right diamond element badge, scaled accessory textures to new placeholder size, and updated collision/sprite offsets and team assignments at spawn points so rings render correctly in turn feed, full battle, and editor contexts.
 [2026-02-14] US-023: Added terrain indicator symbols and gradient shading in BattleMap tile atlas generation for all terrain types (cloud puff, high cloud arrow, candy swirl, puddle waves, cliff triangle, mushroom cap) plus thicker cliff border emphasis.
+
+[2026-02-14] US-024: Redesigned the FeedMain UI by applying VisualTheme label/button styling: title/subtitle use themed fonts/colors, FAB buttons use PALETTE_SKY/PEACH/MINT with shared button theme helper, and added SwipeHintLabel at bottom center to indicate upward swipe progression.

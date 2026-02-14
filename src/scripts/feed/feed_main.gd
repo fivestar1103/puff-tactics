@@ -174,6 +174,7 @@ const FALLBACK_FEED_PUZZLE_SNAPSHOTS: Array[Dictionary] = [
 @onready var feed_track: Node2D = $FeedTrack
 @onready var title_label: Label = $Hud/TopMargin/TopStack/TitleLabel
 @onready var subtitle_label: Label = $Hud/TopMargin/TopStack/SubtitleLabel
+@onready var swipe_hint_label: Label = $Hud/SwipeHintLabel
 @onready var profile_button: Button = $Hud/FabRow/ProfileButton
 @onready var create_button: Button = $Hud/FabRow/CreateButton
 @onready var leaderboard_button: Button = $Hud/FabRow/LeaderboardButton
@@ -197,6 +198,7 @@ func _ready() -> void:
 	_load_initial_snapshots()
 	_build_feed_items()
 	_connect_fab_actions()
+	_style_header_labels()
 	_style_fab_buttons()
 	_layout_feed_items()
 	_set_active_item(0, false)
@@ -619,59 +621,12 @@ func _on_puzzle_editor_published(_snapshot_id: String, status_text: String) -> v
 
 
 func _style_fab_buttons() -> void:
-	var button_specs: Array[Dictionary] = [
-		{
-			"button": profile_button,
-			"base_color": Color(0.43, 0.64, 0.91, 1.0),
-			"font_color": Color(0.95, 0.98, 1.0, 1.0)
-		},
-		{
-			"button": create_button,
-			"base_color": Color(0.99, 0.62, 0.46, 1.0),
-			"font_color": Color(1.0, 0.98, 0.95, 1.0)
-		},
-		{
-			"button": leaderboard_button,
-			"base_color": Color(0.47, 0.75, 0.56, 1.0),
-			"font_color": Color(0.95, 1.0, 0.96, 1.0)
-		}
-	]
+	VisualTheme.apply_button_theme(profile_button, Constants.PALETTE_SKY, Color.WHITE, Vector2(180.0, 76.0), Constants.FONT_SIZE_BUTTON)
+	VisualTheme.apply_button_theme(create_button, Constants.PALETTE_PEACH, Color.WHITE, Vector2(180.0, 76.0), Constants.FONT_SIZE_BUTTON)
+	VisualTheme.apply_button_theme(leaderboard_button, Constants.PALETTE_MINT, Color.WHITE, Vector2(180.0, 76.0), Constants.FONT_SIZE_BUTTON)
 
-	for spec_variant in button_specs:
-		if not (spec_variant is Dictionary):
-			continue
-		var spec: Dictionary = spec_variant
-		var button_variant: Variant = spec.get("button")
-		if not (button_variant is Button):
-			continue
 
-		var button: Button = button_variant
-		var base_color: Color = spec.get("base_color", Color(0.4, 0.4, 0.4, 1.0))
-		var font_color: Color = spec.get("font_color", Color.WHITE)
-
-		button.focus_mode = Control.FOCUS_NONE
-		button.custom_minimum_size = Vector2(220.0, 88.0)
-		button.add_theme_font_size_override("font_size", 26)
-		button.add_theme_color_override("font_color", font_color)
-
-		var normal_style: StyleBoxFlat = StyleBoxFlat.new()
-		normal_style.bg_color = base_color
-		normal_style.corner_radius_top_left = 44
-		normal_style.corner_radius_top_right = 44
-		normal_style.corner_radius_bottom_right = 44
-		normal_style.corner_radius_bottom_left = 44
-		normal_style.border_width_left = 2
-		normal_style.border_width_top = 2
-		normal_style.border_width_right = 2
-		normal_style.border_width_bottom = 2
-		normal_style.border_color = base_color.darkened(0.24)
-
-		var hover_style: StyleBoxFlat = normal_style.duplicate()
-		hover_style.bg_color = base_color.lightened(0.08)
-
-		var pressed_style: StyleBoxFlat = normal_style.duplicate()
-		pressed_style.bg_color = base_color.darkened(0.12)
-
-		button.add_theme_stylebox_override("normal", normal_style)
-		button.add_theme_stylebox_override("hover", hover_style)
-		button.add_theme_stylebox_override("pressed", pressed_style)
+func _style_header_labels() -> void:
+	VisualTheme.apply_label_theme(title_label, Constants.FONT_SIZE_TITLE, Constants.COLOR_TEXT_DARK)
+	VisualTheme.apply_label_theme(subtitle_label, Constants.FONT_SIZE_SUBTITLE, Constants.COLOR_TEXT_DARK.lightened(0.24))
+	VisualTheme.apply_label_theme(swipe_hint_label, Constants.FONT_SIZE_BODY, Constants.COLOR_TEXT_DARK.lightened(0.28))

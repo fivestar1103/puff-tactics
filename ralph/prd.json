@@ -463,8 +463,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 24,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "FeedMain.tscn now includes SwipeHintLabel and FeedMain script applies VisualTheme.apply_label_theme to title/subtitle/swipe hint plus palette-based themed FAB buttons via VisualTheme.apply_button_theme. Title/subtitle fonts now come from constants.",
       "dependsOn": ["US-021"]
     },
     {
