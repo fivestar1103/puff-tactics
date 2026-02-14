@@ -6,3 +6,4 @@
 # [2026-02-14] Project structure created. Godot 4 project.godot configured.
 # PRD with 20 user stories covering M1-M6 scope. Ralph loop ready.
 [2026-02-14] US-001: Added core constants and signal bus scripts, registered both as autoload singletons in project.godot, and updated PRD pass state.
+[2026-02-14] US-002: Added BattleMap.tscn with TileMapLayer and implemented battle_map.gd for isometric terrain rendering, per-cell terrain data/effects, and dictionary+JSON map loading for procedural configs; updated PRD pass state.

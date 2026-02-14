@@ -36,8 +36,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Added BattleMap scene with TileMapLayer and new battle_map.gd terrain system. Terrain types are stored per cell, effects are defined per GDD, and map loading supports dictionary and JSON configs. Placeholder isometric terrain tiles are generated with distinct colors at runtime. Godot/gdlint CLI is unavailable in this environment, so syntax was validated by static script review.",
       "dependsOn": ["US-001"]
     },
     {

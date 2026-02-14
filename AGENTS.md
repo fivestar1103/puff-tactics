@@ -13,6 +13,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 -->
 - "Global gameplay enums/constants live in `src/scripts/core/constants.gd` and are provided via `Constants` autoload."
 - "Cross-system events are centralized in `src/scripts/core/signal_bus.gd` as the `SignalBus` autoload."
+- "`BattleMap` terrain data is loaded via `load_map_from_config()` (`rows` or `cells`) or `load_map_from_json()` for procedural snapshots."
 
 ## Gotchas
 
@@ -40,6 +41,8 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 -->
 - "Core constants: src/scripts/core/constants.gd"
 - "Global signals: src/scripts/core/signal_bus.gd"
+- "Battle map terrain system: src/scripts/core/battle_map.gd"
+- "Battle map scene: src/scenes/maps/BattleMap.tscn"
 
 ## Supabase Notes
 
