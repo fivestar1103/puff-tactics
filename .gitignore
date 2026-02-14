@@ -23,6 +23,7 @@ build/
 .env
 .env.local
 credentials.json
+.mcp.json
 
 # Node (for MCP tools)
 node_modules/
