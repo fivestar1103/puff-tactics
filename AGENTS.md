@@ -15,6 +15,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "Cross-system events are centralized in `src/scripts/core/signal_bus.gd` as the `SignalBus` autoload."
 - "`BattleMap` terrain data is loaded via `load_map_from_config()` (`rows` or `cells`) or `load_map_from_json()` for procedural snapshots."
 - "Base puff archetypes are `PuffData` `.tres` files in `src/resources/puffs/base/`; `src/scripts/puffs/puff.gd` reads these resources to render placeholder puffs."
+- "`TurnManager` phase flow is `player_select -> player_action -> resolve -> enemy_action -> resolve -> player_select`; movement range overlays are drawn in `_draw()` from tilemap cell centers."
 
 ## Gotchas
 
@@ -22,6 +23,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "Godot 4 TileMap uses layers (TileMapLayer), not separate TileMap nodes"
 - "Godot 4.3 is available as `godot`; for syntax checks in this repo use `godot --headless --path /home/fives/projects/puff-tactics --check-only --script <gd_file>` per script (main scene is not present yet)."
 - "GDScript `const` dictionaries must use literal arrays; constructor calls like `PackedStringArray()` are not valid constant expressions."
+- "When instantiating children from a node's `_ready()`, adding to a parent/sibling can hit `Parent node is busy setting up children`; use `call_deferred()` for spawn/setup."
 
 ## Conventions
 

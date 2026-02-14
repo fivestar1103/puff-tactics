@@ -70,8 +70,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Added turn_manager.gd with explicit phase transitions for player_select/player_action/enemy_action/resolve and side-based turn order. Added TurnBattle.tscn wiring BattleMap + TurnManager with tap-friendly puff selection, movement range tile highlights, tile tap movement, enemy tap attacks, and action resolve advancing to enemy then next player turn. Verified runtime phase progression in a headless TurnBattle script and verified all src/scripts .gd files parse with Godot --check-only (HOME=/tmp in this sandbox).",
       "dependsOn": ["US-002", "US-003"]
     },
     {

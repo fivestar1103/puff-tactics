@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://src/scenes/maps/BattleMap.tscn" id="1_nj67n"]
+[ext_resource type="Script" path="res://src/scripts/core/turn_manager.gd" id="2_58ceu"]
+
+[node name="TurnBattle" type="Node2D"]
+
+[node name="BattleMap" parent="." instance=ExtResource("1_nj67n")]
+
+[node name="TurnManager" type="Node2D" parent="."]
+script = ExtResource("2_58ceu")
+battle_map_path = NodePath("../BattleMap")
