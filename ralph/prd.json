@@ -533,8 +533,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 28,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Styled StoryChapter1 dialogue and chapter-complete UI in story_chapter_1.gd: dialogue panel, speaker/line labels, next button, tutorial panel, and chapter complete panel now use VisualTheme helpers with palette/cream/sky/peach colors; buttons use PALETTE_MINT and PALETTE_LAVENDER themed pill styling. Added dedicated story UI theme application in _apply_story_ui_theme().",
       "dependsOn": ["US-021"]
     }
   ]

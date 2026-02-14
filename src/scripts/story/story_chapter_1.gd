@@ -310,6 +310,7 @@ const STORY_BATTLES: Array[Dictionary] = [
 
 @onready var battle_host: Node2D = $BattleHost
 @onready var dialogue_overlay: ColorRect = $UiLayer/DialogueOverlay
+@onready var dialogue_panel: PanelContainer = $UiLayer/DialogueOverlay/DialoguePanel
 @onready var dialogue_portrait: TextureRect = $UiLayer/DialogueOverlay/DialoguePanel/DialogueRow/Portrait
 @onready var dialogue_speaker_label: Label = $UiLayer/DialogueOverlay/DialoguePanel/DialogueRow/DialogueColumn/SpeakerLabel
 @onready var dialogue_line_label: Label = $UiLayer/DialogueOverlay/DialoguePanel/DialogueRow/DialogueColumn/LineLabel
@@ -317,6 +318,7 @@ const STORY_BATTLES: Array[Dictionary] = [
 @onready var tutorial_panel: PanelContainer = $UiLayer/TutorialPanel
 @onready var tutorial_label: Label = $UiLayer/TutorialPanel/TutorialLabel
 @onready var chapter_complete_overlay: ColorRect = $UiLayer/ChapterCompleteOverlay
+@onready var chapter_complete_panel: PanelContainer = $UiLayer/ChapterCompleteOverlay/ChapterPanel
 @onready var chapter_complete_title: Label = $UiLayer/ChapterCompleteOverlay/ChapterPanel/ChapterLayout/TitleLabel
 @onready var chapter_complete_summary: Label = $UiLayer/ChapterCompleteOverlay/ChapterPanel/ChapterLayout/SummaryLabel
 @onready var chapter_complete_button: Button = $UiLayer/ChapterCompleteOverlay/ChapterPanel/ChapterLayout/CompleteButton
@@ -334,6 +336,7 @@ var _last_battle_summary: Dictionary = {}
 
 
 func _ready() -> void:
+	_apply_story_ui_theme()
 	_connect_if_needed(dialogue_next_button, &"pressed", Callable(self, "_on_dialogue_next_pressed"))
 	_connect_if_needed(chapter_complete_button, &"pressed", Callable(self, "_on_chapter_complete_button_pressed"))
 	_build_portraits()
@@ -341,6 +344,53 @@ func _ready() -> void:
 	dialogue_overlay.visible = false
 	tutorial_panel.visible = false
 	_start_current_battle_arc()
+
+
+func _apply_story_ui_theme() -> void:
+	if dialogue_panel != null:
+		dialogue_panel.add_theme_stylebox_override("panel", VisualTheme.create_panel_stylebox(Constants.COLOR_BG_CREAM, 18, Constants.COLOR_TEXT_DARK))
+
+	if dialogue_speaker_label != null:
+		VisualTheme.apply_label_theme(dialogue_speaker_label, Constants.FONT_SIZE_SUBTITLE, Constants.PALETTE_LAVENDER)
+
+	if dialogue_line_label != null:
+		VisualTheme.apply_label_theme(dialogue_line_label, Constants.FONT_SIZE_BODY, Constants.COLOR_TEXT_DARK)
+
+	if dialogue_next_button != null:
+		VisualTheme.apply_button_theme(dialogue_next_button, Constants.PALETTE_MINT, Color.WHITE, Vector2(220.0, 68.0), Constants.FONT_SIZE_BUTTON)
+		var next_button_radius: int = 999
+		var next_button_hover := VisualTheme.create_panel_stylebox(Constants.PALETTE_MINT.lightened(0.08), next_button_radius, Constants.PALETTE_MINT.darkened(0.18))
+		var next_button_normal := VisualTheme.create_panel_stylebox(Constants.PALETTE_MINT, next_button_radius, Constants.PALETTE_MINT.darkened(0.18))
+		var next_button_pressed := VisualTheme.create_panel_stylebox(Constants.PALETTE_MINT.darkened(0.12), next_button_radius, Constants.PALETTE_MINT.darkened(0.28))
+		var next_button_disabled := VisualTheme.create_panel_stylebox(Constants.PALETTE_MINT.darkened(0.28), next_button_radius, Constants.PALETTE_MINT.darkened(0.45))
+		dialogue_next_button.add_theme_stylebox_override("normal", next_button_normal)
+		dialogue_next_button.add_theme_stylebox_override("hover", next_button_hover)
+		dialogue_next_button.add_theme_stylebox_override("pressed", next_button_pressed)
+		dialogue_next_button.add_theme_stylebox_override("disabled", next_button_disabled)
+
+	if tutorial_panel != null:
+		tutorial_panel.add_theme_stylebox_override("panel", VisualTheme.create_panel_stylebox(Constants.PALETTE_SKY, 16, Constants.COLOR_TEXT_DARK))
+	if tutorial_label != null:
+		VisualTheme.apply_label_theme(tutorial_label, Constants.FONT_SIZE_BODY, Constants.COLOR_TEXT_DARK)
+
+	if chapter_complete_panel != null:
+		chapter_complete_panel.add_theme_stylebox_override("panel", VisualTheme.create_panel_stylebox(Constants.PALETTE_PEACH, 20, Constants.COLOR_TEXT_DARK))
+	if chapter_complete_title != null:
+		VisualTheme.apply_label_theme(chapter_complete_title, Constants.FONT_SIZE_TITLE, Constants.COLOR_TEXT_DARK)
+	if chapter_complete_summary != null:
+		VisualTheme.apply_label_theme(chapter_complete_summary, Constants.FONT_SIZE_BODY, Constants.COLOR_TEXT_DARK)
+
+	if chapter_complete_button != null:
+		VisualTheme.apply_button_theme(chapter_complete_button, Constants.PALETTE_LAVENDER, Color.WHITE, Vector2(240.0, 72.0), Constants.FONT_SIZE_BUTTON)
+		var complete_button_radius: int = 999
+		var complete_button_hover := VisualTheme.create_panel_stylebox(Constants.PALETTE_LAVENDER.lightened(0.08), complete_button_radius, Constants.PALETTE_LAVENDER.darkened(0.18))
+		var complete_button_normal := VisualTheme.create_panel_stylebox(Constants.PALETTE_LAVENDER, complete_button_radius, Constants.PALETTE_LAVENDER.darkened(0.18))
+		var complete_button_pressed := VisualTheme.create_panel_stylebox(Constants.PALETTE_LAVENDER.darkened(0.12), complete_button_radius, Constants.PALETTE_LAVENDER.darkened(0.28))
+		var complete_button_disabled := VisualTheme.create_panel_stylebox(Constants.PALETTE_LAVENDER.darkened(0.28), complete_button_radius, Constants.PALETTE_LAVENDER.darkened(0.45))
+		chapter_complete_button.add_theme_stylebox_override("normal", complete_button_normal)
+		chapter_complete_button.add_theme_stylebox_override("hover", complete_button_hover)
+		chapter_complete_button.add_theme_stylebox_override("pressed", complete_button_pressed)
+		chapter_complete_button.add_theme_stylebox_override("disabled", complete_button_disabled)
 
 
 func _start_current_battle_arc() -> void:
