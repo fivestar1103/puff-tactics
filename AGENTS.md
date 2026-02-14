@@ -22,6 +22,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "`src/scripts/feed/feed_item.gd` now owns interactive feed-card micro-puzzle flow: snapshot load (`map_config` + `puffs` + `enemy_intents`), 15-30s decision window, fixed 3s resolve + 2s score phases, and swipe unlock via `can_advance_to_next_item()` that `feed_main.gd` checks before allowing page transitions."
 - "`src/scripts/utils/puzzle_generator.gd` builds four template puzzles with difficulty-scaled terrain/unit placement and returns JSON-safe feed snapshots (`cell` values serialized as `{x,y}`) that include `puzzle_meta.validation` from an internal one-turn action simulation."
 - "Supabase network/auth access is centralized in `src/scripts/network/supabase_client.gd` as the `SupabaseClient` autoload; configure `puff_tactics/supabase/url` and `puff_tactics/supabase/publishable_key` in `project.godot`."
+- "`src/scripts/network/feed_sync.gd` handles `feed_items` batch sync (limit 50), JSON cache + pending score queue files in `user://feed_cache/`, and `feed_main.gd` now renders cached snapshots first then fetches the next batch in the background."
 
 ## Gotchas
 

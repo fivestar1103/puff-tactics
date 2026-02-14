@@ -38,7 +38,9 @@
       "priority": 2,
       "passes": true,
       "notes": "Added BattleMap scene with TileMapLayer and new battle_map.gd terrain system. Terrain types are stored per cell, effects are defined per GDD, and map loading supports dictionary and JSON configs. Placeholder isometric terrain tiles are generated with distinct colors at runtime. Godot/gdlint CLI is unavailable in this environment, so syntax was validated by static script review.",
-      "dependsOn": ["US-001"]
+      "dependsOn": [
+        "US-001"
+      ]
     },
     {
       "id": "US-003",
@@ -55,7 +57,9 @@
       "priority": 3,
       "passes": true,
       "notes": "Implemented PuffData resource schema, Puff scene/script with tilemap positioning and placeholder rendering, six base class .tres resources (Cloud, Flame, Droplet, Leaf, Whirl, Star), and element affinity damage multipliers. Verified all .gd scripts parse via headless Godot --check-only script checks and verified puff resources/scene load headlessly. Also replaced non-constant PackedStringArray() usages in battle_map.gd to satisfy project-wide script parsing.",
-      "dependsOn": ["US-001"]
+      "dependsOn": [
+        "US-001"
+      ]
     },
     {
       "id": "US-004",
@@ -72,7 +76,10 @@
       "priority": 4,
       "passes": true,
       "notes": "Added turn_manager.gd with explicit phase transitions for player_select/player_action/enemy_action/resolve and side-based turn order. Added TurnBattle.tscn wiring BattleMap + TurnManager with tap-friendly puff selection, movement range tile highlights, tile tap movement, enemy tap attacks, and action resolve advancing to enemy then next player turn. Verified runtime phase progression in a headless TurnBattle script and verified all src/scripts .gd files parse with Godot --check-only (HOME=/tmp in this sandbox).",
-      "dependsOn": ["US-002", "US-003"]
+      "dependsOn": [
+        "US-002",
+        "US-003"
+      ]
     },
     {
       "id": "US-005",
@@ -90,7 +97,9 @@
       "priority": 5,
       "passes": true,
       "notes": "Added src/scripts/battle/bump_system.gd to resolve adjacency-based bump direction, chained pushes, and cliff-fall outcomes. Integrated bump actions into turn_manager.gd for player and enemy turns with animated push/fall feedback, SignalBus puff_bumped emissions, and 1-turn cliff stun removal/recovery handling. Verified behavior with a headless runtime script for chain and cliff cases and re-ran Godot --check-only across all src/scripts/*.gd files.",
-      "dependsOn": ["US-004"]
+      "dependsOn": [
+        "US-004"
+      ]
     },
     {
       "id": "US-006",
@@ -106,7 +115,9 @@
       "priority": 6,
       "passes": true,
       "notes": "Added src/scripts/ai/enemy_intent.gd and wired it into TurnBattle.tscn as a ghosted overlay layer. TurnManager now exposes get_enemy_intent_snapshot() so intents are calculated/stored per enemy and reused by enemy action execution for parity. Overlay draws semi-transparent move arrows, attack target highlights, and skill-area previews (bump chain tiles), and intents recalc reactively on phase changes plus SignalBus board-state events. Verified with headless Godot --check-only across all src/scripts/*.gd files and a runtime script confirming intent updates after a player-position board change.",
-      "dependsOn": ["US-004"]
+      "dependsOn": [
+        "US-004"
+      ]
     },
     {
       "id": "US-007",
@@ -123,7 +134,9 @@
       "priority": 7,
       "passes": true,
       "notes": "Added src/scripts/ai/utility_ai.gd for utility-based enemy decision scoring with tunable weight multipliers (attack_value, survival_risk, positional_advantage, bump_opportunity). Refactored TurnManager enemy planning to enumerate legal wait/move/attack/skill candidates per enemy, score all candidates, and pick the highest-utility intent for both enemy execution and get_enemy_intent_snapshot() overlay parity. Verified via headless Godot --check-only across all src/scripts/*.gd files and a runtime headless TurnBattle check confirming legal-candidate evaluation and selected-intent/utility-score parity.",
-      "dependsOn": ["US-006"]
+      "dependsOn": [
+        "US-006"
+      ]
     },
     {
       "id": "US-008",
@@ -141,7 +154,10 @@
       "priority": 8,
       "passes": true,
       "notes": "Added FeedMain as the app entry scene with vertical swipe up/down gesture handling, tweened snap transitions between stacked feed cards, and bottom profile/create/leaderboard FABs. Each card instantiates TurnBattle snapshots (BattleMap + demo puffs + EnemyIntent overlay) with TurnManager input disabled so cards behave as feed snapshots. Verified script syntax with headless Godot --check-only across src/scripts/*.gd and verified project startup parses via headless Godot --quit.",
-      "dependsOn": ["US-002", "US-003"]
+      "dependsOn": [
+        "US-002",
+        "US-003"
+      ]
     },
     {
       "id": "US-009",
@@ -159,7 +175,11 @@
       "priority": 9,
       "passes": true,
       "notes": "Added src/scripts/feed/feed_item.gd to load puzzle snapshots (map config + puff positions + seeded enemy intents), run one-turn tactical interaction, enforce a 15-30s decision window, play a 3s result phase and 2s score/comparison phase, and emit feed completion scores. Refactored src/scripts/feed/feed_main.gd to instantiate FeedItem cards, activate one card at a time, and gate swipe transitions until the active cycle is complete. Extended src/scripts/ai/enemy_intent.gd with load_snapshot_intents() so feed snapshots can render authored intent overlays before reactive recalculation.",
-      "dependsOn": ["US-005", "US-007", "US-008"]
+      "dependsOn": [
+        "US-005",
+        "US-007",
+        "US-008"
+      ]
     },
     {
       "id": "US-010",
@@ -176,7 +196,10 @@
       "priority": 10,
       "passes": true,
       "notes": "Added src/scripts/utils/puzzle_generator.gd with template-based generation for bump-to-cliff-kill, defeat-N-in-1-turn, heal-all-allies, and minimum-moves puzzles. Generator scales puzzle setup by difficulty, simulates legal player actions (move/attack/bump/heal) to auto-validate solvability, and returns feed-ready JSON-safe snapshots (map_config/puffs/enemy_intents/target_score plus puzzle_meta validation details). Verified all scripts with headless Godot --check-only and ran a headless smoke test that generated all four templates and round-tripped JSON serialization.",
-      "dependsOn": ["US-005", "US-007"]
+      "dependsOn": [
+        "US-005",
+        "US-007"
+      ]
     },
     {
       "id": "US-011",
@@ -193,7 +216,9 @@
       "priority": 11,
       "passes": true,
       "notes": "Implemented src/scripts/network/supabase_client.gd as a Supabase autoload HTTPRequest wrapper with auth-aware REST/auth helpers, local guest UUID identity, Apple Sign-In handoff stub for iOS plugin integration, encrypted auth state storage at user://auth/supabase_auth.dat, and automatic token refresh (timer + pre-request validation). Added project settings keys puff_tactics/supabase/url and puff_tactics/supabase/publishable_key in project.godot. Verified all src/scripts/*.gd via HOME=/tmp godot --headless --check-only.",
-      "dependsOn": ["US-001"]
+      "dependsOn": [
+        "US-001"
+      ]
     },
     {
       "id": "US-012",
@@ -208,9 +233,12 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 12,
-      "passes": false,
-      "notes": "",
-      "dependsOn": ["US-009", "US-011"]
+      "passes": true,
+      "notes": "Added src/scripts/network/feed_sync.gd to fetch feed_items from Supabase in 50-item batches, cache feed snapshots/results under user://feed_cache/, and retry queued score uploads offline. Updated feed_main.gd to load cached snapshots instantly on app open, render immediately, and run a non-blocking background fetch for the next batch while preserving offline cached playability; score submissions now post via FeedSync after each completed item.",
+      "dependsOn": [
+        "US-009",
+        "US-011"
+      ]
     },
     {
       "id": "US-013",
@@ -227,7 +255,9 @@
       "priority": 13,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-009"]
+      "dependsOn": [
+        "US-009"
+      ]
     },
     {
       "id": "US-014",
@@ -243,7 +273,9 @@
       "priority": 14,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-013"]
+      "dependsOn": [
+        "US-013"
+      ]
     },
     {
       "id": "US-015",
@@ -260,7 +292,10 @@
       "priority": 15,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-013", "US-011"]
+      "dependsOn": [
+        "US-013",
+        "US-011"
+      ]
     },
     {
       "id": "US-016",
@@ -277,7 +312,9 @@
       "priority": 16,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-003"]
+      "dependsOn": [
+        "US-003"
+      ]
     },
     {
       "id": "US-017",
@@ -294,7 +331,10 @@
       "priority": 17,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-010", "US-011"]
+      "dependsOn": [
+        "US-010",
+        "US-011"
+      ]
     },
     {
       "id": "US-018",
@@ -313,7 +353,9 @@
       "priority": 18,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-003"]
+      "dependsOn": [
+        "US-003"
+      ]
     },
     {
       "id": "US-019",
@@ -330,7 +372,9 @@
       "priority": 19,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-009"]
+      "dependsOn": [
+        "US-009"
+      ]
     },
     {
       "id": "US-020",
@@ -347,7 +391,10 @@
       "priority": 20,
       "passes": false,
       "notes": "",
-      "dependsOn": ["US-013", "US-018"]
+      "dependsOn": [
+        "US-013",
+        "US-018"
+      ]
     }
   ]
 }

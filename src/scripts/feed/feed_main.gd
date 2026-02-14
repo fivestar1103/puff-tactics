@@ -2,12 +2,14 @@ extends Control
 class_name FeedMain
 
 const FEED_ITEM_SCRIPT: GDScript = preload("res://src/scripts/feed/feed_item.gd")
+const FEED_SYNC_SCRIPT: GDScript = preload("res://src/scripts/network/feed_sync.gd")
 
 const SNAP_DURATION: float = 0.28
 const SWIPE_THRESHOLD_PX: float = 120.0
 const SNAPSHOT_Y_RATIO: float = 0.34
+const FEED_BATCH_SIZE: int = 50
 
-const FEED_PUZZLE_SNAPSHOTS: Array[Dictionary] = [
+const FALLBACK_FEED_PUZZLE_SNAPSHOTS: Array[Dictionary] = [
 	{
 		"map_config": {
 			"width": 5,
@@ -179,13 +181,18 @@ var _drag_start_position: Vector2 = Vector2.ZERO
 var _drag_delta_y: float = 0.0
 var _snap_tween: Tween
 var _feed_items: Array[Node2D] = []
+var _feed_snapshots: Array[Dictionary] = []
+var _feed_sync: Node
 
 
 func _ready() -> void:
+	_setup_feed_sync()
+	_load_initial_snapshots()
 	_build_feed_items()
 	_style_fab_buttons()
 	_layout_feed_items()
 	_set_active_item(0, false)
+	call_deferred("_fetch_next_batch_in_background")
 
 
 func _notification(what: int) -> void:
@@ -288,8 +295,74 @@ func _stop_snap_tween() -> void:
 	_snap_tween = null
 
 
+func _setup_feed_sync() -> void:
+	var feed_sync_variant: Variant = FEED_SYNC_SCRIPT.new()
+	if not (feed_sync_variant is Node):
+		return
+	_feed_sync = feed_sync_variant
+	_feed_sync.name = "FeedSync"
+	add_child(_feed_sync)
+
+
+func _load_initial_snapshots() -> void:
+	_feed_snapshots.clear()
+
+	var cached_snapshots: Array[Dictionary] = []
+	if _feed_sync != null and _feed_sync.has_method("load_cached_feed_items"):
+		var cached_variant: Variant = _feed_sync.call("load_cached_feed_items")
+		if cached_variant is Array:
+			cached_snapshots = _to_snapshot_array(cached_variant)
+
+	if cached_snapshots.is_empty():
+		_feed_snapshots = _to_snapshot_array(FALLBACK_FEED_PUZZLE_SNAPSHOTS)
+		return
+
+	_feed_snapshots = cached_snapshots
+	subtitle_label.text = "Loaded %d cached puzzles. Syncing next batch..." % _feed_snapshots.size()
+
+
+func _fetch_next_batch_in_background() -> void:
+	if _feed_sync == null:
+		return
+	if not _feed_sync.has_method("fetch_feed_items_batch"):
+		return
+
+	var offset: int = _feed_snapshots.size()
+	var fetch_result_variant: Variant = await _feed_sync.call("fetch_feed_items_batch", offset, FEED_BATCH_SIZE)
+	if not (fetch_result_variant is Dictionary):
+		return
+
+	var fetch_result: Dictionary = fetch_result_variant
+	if not bool(fetch_result.get("ok", false)):
+		if offset > 0:
+			subtitle_label.text = "Offline mode: playing cached feed items"
+		return
+
+	var batch_variant: Variant = fetch_result.get("items", [])
+	if not (batch_variant is Array):
+		return
+
+	var fetched_snapshots: Array[Dictionary] = _to_snapshot_array(batch_variant)
+	if fetched_snapshots.is_empty():
+		return
+
+	var start_index: int = _feed_snapshots.size()
+	_feed_snapshots.append_array(fetched_snapshots)
+	_build_feed_items_from_index(start_index)
+	_layout_feed_items()
+	_update_header_text()
+
+
 func _build_feed_items() -> void:
-	for item_index in FEED_PUZZLE_SNAPSHOTS.size():
+	_feed_items.clear()
+	for child in feed_track.get_children():
+		child.queue_free()
+
+	_build_feed_items_from_index(0)
+
+
+func _build_feed_items_from_index(start_index: int) -> void:
+	for item_index in range(start_index, _feed_snapshots.size()):
 		var feed_item_variant: Variant = FEED_ITEM_SCRIPT.new()
 		if not (feed_item_variant is Node2D):
 			continue
@@ -297,7 +370,7 @@ func _build_feed_items() -> void:
 		var feed_item: Node2D = feed_item_variant
 		feed_item.name = "FeedItem_%d" % item_index
 		if feed_item.has_method("configure_snapshot"):
-			var snapshot: Dictionary = FEED_PUZZLE_SNAPSHOTS[item_index].duplicate(true)
+			var snapshot: Dictionary = _feed_snapshots[item_index].duplicate(true)
 			feed_item.call("configure_snapshot", snapshot)
 
 		feed_track.add_child(feed_item)
@@ -305,6 +378,16 @@ func _build_feed_items() -> void:
 
 		_connect_if_available(feed_item, &"cycle_completed", Callable(self, "_on_feed_item_cycle_completed").bind(item_index))
 		_connect_if_available(feed_item, &"status_changed", Callable(self, "_on_feed_item_status_changed").bind(item_index))
+
+
+func _to_snapshot_array(raw_array: Array) -> Array[Dictionary]:
+	var snapshots: Array[Dictionary] = []
+	for snapshot_variant in raw_array:
+		if not (snapshot_variant is Dictionary):
+			continue
+		var snapshot: Dictionary = snapshot_variant.duplicate(true)
+		snapshots.append(snapshot)
+	return snapshots
 
 
 func _layout_feed_items() -> void:
@@ -373,6 +456,8 @@ func _update_subtitle_for_locked_swipe() -> void:
 
 
 func _on_feed_item_cycle_completed(score: int, cycle_duration_seconds: float, item_index: int) -> void:
+	_submit_feed_result(item_index, score, cycle_duration_seconds)
+
 	if item_index != _active_item_index:
 		return
 	subtitle_label.text = "Score %d in %.1fs. Swipe up for next." % [score, cycle_duration_seconds]
@@ -385,6 +470,18 @@ func _on_feed_item_status_changed(status_text: String, swipe_unlocked: bool, ite
 		subtitle_label.text = "%s" % status_text
 		return
 	subtitle_label.text = status_text
+
+
+func _submit_feed_result(item_index: int, score: int, cycle_duration_seconds: float) -> void:
+	if _feed_sync == null:
+		return
+	if not _feed_sync.has_method("submit_feed_result"):
+		return
+	if item_index < 0 or item_index >= _feed_snapshots.size():
+		return
+
+	var snapshot: Dictionary = _feed_snapshots[item_index]
+	_feed_sync.call("submit_feed_result", snapshot, score, cycle_duration_seconds)
 
 
 func _connect_if_available(source: Object, signal_name: StringName, callback: Callable) -> void:
