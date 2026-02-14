@@ -1,51 +1,174 @@
 extends Control
 class_name FeedMain
 
-const TURN_BATTLE_SCENE: PackedScene = preload("res://src/scenes/battle/TurnBattle.tscn")
+const FEED_ITEM_SCRIPT: GDScript = preload("res://src/scripts/feed/feed_item.gd")
 
-const ITEM_COUNT: int = 3
 const SNAP_DURATION: float = 0.28
 const SWIPE_THRESHOLD_PX: float = 120.0
-const SNAPSHOT_SCALE: Vector2 = Vector2(0.68, 0.68)
 const SNAPSHOT_Y_RATIO: float = 0.34
 
-const FEED_MAP_CONFIGS: Array[Dictionary] = [
+const FEED_PUZZLE_SNAPSHOTS: Array[Dictionary] = [
 	{
-		"width": 5,
-		"height": 5,
-		"rows": [
-			["cloud", "cloud", "high_cloud", "cloud", "cloud"],
-			["cloud", "puddle", "cloud", "mushroom", "cloud"],
-			["cotton_candy", "cloud", "cliff", "cloud", "high_cloud"],
-			["cloud", "mushroom", "cloud", "puddle", "cloud"],
-			["cloud", "cloud", "high_cloud", "cloud", "cloud"]
-		]
+		"map_config": {
+			"width": 5,
+			"height": 5,
+			"rows": [
+				["cloud", "cloud", "high_cloud", "cloud", "cloud"],
+				["cloud", "puddle", "cloud", "mushroom", "cloud"],
+				["cotton_candy", "cloud", "cliff", "cloud", "high_cloud"],
+				["cloud", "mushroom", "cloud", "puddle", "cloud"],
+				["cloud", "cloud", "high_cloud", "cloud", "cloud"]
+			]
+		},
+		"puffs": [
+			{
+				"name": "Flame_Lead",
+				"team": "player",
+				"data_path": "res://src/resources/puffs/base/flame_melee.tres",
+				"cell": Vector2i(1, 3)
+			},
+			{
+				"name": "Cloud_Guard",
+				"team": "enemy",
+				"data_path": "res://src/resources/puffs/base/cloud_tank.tres",
+				"cell": Vector2i(2, 2)
+			},
+			{
+				"name": "Droplet_Backline",
+				"team": "enemy",
+				"data_path": "res://src/resources/puffs/base/droplet_ranged.tres",
+				"cell": Vector2i(4, 1)
+			}
+		],
+		"enemy_intents": [
+			{
+				"action": &"skill",
+				"actor_cell": Vector2i(2, 2),
+				"move_cell": Vector2i(2, 2),
+				"target_cell": Vector2i(1, 3),
+				"skill_cells": [Vector2i(1, 3), Vector2i(2, 3)],
+				"direction": Vector2i(-1, 0)
+			},
+			{
+				"action": &"move",
+				"actor_cell": Vector2i(4, 1),
+				"move_cell": Vector2i(3, 1),
+				"target_cell": Vector2i(3, 1),
+				"skill_cells": [],
+				"direction": Vector2i.ZERO
+			}
+		],
+		"target_score": 230
 	},
 	{
-		"width": 5,
-		"height": 5,
-		"rows": [
-			["high_cloud", "cloud", "cloud", "cloud", "cliff"],
-			["cloud", "cotton_candy", "puddle", "cloud", "cloud"],
-			["cloud", "cloud", "mushroom", "high_cloud", "cloud"],
-			["cloud", "puddle", "cloud", "cloud", "cloud"],
-			["cliff", "cloud", "cloud", "cotton_candy", "high_cloud"]
-		]
+		"map_config": {
+			"width": 5,
+			"height": 5,
+			"rows": [
+				["high_cloud", "cloud", "cloud", "cloud", "cliff"],
+				["cloud", "cotton_candy", "puddle", "cloud", "cloud"],
+				["cloud", "cloud", "mushroom", "high_cloud", "cloud"],
+				["cloud", "puddle", "cloud", "cloud", "cloud"],
+				["cliff", "cloud", "cloud", "cotton_candy", "high_cloud"]
+			]
+		},
+		"puffs": [
+			{
+				"name": "Whirl_Scout",
+				"team": "player",
+				"data_path": "res://src/resources/puffs/base/whirl_mobility.tres",
+				"cell": Vector2i(1, 2)
+			},
+			{
+				"name": "Cloud_Anchor",
+				"team": "enemy",
+				"data_path": "res://src/resources/puffs/base/cloud_tank.tres",
+				"cell": Vector2i(2, 2)
+			},
+			{
+				"name": "Leaf_Enemy",
+				"team": "enemy",
+				"data_path": "res://src/resources/puffs/base/leaf_healer.tres",
+				"cell": Vector2i(3, 3)
+			}
+		],
+		"enemy_intents": [
+			{
+				"action": &"attack",
+				"actor_cell": Vector2i(2, 2),
+				"move_cell": Vector2i(2, 2),
+				"target_cell": Vector2i(1, 2),
+				"skill_cells": [],
+				"direction": Vector2i.ZERO
+			},
+			{
+				"action": &"move",
+				"actor_cell": Vector2i(3, 3),
+				"move_cell": Vector2i(2, 3),
+				"target_cell": Vector2i(2, 3),
+				"skill_cells": [],
+				"direction": Vector2i.ZERO
+			}
+		],
+		"target_score": 255
 	},
 	{
-		"width": 5,
-		"height": 5,
-		"rows": [
-			["cloud", "mushroom", "cloud", "high_cloud", "cloud"],
-			["cloud", "cloud", "puddle", "cloud", "cloud"],
-			["high_cloud", "cliff", "cloud", "puddle", "cloud"],
-			["cloud", "cloud", "cotton_candy", "cloud", "mushroom"],
-			["cloud", "high_cloud", "cloud", "cloud", "cliff"]
-		]
+		"map_config": {
+			"width": 5,
+			"height": 5,
+			"rows": [
+				["cloud", "mushroom", "cloud", "high_cloud", "cloud"],
+				["cloud", "cloud", "puddle", "cloud", "cloud"],
+				["high_cloud", "cliff", "cloud", "puddle", "cloud"],
+				["cloud", "cloud", "cotton_candy", "cloud", "mushroom"],
+				["cloud", "high_cloud", "cloud", "cloud", "cliff"]
+			]
+		},
+		"puffs": [
+			{
+				"name": "Star_Closer",
+				"team": "player",
+				"data_path": "res://src/resources/puffs/base/star_wildcard.tres",
+				"cell": Vector2i(1, 3)
+			},
+			{
+				"name": "Flame_Enemy",
+				"team": "enemy",
+				"data_path": "res://src/resources/puffs/base/flame_melee.tres",
+				"cell": Vector2i(2, 3)
+			},
+			{
+				"name": "Droplet_Enemy",
+				"team": "enemy",
+				"data_path": "res://src/resources/puffs/base/droplet_ranged.tres",
+				"cell": Vector2i(4, 2)
+			}
+		],
+		"enemy_intents": [
+			{
+				"action": &"skill",
+				"actor_cell": Vector2i(2, 3),
+				"move_cell": Vector2i(2, 3),
+				"target_cell": Vector2i(1, 3),
+				"skill_cells": [Vector2i(1, 3), Vector2i(2, 3), Vector2i(3, 3)],
+				"direction": Vector2i(-1, 0)
+			},
+			{
+				"action": &"attack",
+				"actor_cell": Vector2i(4, 2),
+				"move_cell": Vector2i(4, 2),
+				"target_cell": Vector2i(1, 3),
+				"skill_cells": [],
+				"direction": Vector2i.ZERO
+			}
+		],
+		"target_score": 280
 	}
 ]
 
 @onready var feed_track: Node2D = $FeedTrack
+@onready var title_label: Label = $Hud/TopMargin/TopStack/TitleLabel
+@onready var subtitle_label: Label = $Hud/TopMargin/TopStack/SubtitleLabel
 @onready var profile_button: Button = $Hud/FabRow/ProfileButton
 @onready var create_button: Button = $Hud/FabRow/CreateButton
 @onready var leaderboard_button: Button = $Hud/FabRow/LeaderboardButton
@@ -62,7 +185,7 @@ func _ready() -> void:
 	_build_feed_items()
 	_style_fab_buttons()
 	_layout_feed_items()
-	_snap_to_active_item(false)
+	_set_active_item(0, false)
 
 
 func _notification(what: int) -> void:
@@ -120,9 +243,15 @@ func _end_drag(screen_position: Vector2) -> void:
 
 	var next_index: int = _active_item_index
 	if _drag_delta_y <= -SWIPE_THRESHOLD_PX:
-		next_index = mini(_active_item_index + 1, _feed_items.size() - 1)
+		if _active_item_can_advance():
+			next_index = mini(_active_item_index + 1, _feed_items.size() - 1)
+		else:
+			_update_subtitle_for_locked_swipe()
 	elif _drag_delta_y >= SWIPE_THRESHOLD_PX:
-		next_index = maxi(_active_item_index - 1, 0)
+		if _active_item_can_advance():
+			next_index = maxi(_active_item_index - 1, 0)
+		else:
+			_update_subtitle_for_locked_swipe()
 
 	_set_active_item(next_index, true)
 
@@ -133,7 +262,9 @@ func _set_active_item(index: int, animate: bool) -> void:
 		return
 
 	_active_item_index = clampi(index, 0, _feed_items.size() - 1)
+	_sync_feed_item_activation()
 	_snap_to_active_item(animate)
+	_update_header_text()
 
 
 func _snap_to_active_item(animate: bool) -> void:
@@ -158,33 +289,22 @@ func _stop_snap_tween() -> void:
 
 
 func _build_feed_items() -> void:
-	for item_index in ITEM_COUNT:
-		var feed_item: Node2D = Node2D.new()
+	for item_index in FEED_PUZZLE_SNAPSHOTS.size():
+		var feed_item_variant: Variant = FEED_ITEM_SCRIPT.new()
+		if not (feed_item_variant is Node2D):
+			continue
+
+		var feed_item: Node2D = feed_item_variant
 		feed_item.name = "FeedItem_%d" % item_index
+		if feed_item.has_method("configure_snapshot"):
+			var snapshot: Dictionary = FEED_PUZZLE_SNAPSHOTS[item_index].duplicate(true)
+			feed_item.call("configure_snapshot", snapshot)
+
 		feed_track.add_child(feed_item)
 		_feed_items.append(feed_item)
 
-		var snapshot_variant: Node = TURN_BATTLE_SCENE.instantiate()
-		if not (snapshot_variant is Node2D):
-			snapshot_variant.queue_free()
-			continue
-
-		var snapshot: Node2D = snapshot_variant
-		feed_item.add_child(snapshot)
-		snapshot.scale = SNAPSHOT_SCALE
-		_configure_snapshot(snapshot, item_index)
-
-
-func _configure_snapshot(snapshot: Node2D, item_index: int) -> void:
-	var battle_map: Node = snapshot.get_node_or_null("BattleMap")
-	if battle_map != null and battle_map.has_method("load_map_from_config"):
-		var map_config: Dictionary = FEED_MAP_CONFIGS[item_index % FEED_MAP_CONFIGS.size()].duplicate(true)
-		battle_map.call("load_map_from_config", map_config)
-
-	var turn_manager: Node = snapshot.get_node_or_null("TurnManager")
-	if turn_manager != null:
-		# Feed cards are snapshots; disable direct battle tap input inside the feed.
-		turn_manager.set_process_unhandled_input(false)
+		_connect_if_available(feed_item, &"cycle_completed", Callable(self, "_on_feed_item_cycle_completed").bind(item_index))
+		_connect_if_available(feed_item, &"status_changed", Callable(self, "_on_feed_item_status_changed").bind(item_index))
 
 
 func _layout_feed_items() -> void:
@@ -197,12 +317,84 @@ func _layout_feed_items() -> void:
 		)
 
 
+func _sync_feed_item_activation() -> void:
+	for item_index in _feed_items.size():
+		var feed_item: Node2D = _feed_items[item_index]
+		if not feed_item.has_method("set_interaction_enabled"):
+			continue
+		feed_item.call("set_interaction_enabled", item_index == _active_item_index)
+
+
+func _update_header_text() -> void:
+	var total_items: int = _feed_items.size()
+	title_label.text = "Puff Tactics Feed (%d/%d)" % [_active_item_index + 1, total_items]
+
+	var active_feed_item: Node2D = _get_active_feed_item()
+	if active_feed_item == null:
+		subtitle_label.text = "Swipe up for the next tactical snapshot"
+		return
+
+	if active_feed_item.has_method("get_status_text"):
+		var status_text: String = str(active_feed_item.call("get_status_text"))
+		if not status_text.is_empty():
+			subtitle_label.text = status_text
+			return
+
+	subtitle_label.text = "Solve the turn, then swipe to the next puzzle"
+
+
 func _active_track_position_y() -> float:
 	return -float(_active_item_index) * _page_height()
 
 
 func _page_height() -> float:
 	return get_viewport_rect().size.y
+
+
+func _active_item_can_advance() -> bool:
+	var active_feed_item: Node2D = _get_active_feed_item()
+	if active_feed_item == null:
+		return true
+	if not active_feed_item.has_method("can_advance_to_next_item"):
+		return true
+	return bool(active_feed_item.call("can_advance_to_next_item"))
+
+
+func _get_active_feed_item() -> Node2D:
+	if _feed_items.is_empty():
+		return null
+	if _active_item_index < 0 or _active_item_index >= _feed_items.size():
+		return null
+	return _feed_items[_active_item_index]
+
+
+func _update_subtitle_for_locked_swipe() -> void:
+	subtitle_label.text = "Finish this 1-turn puzzle before swiping"
+
+
+func _on_feed_item_cycle_completed(score: int, cycle_duration_seconds: float, item_index: int) -> void:
+	if item_index != _active_item_index:
+		return
+	subtitle_label.text = "Score %d in %.1fs. Swipe up for next." % [score, cycle_duration_seconds]
+
+
+func _on_feed_item_status_changed(status_text: String, swipe_unlocked: bool, item_index: int) -> void:
+	if item_index != _active_item_index:
+		return
+	if swipe_unlocked:
+		subtitle_label.text = "%s" % status_text
+		return
+	subtitle_label.text = status_text
+
+
+func _connect_if_available(source: Object, signal_name: StringName, callback: Callable) -> void:
+	if source == null:
+		return
+	if not source.has_signal(signal_name):
+		return
+	if source.is_connected(signal_name, callback):
+		return
+	source.connect(signal_name, callback)
 
 
 func _style_fab_buttons() -> void:

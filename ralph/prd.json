@@ -157,8 +157,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 9,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Added src/scripts/feed/feed_item.gd to load puzzle snapshots (map config + puff positions + seeded enemy intents), run one-turn tactical interaction, enforce a 15-30s decision window, play a 3s result phase and 2s score/comparison phase, and emit feed completion scores. Refactored src/scripts/feed/feed_main.gd to instantiate FeedItem cards, activate one card at a time, and gate swipe transitions until the active cycle is complete. Extended src/scripts/ai/enemy_intent.gd with load_snapshot_intents() so feed snapshots can render authored intent overlays before reactive recalculation.",
       "dependsOn": ["US-005", "US-007", "US-008"]
     },
     {

@@ -19,7 +19,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "`src/scripts/battle/bump_system.gd` resolves bump chains from tail to head; `TurnManager` applies pushes and treats any pushed puff standing on `cliff` terrain as a 1-turn stun using `_stun_state_by_puff_id` + team-turn recovery."
 - "Enemy intent overlays use `TurnManager.get_enemy_intent_snapshot()` (same plan logic used by enemy execution) and refresh from `phase_changed` plus `SignalBus` board-state events (`puff_moved`, `puff_bumped`, `turn_ended`)."
 - "Enemy planning is centralized through `src/scripts/ai/utility_ai.gd`; `TurnManager` builds legal wait/move/attack/skill candidates per enemy and selects the max-utility intent using weighted factors (`attack_value`, `survival_risk`, `positional_advantage`, `bump_opportunity`) exposed as TurnManager exports for difficulty tuning."
-- "`src/scripts/feed/feed_main.gd` drives swipe feed navigation by tweening `FeedTrack.position.y`; each feed card instances `TurnBattle.tscn` for map+puffs+enemy-intent snapshots and disables `TurnManager` unhandled input so cards stay preview-only."
+- "`src/scripts/feed/feed_item.gd` now owns interactive feed-card micro-puzzle flow: snapshot load (`map_config` + `puffs` + `enemy_intents`), 15-30s decision window, fixed 3s resolve + 2s score phases, and swipe unlock via `can_advance_to_next_item()` that `feed_main.gd` checks before allowing page transitions."
 
 ## Gotchas
 

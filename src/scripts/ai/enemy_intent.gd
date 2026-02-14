@@ -24,6 +24,7 @@ const SKILL_PRIMARY_BORDER_COLOR: Color = Color(0.99, 0.82, 0.47, 0.82)
 @export var turn_manager_path: NodePath
 
 var enemy_intents: Dictionary = {}
+var _pending_snapshot_seed: bool = false
 
 var _battle_map: Node2D
 var _turn_manager: Node
@@ -44,6 +45,11 @@ func _ready() -> void:
 
 
 func recalculate_intents() -> void:
+	if _pending_snapshot_seed:
+		_pending_snapshot_seed = false
+		queue_redraw()
+		return
+
 	if _turn_manager == null or not _turn_manager.has_method("get_enemy_intent_snapshot"):
 		enemy_intents.clear()
 		queue_redraw()
@@ -60,6 +66,20 @@ func recalculate_intents() -> void:
 
 func get_enemy_intents() -> Dictionary:
 	return enemy_intents.duplicate(true)
+
+
+func load_snapshot_intents(snapshot_intents: Array) -> void:
+	enemy_intents.clear()
+	var snapshot_index: int = 0
+	for intent_variant in snapshot_intents:
+		if not (intent_variant is Dictionary):
+			continue
+		var intent: Dictionary = intent_variant
+		enemy_intents[snapshot_index] = intent.duplicate(true)
+		snapshot_index += 1
+
+	_pending_snapshot_seed = not enemy_intents.is_empty()
+	queue_redraw()
 
 
 func _draw() -> void:
