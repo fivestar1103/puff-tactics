@@ -395,6 +395,147 @@
         "US-013",
         "US-018"
       ]
+    },
+    {
+      "id": "US-021",
+      "title": "Global visual theme system",
+      "description": "As a developer, I want a shared visual theme autoload so that all screens use consistent GDD pastel/kawaii styling without duplication.",
+      "acceptanceCriteria": [
+        "src/scripts/core/visual_theme.gd exists as a new autoload singleton registered in project.godot",
+        "VisualTheme provides: create_panel_stylebox(bg_color, corner_radius, border_color) returning StyleBoxFlat",
+        "VisualTheme provides: create_button_styleboxes(base_color, font_color, corner_radius) returning Dictionary with normal/hover/pressed/disabled StyleBoxFlat entries",
+        "VisualTheme provides: apply_button_theme(button, base_color, font_color, min_size, font_size) that fully styles a Button node",
+        "VisualTheme provides: apply_label_theme(label, font_size, font_color) that styles a Label node",
+        "VisualTheme provides: create_separator_stylebox(color, thickness) returning StyleBoxLine",
+        "constants.gd has GDD palette colors: PALETTE_LAVENDER (#957DAD), PALETTE_MINT (#A8D8B9), PALETTE_PEACH (#FFD6BA), PALETTE_SKY (#A0C4FF), PALETTE_PINK (#E8A0BF)",
+        "constants.gd has UI colors: COLOR_BG_CREAM, COLOR_BG_DARK_OVERLAY, COLOR_TEXT_DARK, COLOR_TEXT_LIGHT, COLOR_TEAM_PLAYER, COLOR_TEAM_ENEMY",
+        "constants.gd has font size constants: FONT_SIZE_TITLE (38), FONT_SIZE_SUBTITLE (22), FONT_SIZE_BODY (18), FONT_SIZE_BUTTON (26), FONT_SIZE_HUD (20)",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 21,
+      "passes": true,
+      "notes": "Added src/scripts/core/visual_theme.gd with StyleBox/label/button helpers, registered it as VisualTheme autoload in project.godot, and added palette/font UI constants in src/scripts/core/constants.gd (PALETTE_* and COLOR_*/FONT_SIZE_*).",
+      "dependsOn": ["US-001"]
+    },
+    {
+      "id": "US-022",
+      "title": "Puff visual upgrade with kawaii face and team ring",
+      "description": "As a player, I want puffs to be bigger with cute faces and team-colored rings so that they are visually appealing and clearly team-identified.",
+      "acceptanceCriteria": [
+        "PLACEHOLDER_TEXTURE_SIZE increased from 72 to 128 and PLACEHOLDER_RADIUS from 26 to 48 in puff.gd",
+        "Puff placeholder texture draws a kawaii face: two oval dark eyes at ~35% from top, small curved mouth at ~55% from top, two small pink blush circles on cheeks",
+        "Puff placeholder texture draws a 3px team-colored ring around the outer edge (player=COLOR_TEAM_PLAYER blue, enemy=COLOR_TEAM_ENEMY red)",
+        "Puff.gd accepts a team property or parameter to determine ring color during _build_placeholder_visual()",
+        "Small colored diamond element badge drawn in the bottom-right corner of the puff texture using the element color",
+        "Collision shape radius and sprite offset updated to match the new 128px size",
+        "Accessory textures (hat/scarf/ribbon) scale proportionally to the new 128px size",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 22,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-021"]
+    },
+    {
+      "id": "US-023",
+      "title": "Isometric tilemap terrain indicator symbols",
+      "description": "As a player, I want distinct visual indicators on each terrain tile so that I can tell cloud from cliff at a glance.",
+      "acceptanceCriteria": [
+        "Each terrain type in _draw_isometric_diamond() draws a pixel-art indicator symbol on the tile center: cloud=small white circle puff, high_cloud=upward arrow pixels, cotton_candy=spiral/swirl pattern, puddle=wavy horizontal lines, cliff=downward-pointing triangle, mushroom=mushroom cap silhouette",
+        "Tiles have a subtle gradient: top half slightly lighter, bottom half slightly darker for 3D depth",
+        "Cliff tiles have a thicker/darker border for danger emphasis",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 23,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-021"]
+    },
+    {
+      "id": "US-024",
+      "title": "Feed UI redesign with themed labels and swipe hint",
+      "description": "As a player, I want the feed screen to look polished with styled titles, themed FAB buttons, and a swipe hint so that the first impression is premium.",
+      "acceptanceCriteria": [
+        "Title label uses VisualTheme.apply_label_theme with FONT_SIZE_TITLE and COLOR_TEXT_DARK",
+        "Subtitle label uses VisualTheme.apply_label_theme with FONT_SIZE_SUBTITLE and a slightly muted color",
+        "FAB buttons (Profile, Create, Leaderboard) use VisualTheme.apply_button_theme with GDD palette colors: Profile=PALETTE_SKY, Create=PALETTE_PEACH, Leaderboard=PALETTE_MINT",
+        "A SwipeHintLabel node exists showing upward swipe indicator text at the bottom center of the feed",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 24,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-021"]
+    },
+    {
+      "id": "US-025",
+      "title": "Battle HUD with turn banner and result overlay",
+      "description": "As a player, I want a battle HUD showing turn state and results so that I understand what is happening during combat.",
+      "acceptanceCriteria": [
+        "TurnBattle.tscn has a new HudLayer (CanvasLayer) child with TurnBanner (Label), ScorePanel (PanelContainer), and ResultOverlay (ColorRect) nodes",
+        "src/scripts/ui/battle_hud.gd exists as the script on HudLayer, connecting to TurnManager signals",
+        "TurnBanner displays 'Your Turn' or 'Enemy Turn' as a styled pill-shaped label (lavender bg, white text) during phase changes",
+        "ResultOverlay shows 'Victory!' or 'Defeat' with a semi-transparent dark overlay when battle ends",
+        "HUD elements are styled using VisualTheme helpers with GDD palette colors",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 25,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-021"]
+    },
+    {
+      "id": "US-026",
+      "title": "Enhanced enemy intent visualization with arrows",
+      "description": "As a player, I want colored arrows and cell highlights for enemy intents so that the Into-the-Breach-style preview is visually clear.",
+      "acceptanceCriteria": [
+        "Enemy intent move actions draw a colored arrow line from actor cell to destination cell (yellow/gold color)",
+        "Enemy intent attack actions draw a red semi-transparent overlay on the target cell with a crosshair/X symbol",
+        "Enemy intent skill/bump actions draw an orange arrow from actor to target with skill area cells highlighted in purple",
+        "Arrow heads are visible and properly oriented toward the target direction",
+        "Intent colors are more vivid and distinguishable than the current implementation",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 26,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-021"]
+    },
+    {
+      "id": "US-027",
+      "title": "Collection and editor screen styling",
+      "description": "As a player, I want the collection and puzzle editor screens to use themed panels and buttons so that all screens feel visually consistent.",
+      "acceptanceCriteria": [
+        "CollectionScreen applies VisualTheme.create_panel_stylebox() to its Panel node with cream bg and rounded corners",
+        "CollectionScreen title label uses FONT_SIZE_TITLE with PALETTE_LAVENDER color",
+        "CollectionScreen CloseButton uses apply_button_theme with PALETTE_PINK",
+        "PuzzleEditor Panel uses a themed panel stylebox",
+        "PuzzleEditor buttons use themed styling: Apply=PALETTE_SKY, Remove=PALETTE_PINK, Clear=PALETTE_PEACH, TestPlay=PALETTE_MINT, Publish=PALETTE_LAVENDER",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 27,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-021"]
+    },
+    {
+      "id": "US-028",
+      "title": "Story dialogue and chapter complete styling",
+      "description": "As a player, I want story dialogue panels and chapter complete overlays to use themed kawaii styling so that the narrative feels polished.",
+      "acceptanceCriteria": [
+        "DialoguePanel uses VisualTheme.create_panel_stylebox() with COLOR_BG_CREAM bg and rounded corners",
+        "SpeakerLabel uses PALETTE_LAVENDER color and bold-sized font",
+        "LineLabel uses COLOR_TEXT_DARK and comfortable font size",
+        "NextButton uses apply_button_theme with PALETTE_MINT (pill shape)",
+        "TutorialPanel uses VisualTheme.create_panel_stylebox() with PALETTE_SKY bg and white text",
+        "ChapterCompleteOverlay ChapterPanel uses PALETTE_PEACH bg",
+        "CompleteButton uses apply_button_theme with PALETTE_LAVENDER",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 28,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-021"]
     }
   ]
 }

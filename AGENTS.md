@@ -32,6 +32,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "Puff animation feedback is centralized in `src/scripts/ui/puff_animator.gd`; `TurnManager` drives move/attack/bump/defeat/recovery tweens through this helper and uses `_is_action_locked` to block duplicate inputs during active action animations."
 - "`src/scenes/ui/PuzzleEditor.tscn` + `src/scripts/ui/puzzle_editor.gd` handle UGC authoring: drag terrain painting + puff drag/drop placement, per-puff team/element/class controls, template objective metadata, and FeedItem-gated test-play that must pass before Supabase `ugc_puzzles` publish is enabled."
 - "Story campaign flow is orchestrated by `src/scripts/story/story_chapter_1.gd`, which runs scripted `FullBattle.start_scripted_battle(...)` scenarios and advances dialogue/tutorial beats from `battle_completed` + `player_action_resolved`."
+- "Register `VisualTheme` as an autoload and use its StyleBox helpers for consistent label/button/panel styling across feed, battle, story, and editor screens."
 
 ## Gotchas
 
@@ -41,6 +42,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "GDScript `const` dictionaries must use literal arrays; constructor calls like `PackedStringArray()` are not valid constant expressions."
 - "When instantiating children from a node's `_ready()`, adding to a parent/sibling can hit `Parent node is busy setting up children`; use `call_deferred()` for spawn/setup."
 - "`godot --check-only --script` can fail to resolve cross-file `class_name` references in isolation; preload helper scripts (e.g. `const X_SCRIPT = preload(...); X_SCRIPT.new()`) for deterministic syntax checks."
+- "Keep the new `VisualTheme` utility methods in sync with accepted button style state keys (`normal`, `hover`, `pressed`, `disabled`) and font override usage."
 
 ## Conventions
 

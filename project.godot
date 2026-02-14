@@ -19,6 +19,7 @@ config/icon="res://assets/icon.png"
 [autoload]
 
 Constants="*res://src/scripts/core/constants.gd"
+VisualTheme="*res://src/scripts/core/visual_theme.gd"
 SignalBus="*res://src/scripts/core/signal_bus.gd"
 SupabaseClient="*res://src/scripts/network/supabase_client.gd"
 PuffProgression="*res://src/scripts/puffs/puff_progression.gd"
