@@ -191,8 +191,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 11,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Implemented src/scripts/network/supabase_client.gd as a Supabase autoload HTTPRequest wrapper with auth-aware REST/auth helpers, local guest UUID identity, Apple Sign-In handoff stub for iOS plugin integration, encrypted auth state storage at user://auth/supabase_auth.dat, and automatic token refresh (timer + pre-request validation). Added project settings keys puff_tactics/supabase/url and puff_tactics/supabase/publishable_key in project.godot. Verified all src/scripts/*.gd via HOME=/tmp godot --headless --check-only.",
       "dependsOn": ["US-001"]
     },
     {

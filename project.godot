@@ -20,6 +20,7 @@ config/icon="res://assets/icon.png"
 
 Constants="*res://src/scripts/core/constants.gd"
 SignalBus="*res://src/scripts/core/signal_bus.gd"
+SupabaseClient="*res://src/scripts/network/supabase_client.gd"
 
 [display]
 
@@ -33,6 +34,11 @@ window/stretch/aspect="expand"
 [input_devices]
 
 pointing/emulate_touch_from_mouse=true
+
+[puff_tactics]
+
+supabase/url=""
+supabase/publishable_key=""
 
 [rendering]
 

@@ -21,6 +21,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "Enemy planning is centralized through `src/scripts/ai/utility_ai.gd`; `TurnManager` builds legal wait/move/attack/skill candidates per enemy and selects the max-utility intent using weighted factors (`attack_value`, `survival_risk`, `positional_advantage`, `bump_opportunity`) exposed as TurnManager exports for difficulty tuning."
 - "`src/scripts/feed/feed_item.gd` now owns interactive feed-card micro-puzzle flow: snapshot load (`map_config` + `puffs` + `enemy_intents`), 15-30s decision window, fixed 3s resolve + 2s score phases, and swipe unlock via `can_advance_to_next_item()` that `feed_main.gd` checks before allowing page transitions."
 - "`src/scripts/utils/puzzle_generator.gd` builds four template puzzles with difficulty-scaled terrain/unit placement and returns JSON-safe feed snapshots (`cell` values serialized as `{x,y}`) that include `puzzle_meta.validation` from an internal one-turn action simulation."
+- "Supabase network/auth access is centralized in `src/scripts/network/supabase_client.gd` as the `SupabaseClient` autoload; configure `puff_tactics/supabase/url` and `puff_tactics/supabase/publishable_key` in `project.godot`."
 
 ## Gotchas
 
@@ -59,3 +60,4 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "RLS policies require auth.uid() check on all user-scoped tables"
 - "Edge Functions timeout at 60s — keep puzzle generation batches small"
 -->
+- "Supabase auth state is encrypted in `user://auth/supabase_auth.dat`; token refresh is scheduled ~60s before expiry and also checked before each API request."
