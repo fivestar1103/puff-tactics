@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="PuffData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/scripts/puffs/puff_data.gd" id="1_urmqx"]
+
+[resource]
+script = ExtResource("1_urmqx")
+display_name = &"Flame"
+element = 0
+puff_class = 1
+move_range = 3
+attack_range = 1
+hp = 12
+attack = 6
+defense = 2
+unique_skill_id = &"flame_rush"

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="PuffData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/scripts/puffs/puff_data.gd" id="1_ak4ga"]
+
+[resource]
+script = ExtResource("1_ak4ga")
+display_name = &"Whirl"
+element = 3
+puff_class = 4
+move_range = 4
+attack_range = 1
+hp = 10
+attack = 4
+defense = 2
+unique_skill_id = &"whirlwind_dash"

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="PuffData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/scripts/puffs/puff_data.gd" id="1_3b6xu"]
+
+[resource]
+script = ExtResource("1_3b6xu")
+display_name = &"Star"
+element = 4
+puff_class = 5
+move_range = 3
+attack_range = 2
+hp = 12
+attack = 4
+defense = 3
+unique_skill_id = &"star_shift"

@@ -14,12 +14,14 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "Global gameplay enums/constants live in `src/scripts/core/constants.gd` and are provided via `Constants` autoload."
 - "Cross-system events are centralized in `src/scripts/core/signal_bus.gd` as the `SignalBus` autoload."
 - "`BattleMap` terrain data is loaded via `load_map_from_config()` (`rows` or `cells`) or `load_map_from_json()` for procedural snapshots."
+- "Base puff archetypes are `PuffData` `.tres` files in `src/resources/puffs/base/`; `src/scripts/puffs/puff.gd` reads these resources to render placeholder puffs."
 
 ## Gotchas
 
 - "NEVER use `class_name X` on autoload scripts — it conflicts with the singleton name. Autoloads are already accessible globally (e.g. `Constants.FIRE`, `SignalBus.emit(...)`) without class_name."
 - "Godot 4 TileMap uses layers (TileMapLayer), not separate TileMap nodes"
-- "Godot 4.3 is installed and available as `godot` in PATH. Use `godot --headless --path /home/fives/projects/puff-tactics --check-only --quit` to validate GDScript syntax after implementing a story."
+- "Godot 4.3 is available as `godot`; for syntax checks in this repo use `godot --headless --path /home/fives/projects/puff-tactics --check-only --script <gd_file>` per script (main scene is not present yet)."
+- "GDScript `const` dictionaries must use literal arrays; constructor calls like `PackedStringArray()` are not valid constant expressions."
 
 ## Conventions
 

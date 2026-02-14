@@ -53,8 +53,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Implemented PuffData resource schema, Puff scene/script with tilemap positioning and placeholder rendering, six base class .tres resources (Cloud, Flame, Droplet, Leaf, Whirl, Star), and element affinity damage multipliers. Verified all .gd scripts parse via headless Godot --check-only script checks and verified puff resources/scene load headlessly. Also replaced non-constant PackedStringArray() usages in battle_map.gd to satisfy project-wide script parsing.",
       "dependsOn": ["US-001"]
     },
     {

@@ -22,7 +22,7 @@ const TERRAIN_EFFECTS: Dictionary = {
 		"water_attack_bonus": 0,
 		"fire_attack_penalty": 0,
 		"fall_ko_stun_turns": 0,
-		"random_effects": PackedStringArray(),
+		"random_effects": [],
 		"notes": "Base tile with no special effect."
 	},
 	"high_cloud": {
@@ -33,7 +33,7 @@ const TERRAIN_EFFECTS: Dictionary = {
 		"water_attack_bonus": 0,
 		"fire_attack_penalty": 0,
 		"fall_ko_stun_turns": 0,
-		"random_effects": PackedStringArray(),
+		"random_effects": [],
 		"notes": "High ground bonus: +1 attack and improved resistance to being pushed."
 	},
 	"cotton_candy": {
@@ -45,7 +45,7 @@ const TERRAIN_EFFECTS: Dictionary = {
 		"water_attack_bonus": 0,
 		"fire_attack_penalty": 0,
 		"fall_ko_stun_turns": 0,
-		"random_effects": PackedStringArray(),
+		"random_effects": [],
 		"notes": "Entering costs 1 extra movement and grants a temporary buff."
 	},
 	"puddle": {
@@ -56,7 +56,7 @@ const TERRAIN_EFFECTS: Dictionary = {
 		"water_attack_bonus": 1,
 		"fire_attack_penalty": 1,
 		"fall_ko_stun_turns": 0,
-		"random_effects": PackedStringArray(),
+		"random_effects": [],
 		"notes": "Water element attacks are boosted and fire element attacks are weakened."
 	},
 	"cliff": {
@@ -67,7 +67,7 @@ const TERRAIN_EFFECTS: Dictionary = {
 		"water_attack_bonus": 0,
 		"fire_attack_penalty": 0,
 		"fall_ko_stun_turns": 1,
-		"random_effects": PackedStringArray(),
+		"random_effects": [],
 		"notes": "Falling from a push applies a 1-turn knockout/stun."
 	},
 	"mushroom": {
@@ -78,7 +78,7 @@ const TERRAIN_EFFECTS: Dictionary = {
 		"water_attack_bonus": 0,
 		"fire_attack_penalty": 0,
 		"fall_ko_stun_turns": 0,
-		"random_effects": PackedStringArray(["heal", "buff", "teleport"]),
+		"random_effects": ["heal", "buff", "teleport"],
 		"notes": "On step, triggers a random effect: heal, buff, or teleport."
 	}
 }
