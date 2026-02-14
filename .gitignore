@@ -24,6 +24,7 @@ build/
 .env.local
 credentials.json
 .mcp.json
+.codex/config.toml
 
 # Node (for MCP tools)
 node_modules/
