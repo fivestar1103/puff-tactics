@@ -18,14 +18,14 @@ const RESULT_PHASE_SECONDS: float = 3.0
 const SCORE_PHASE_SECONDS: float = 2.0
 const SCORE_REVEAL_DURATION: float = 1.1
 
-const SNAPSHOT_SCALE: Vector2 = Vector2(1.52, 1.52)
+const SNAPSHOT_SCALE: Vector2 = Vector2(1.46, 1.46)
 const SNAPSHOT_LOCAL_Y: float = -160.0
 const SNAPSHOT_BOUNDS_FALLBACK_SIZE: Vector2 = Vector2(640.0, 320.0)
-const STATUS_PANEL_SIZE: Vector2 = Vector2(804.0, 170.0)
-const STATUS_PANEL_MAP_GAP: float = 30.0
+const STATUS_PANEL_SIZE: Vector2 = Vector2(804.0, 228.0)
+const STATUS_PANEL_MAP_GAP: float = 16.0
 const STATUS_PANEL_FALLBACK_LOCAL_Y: float = -120.0
 const SCORE_PANEL_SIZE: Vector2 = Vector2(804.0, 320.0)
-const SCORE_PANEL_MAP_GAP: float = 24.0
+const SCORE_PANEL_MAP_GAP: float = 16.0
 const SCORE_PANEL_FALLBACK_LOCAL_Y: float = 300.0
 const DEFAULT_TARGET_SCORE: int = 230
 const MOMENT_FEED_ITEM_PREFIX: String = "moment_"
@@ -80,7 +80,7 @@ const DEFAULT_SNAPSHOT: Dictionary = {
 			"name": "Cloud_Guard",
 			"team": TEAM_ENEMY,
 			"data_path": "res://src/resources/puffs/base/cloud_tank.tres",
-			"cell": Vector2i(2, 2)
+			"cell": Vector2i(3, 2)
 		},
 		{
 			"name": "Droplet_Backline",
@@ -92,10 +92,10 @@ const DEFAULT_SNAPSHOT: Dictionary = {
 	"enemy_intents": [
 		{
 			"action": &"skill",
-			"actor_cell": Vector2i(2, 2),
-			"move_cell": Vector2i(2, 2),
+			"actor_cell": Vector2i(3, 2),
+			"move_cell": Vector2i(3, 2),
 			"target_cell": Vector2i(1, 3),
-			"skill_cells": [Vector2i(1, 3), Vector2i(2, 3)],
+			"skill_cells": [Vector2i(2, 3), Vector2i(3, 3)],
 			"direction": Vector2i(-1, 0)
 		},
 		{
@@ -202,8 +202,8 @@ func _build_status_overlay() -> void:
 	add_child(_status_panel)
 
 	_status_label = Label.new()
-	_status_label.position = Vector2(24.0, 20.0)
-	_status_label.size = Vector2(756.0, 62.0)
+	_status_label.position = Vector2(24.0, 26.0)
+	_status_label.size = Vector2(756.0, 72.0)
 	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_status_label.add_theme_font_size_override("font_size", 34)
@@ -211,8 +211,8 @@ func _build_status_overlay() -> void:
 	_status_panel.add_child(_status_label)
 
 	_detail_label = Label.new()
-	_detail_label.position = Vector2(24.0, 86.0)
-	_detail_label.size = Vector2(756.0, 64.0)
+	_detail_label.position = Vector2(24.0, 110.0)
+	_detail_label.size = Vector2(756.0, 88.0)
 	_detail_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_detail_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_detail_label.add_theme_font_size_override("font_size", 24)

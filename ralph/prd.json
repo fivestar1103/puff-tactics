@@ -719,8 +719,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 37,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Screenshot review showed vertical flow still loose: the subtitle-to-status gap read oversized, and status->map plus map->score spacing left the tactical stack looking disconnected. Tightened feed-card spacing in `src/scripts/feed/feed_item.gd` by increasing status panel height (170 -> 228) so it sits closer to the header lane while reducing map-anchored gaps (`STATUS_PANEL_MAP_GAP` 30 -> 16, `SCORE_PANEL_MAP_GAP` 24 -> 16). Tightened feed HUD stack spacing in `src/scripts/feed/feed_main.gd` (`SCORE_TO_SWIPE_HINT_GAP` 52 -> 46, `SWIPE_HINT_TO_FAB_GAP` 66 -> 64). Verified with a headless layout probe: subtitle->status ~55.5px, status->map ~16px, map->score ~16px, score->swipe ~46px, swipe->FAB ~64px, and confirmed parse via `HOME=/tmp godot --headless --path /home/fives/projects/puff-tactics --scene res://src/scenes/feed/FeedMain.tscn --quit`.",
       "dependsOn": ["US-036"]
     },
     {
@@ -734,8 +734,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 38,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Screenshot QA still showed two issues: lower HUD controls were drifting too high (leaving a large empty band beneath FABs) and center-lane puff sprites were visually colliding. Updated `src/scripts/feed/feed_main.gd` `_layout_hud_overlays()` so FAB placement is clamped to at least the bottom-anchored fallback row (`maxf(fab_top_y, fallback_fab_top_y)`) and swipe-hint Y is recalculated from the final FAB Y, keeping hint/FAB spacing tight while preventing the control stack from floating upward. Updated `src/scripts/feed/feed_item.gd` `SNAPSHOT_SCALE` from `Vector2(1.52, 1.52)` to `Vector2(1.46, 1.46)` to keep board fill within the visual bar and reduce puff overlap pressure. Also adjusted first fallback/default snapshot enemy placement (`Cloud_Guard` cell `Vector2i(2, 2)` -> `Vector2i(3, 2)`) and synced corresponding intent actor/move/skill cells in both `feed_main.gd` fallback snapshots and `feed_item.gd` default snapshot so 2v2 units remain clearly separated. Verified scene parse with `HOME=/tmp godot --headless --path /home/fives/projects/puff-tactics --scene res://src/scenes/feed/FeedMain.tscn --quit`.",
       "dependsOn": ["US-037"]
     },
     {

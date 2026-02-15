@@ -20,8 +20,8 @@ const SWIPE_HINT_HEIGHT: float = 42.0
 const SWIPE_HINT_GAP_RATIO: float = 0.05
 const SWIPE_HINT_GAP_MIN: float = 56.0
 const SWIPE_HINT_GAP_MAX: float = 84.0
-const SCORE_TO_SWIPE_HINT_GAP: float = 52.0
-const SWIPE_HINT_TO_FAB_GAP: float = 66.0
+const SCORE_TO_SWIPE_HINT_GAP: float = 46.0
+const SWIPE_HINT_TO_FAB_GAP: float = 64.0
 const FEED_BATCH_SIZE: int = 50
 const MIN_PLAYER_PUFFS_PER_SNAPSHOT: int = 2
 const MIN_ENEMY_PUFFS_PER_SNAPSHOT: int = 2
@@ -88,7 +88,7 @@ const FALLBACK_FEED_PUZZLE_SNAPSHOTS: Array[Dictionary] = [
 					"name": "Cloud_Guard",
 					"team": "enemy",
 					"data_path": "res://src/resources/puffs/base/cloud_tank.tres",
-					"cell": Vector2i(2, 2)
+					"cell": Vector2i(3, 2)
 			},
 			{
 				"name": "Droplet_Backline",
@@ -100,10 +100,10 @@ const FALLBACK_FEED_PUZZLE_SNAPSHOTS: Array[Dictionary] = [
 		"enemy_intents": [
 			{
 				"action": &"skill",
-				"actor_cell": Vector2i(2, 2),
-				"move_cell": Vector2i(2, 2),
+				"actor_cell": Vector2i(3, 2),
+				"move_cell": Vector2i(3, 2),
 				"target_cell": Vector2i(1, 3),
-				"skill_cells": [Vector2i(1, 3), Vector2i(2, 3)],
+				"skill_cells": [Vector2i(2, 3), Vector2i(3, 3)],
 				"direction": Vector2i(-1, 0)
 			},
 			{
@@ -786,16 +786,19 @@ func _layout_hud_overlays() -> void:
 		SWIPE_HINT_GAP_MIN,
 		SWIPE_HINT_GAP_MAX
 	)
-	var swipe_hint_top_y: float = fallback_fab_top_y - SWIPE_HINT_HEIGHT - fallback_swipe_gap
+	var fallback_swipe_hint_top_y: float = fallback_fab_top_y - SWIPE_HINT_HEIGHT - fallback_swipe_gap
+	var swipe_hint_top_y: float = fallback_swipe_hint_top_y
 	var score_panel_bottom_y: float = _resolve_active_score_panel_bottom_y()
 	if not is_nan(score_panel_bottom_y):
 		swipe_hint_top_y = score_panel_bottom_y + SCORE_TO_SWIPE_HINT_GAP
 
 	var fab_top_y: float = swipe_hint_top_y + SWIPE_HINT_HEIGHT + SWIPE_HINT_TO_FAB_GAP
+	fab_top_y = maxf(fab_top_y, fallback_fab_top_y)
 	var max_fab_top_y: float = viewport_size.y - FAB_ROW_HEIGHT - FAB_ROW_VIEWPORT_PADDING
 	if fab_top_y > max_fab_top_y:
 		fab_top_y = max_fab_top_y
-		swipe_hint_top_y = fab_top_y - SWIPE_HINT_HEIGHT - SWIPE_HINT_TO_FAB_GAP
+
+	swipe_hint_top_y = fab_top_y - SWIPE_HINT_HEIGHT - SWIPE_HINT_TO_FAB_GAP
 
 	var fab_top: float = fab_top_y - viewport_size.y
 	var fab_bottom: float = fab_top + FAB_ROW_HEIGHT
