@@ -9,8 +9,42 @@ const STORY_CHAPTER_1_SCENE_PATH: String = "res://src/scenes/story/StoryChapter1
 
 const SNAP_DURATION: float = 0.28
 const SWIPE_THRESHOLD_PX: float = 120.0
-const SNAPSHOT_Y_RATIO: float = 0.34
+const SNAPSHOT_Y_RATIO: float = 0.36
 const FEED_BATCH_SIZE: int = 50
+const MIN_PLAYER_PUFFS_PER_SNAPSHOT: int = 2
+const MIN_ENEMY_PUFFS_PER_SNAPSHOT: int = 2
+const FALLBACK_PLAYER_DATA_PATH: String = "res://src/resources/puffs/base/flame_melee.tres"
+const FALLBACK_ENEMY_DATA_PATH: String = "res://src/resources/puffs/base/cloud_tank.tres"
+
+const SUPPLEMENTAL_PLAYER_PUFFS: Array[Dictionary] = [
+	{
+		"name": "Leaf_Support",
+		"team": "player",
+		"data_path": "res://src/resources/puffs/base/leaf_healer.tres",
+		"preferred_cells": [Vector2i(0, 2), Vector2i(0, 3), Vector2i(1, 4), Vector2i(2, 4)]
+	},
+	{
+		"name": "Whirl_Support",
+		"team": "player",
+		"data_path": "res://src/resources/puffs/base/whirl_mobility.tres",
+		"preferred_cells": [Vector2i(1, 4), Vector2i(0, 4), Vector2i(2, 3), Vector2i(1, 1)]
+	}
+]
+
+const SUPPLEMENTAL_ENEMY_PUFFS: Array[Dictionary] = [
+	{
+		"name": "Flame_Raider",
+		"team": "enemy",
+		"data_path": "res://src/resources/puffs/base/flame_melee.tres",
+		"preferred_cells": [Vector2i(4, 1), Vector2i(4, 2), Vector2i(3, 1), Vector2i(3, 2)]
+	},
+	{
+		"name": "Droplet_Sniper",
+		"team": "enemy",
+		"data_path": "res://src/resources/puffs/base/droplet_ranged.tres",
+		"preferred_cells": [Vector2i(4, 0), Vector2i(3, 0), Vector2i(4, 3), Vector2i(3, 3)]
+	}
+]
 
 const FALLBACK_FEED_PUZZLE_SNAPSHOTS: Array[Dictionary] = [
 	{
@@ -25,18 +59,24 @@ const FALLBACK_FEED_PUZZLE_SNAPSHOTS: Array[Dictionary] = [
 				["cloud", "cloud", "high_cloud", "cloud", "cloud"]
 			]
 		},
-		"puffs": [
-			{
-				"name": "Flame_Lead",
-				"team": "player",
-				"data_path": "res://src/resources/puffs/base/flame_melee.tres",
-				"cell": Vector2i(1, 3)
-			},
-			{
-				"name": "Cloud_Guard",
-				"team": "enemy",
-				"data_path": "res://src/resources/puffs/base/cloud_tank.tres",
-				"cell": Vector2i(2, 2)
+			"puffs": [
+				{
+					"name": "Flame_Lead",
+					"team": "player",
+					"data_path": "res://src/resources/puffs/base/flame_melee.tres",
+					"cell": Vector2i(1, 3)
+				},
+				{
+					"name": "Leaf_Ally",
+					"team": "player",
+					"data_path": "res://src/resources/puffs/base/leaf_healer.tres",
+					"cell": Vector2i(0, 2)
+				},
+				{
+					"name": "Cloud_Guard",
+					"team": "enemy",
+					"data_path": "res://src/resources/puffs/base/cloud_tank.tres",
+					"cell": Vector2i(2, 2)
 			},
 			{
 				"name": "Droplet_Backline",
@@ -77,18 +117,24 @@ const FALLBACK_FEED_PUZZLE_SNAPSHOTS: Array[Dictionary] = [
 				["cliff", "cloud", "cloud", "cotton_candy", "high_cloud"]
 			]
 		},
-		"puffs": [
-			{
-				"name": "Whirl_Scout",
-				"team": "player",
-				"data_path": "res://src/resources/puffs/base/whirl_mobility.tres",
-				"cell": Vector2i(1, 2)
-			},
-			{
-				"name": "Cloud_Anchor",
-				"team": "enemy",
-				"data_path": "res://src/resources/puffs/base/cloud_tank.tres",
-				"cell": Vector2i(2, 2)
+			"puffs": [
+				{
+					"name": "Whirl_Scout",
+					"team": "player",
+					"data_path": "res://src/resources/puffs/base/whirl_mobility.tres",
+					"cell": Vector2i(1, 2)
+				},
+				{
+					"name": "Flame_Vanguard",
+					"team": "player",
+					"data_path": "res://src/resources/puffs/base/flame_melee.tres",
+					"cell": Vector2i(0, 3)
+				},
+				{
+					"name": "Cloud_Anchor",
+					"team": "enemy",
+					"data_path": "res://src/resources/puffs/base/cloud_tank.tres",
+					"cell": Vector2i(2, 2)
 			},
 			{
 				"name": "Leaf_Enemy",
@@ -129,18 +175,24 @@ const FALLBACK_FEED_PUZZLE_SNAPSHOTS: Array[Dictionary] = [
 				["cloud", "high_cloud", "cloud", "cloud", "cliff"]
 			]
 		},
-		"puffs": [
-			{
-				"name": "Star_Closer",
-				"team": "player",
-				"data_path": "res://src/resources/puffs/base/star_wildcard.tres",
-				"cell": Vector2i(1, 3)
-			},
-			{
-				"name": "Flame_Enemy",
-				"team": "enemy",
-				"data_path": "res://src/resources/puffs/base/flame_melee.tres",
-				"cell": Vector2i(2, 3)
+			"puffs": [
+				{
+					"name": "Star_Closer",
+					"team": "player",
+					"data_path": "res://src/resources/puffs/base/star_wildcard.tres",
+					"cell": Vector2i(1, 3)
+				},
+				{
+					"name": "Leaf_Backup",
+					"team": "player",
+					"data_path": "res://src/resources/puffs/base/leaf_healer.tres",
+					"cell": Vector2i(0, 4)
+				},
+				{
+					"name": "Flame_Enemy",
+					"team": "enemy",
+					"data_path": "res://src/resources/puffs/base/flame_melee.tres",
+					"cell": Vector2i(2, 3)
 			},
 			{
 				"name": "Droplet_Enemy",
@@ -422,9 +474,269 @@ func _to_snapshot_array(raw_array: Array) -> Array[Dictionary]:
 	for snapshot_variant in raw_array:
 		if not (snapshot_variant is Dictionary):
 			continue
-		var snapshot: Dictionary = snapshot_variant.duplicate(true)
+		var snapshot: Dictionary = _normalize_snapshot_for_feed(snapshot_variant)
+		if snapshot.is_empty():
+			continue
 		snapshots.append(snapshot)
 	return snapshots
+
+
+func _normalize_snapshot_for_feed(raw_snapshot: Dictionary) -> Dictionary:
+	var snapshot: Dictionary = raw_snapshot.duplicate(true)
+
+	var map_config_variant: Variant = snapshot.get("map_config", {})
+	if not (map_config_variant is Dictionary):
+		return {}
+	var map_config: Dictionary = map_config_variant.duplicate(true)
+	snapshot["map_config"] = map_config
+
+	var map_size: Vector2i = _resolve_map_size(map_config)
+	var puffs: Array[Dictionary] = _normalize_snapshot_puffs(snapshot.get("puffs", []), map_size)
+	if puffs.is_empty():
+		return {}
+
+	var occupied_cells: Dictionary = {}
+	var unique_puffs: Array[Dictionary] = []
+	var player_count: int = 0
+	var enemy_count: int = 0
+	for puff in puffs:
+		var team_text: String = _normalize_team_text(puff.get("team", "enemy"))
+		var cell: Vector2i = _to_cell(puff.get("cell", Vector2i.ZERO))
+		if not _is_cell_available(cell, occupied_cells, map_size):
+			cell = _find_first_available_cell(occupied_cells, map_size, [])
+		if not _is_cell_in_bounds(cell, map_size):
+			continue
+		puff["team"] = team_text
+		puff["cell"] = cell
+		unique_puffs.append(puff)
+		occupied_cells[cell] = true
+		if team_text == "player":
+			player_count += 1
+		else:
+			enemy_count += 1
+
+	_append_missing_team_puffs(
+		unique_puffs,
+		occupied_cells,
+		map_size,
+		"player",
+		MIN_PLAYER_PUFFS_PER_SNAPSHOT - player_count,
+		SUPPLEMENTAL_PLAYER_PUFFS
+	)
+	_append_missing_team_puffs(
+		unique_puffs,
+		occupied_cells,
+		map_size,
+		"enemy",
+		MIN_ENEMY_PUFFS_PER_SNAPSHOT - enemy_count,
+		SUPPLEMENTAL_ENEMY_PUFFS
+	)
+
+	snapshot["puffs"] = unique_puffs
+
+	var enemy_intents: Array[Dictionary] = _normalize_enemy_intents(snapshot.get("enemy_intents", []))
+	if enemy_intents.is_empty():
+		enemy_intents = _build_fallback_enemy_intents(unique_puffs)
+	snapshot["enemy_intents"] = enemy_intents
+	return snapshot
+
+
+func _normalize_snapshot_puffs(raw_puffs_variant: Variant, map_size: Vector2i) -> Array[Dictionary]:
+	var normalized: Array[Dictionary] = []
+	if not (raw_puffs_variant is Array):
+		return normalized
+
+	var raw_puffs: Array = raw_puffs_variant
+	for puff_variant in raw_puffs:
+		if not (puff_variant is Dictionary):
+			continue
+		var raw_puff: Dictionary = puff_variant.duplicate(true)
+		var team_text: String = _normalize_team_text(raw_puff.get("team", "enemy"))
+		var cell: Vector2i = _to_cell(raw_puff.get("cell", Vector2i.ZERO))
+		if not _is_cell_in_bounds(cell, map_size):
+			continue
+		normalized.append(
+			{
+				"name": str(raw_puff.get("name", "Puff")),
+				"team": team_text,
+				"data_path": str(raw_puff.get("data_path", _default_data_path_for_team(team_text))),
+				"cell": cell,
+				"hp": int(raw_puff.get("hp", 0)),
+				"max_hp": int(raw_puff.get("max_hp", 0))
+			}
+		)
+
+	return normalized
+
+
+func _normalize_enemy_intents(raw_intents_variant: Variant) -> Array[Dictionary]:
+	var normalized: Array[Dictionary] = []
+	if not (raw_intents_variant is Array):
+		return normalized
+
+	var raw_intents: Array = raw_intents_variant
+	for intent_variant in raw_intents:
+		if not (intent_variant is Dictionary):
+			continue
+		var raw_intent: Dictionary = intent_variant
+
+		var skill_cells: Array[Vector2i] = []
+		var raw_skill_cells_variant: Variant = raw_intent.get("skill_cells", [])
+		if raw_skill_cells_variant is Array:
+			var raw_skill_cells: Array = raw_skill_cells_variant
+			for skill_cell_variant in raw_skill_cells:
+				skill_cells.append(_to_cell(skill_cell_variant))
+
+		normalized.append(
+			{
+				"action": StringName(str(raw_intent.get("action", "wait")).to_lower()),
+				"actor_cell": _to_cell(raw_intent.get("actor_cell", Vector2i.ZERO)),
+				"move_cell": _to_cell(raw_intent.get("move_cell", raw_intent.get("actor_cell", Vector2i.ZERO))),
+				"target_cell": _to_cell(raw_intent.get("target_cell", raw_intent.get("actor_cell", Vector2i.ZERO))),
+				"skill_cells": skill_cells,
+				"direction": _to_cell(raw_intent.get("direction", Vector2i.ZERO))
+			}
+		)
+
+	return normalized
+
+
+func _build_fallback_enemy_intents(puffs: Array[Dictionary]) -> Array[Dictionary]:
+	var first_enemy_cell: Vector2i = Vector2i(-1, -1)
+	var first_player_cell: Vector2i = Vector2i(-1, -1)
+
+	for puff in puffs:
+		var team_text: String = _normalize_team_text(puff.get("team", "enemy"))
+		var cell: Vector2i = _to_cell(puff.get("cell", Vector2i.ZERO))
+		if team_text == "enemy" and first_enemy_cell.x < 0:
+			first_enemy_cell = cell
+		elif team_text == "player" and first_player_cell.x < 0:
+			first_player_cell = cell
+		if first_enemy_cell.x >= 0 and first_player_cell.x >= 0:
+			break
+
+	if first_enemy_cell.x < 0 or first_player_cell.x < 0:
+		return []
+
+	return [
+		{
+			"action": &"attack",
+			"actor_cell": first_enemy_cell,
+			"move_cell": first_enemy_cell,
+			"target_cell": first_player_cell,
+			"skill_cells": [],
+			"direction": _direction_from_to(first_enemy_cell, first_player_cell)
+		}
+	]
+
+
+func _append_missing_team_puffs(
+	puffs: Array[Dictionary],
+	occupied_cells: Dictionary,
+	map_size: Vector2i,
+	team_text: String,
+	missing_count: int,
+	templates: Array[Dictionary]
+) -> void:
+	var to_add: int = maxi(0, missing_count)
+	if to_add <= 0:
+		return
+	if templates.is_empty():
+		return
+
+	for index in range(to_add):
+		var template: Dictionary = templates[index % templates.size()]
+		var preferred_cells_variant: Variant = template.get("preferred_cells", [])
+		var spawn_cell: Vector2i = _find_first_available_cell(occupied_cells, map_size, preferred_cells_variant)
+		if not _is_cell_in_bounds(spawn_cell, map_size):
+			break
+
+		var puff_name: String = str(template.get("name", "Puff"))
+		puffs.append(
+			{
+				"name": "%s_%d" % [puff_name, index + 1],
+				"team": team_text,
+				"data_path": str(template.get("data_path", _default_data_path_for_team(team_text))),
+				"cell": spawn_cell
+			}
+		)
+		occupied_cells[spawn_cell] = true
+
+
+func _find_first_available_cell(occupied_cells: Dictionary, map_size: Vector2i, preferred_cells_variant: Variant) -> Vector2i:
+	if preferred_cells_variant is Array:
+		var preferred_cells: Array = preferred_cells_variant
+		for preferred_cell_variant in preferred_cells:
+			var preferred_cell: Vector2i = _to_cell(preferred_cell_variant)
+			if _is_cell_available(preferred_cell, occupied_cells, map_size):
+				return preferred_cell
+
+	for y in range(map_size.y):
+		for x in range(map_size.x):
+			var candidate: Vector2i = Vector2i(x, y)
+			if _is_cell_available(candidate, occupied_cells, map_size):
+				return candidate
+
+	return Vector2i(-1, -1)
+
+
+func _resolve_map_size(map_config: Dictionary) -> Vector2i:
+	var width: int = int(map_config.get("width", Constants.GRID_SIZE.x))
+	var height: int = int(map_config.get("height", Constants.GRID_SIZE.y))
+
+	var rows_variant: Variant = map_config.get("rows", [])
+	if rows_variant is Array:
+		var rows: Array = rows_variant
+		if height <= 0:
+			height = rows.size()
+		if width <= 0 and not rows.is_empty() and rows[0] is Array:
+			width = (rows[0] as Array).size()
+
+	if width <= 0:
+		width = Constants.GRID_SIZE.x
+	if height <= 0:
+		height = Constants.GRID_SIZE.y
+	return Vector2i(width, height)
+
+
+func _is_cell_available(cell: Vector2i, occupied_cells: Dictionary, map_size: Vector2i) -> bool:
+	if not _is_cell_in_bounds(cell, map_size):
+		return false
+	return not occupied_cells.has(cell)
+
+
+func _is_cell_in_bounds(cell: Vector2i, map_size: Vector2i) -> bool:
+	return cell.x >= 0 and cell.y >= 0 and cell.x < map_size.x and cell.y < map_size.y
+
+
+func _default_data_path_for_team(team_text: String) -> String:
+	if team_text == "player":
+		return FALLBACK_PLAYER_DATA_PATH
+	return FALLBACK_ENEMY_DATA_PATH
+
+
+func _normalize_team_text(team_variant: Variant) -> String:
+	var team_text: String = str(team_variant).strip_edges().to_lower()
+	if team_text == "player":
+		return "player"
+	return "enemy"
+
+
+func _to_cell(cell_variant: Variant) -> Vector2i:
+	if cell_variant is Vector2i:
+		return cell_variant
+	if cell_variant is Dictionary:
+		var cell_dict: Dictionary = cell_variant
+		return Vector2i(int(cell_dict.get("x", 0)), int(cell_dict.get("y", 0)))
+	if cell_variant is Array:
+		var cell_array: Array = cell_variant
+		if cell_array.size() >= 2:
+			return Vector2i(int(cell_array[0]), int(cell_array[1]))
+	return Vector2i.ZERO
+
+
+func _direction_from_to(origin: Vector2i, target: Vector2i) -> Vector2i:
+	return Vector2i(signi(target.x - origin.x), signi(target.y - origin.y))
 
 
 func _layout_feed_items() -> void:

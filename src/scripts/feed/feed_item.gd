@@ -19,6 +19,11 @@ const SCORE_PHASE_SECONDS: float = 2.0
 const SCORE_REVEAL_DURATION: float = 1.1
 
 const SNAPSHOT_SCALE: Vector2 = Vector2(1.14, 1.14)
+const SNAPSHOT_BOUNDS_FALLBACK_SIZE: Vector2 = Vector2(640.0, 320.0)
+const STATUS_PANEL_SIZE: Vector2 = Vector2(804.0, 170.0)
+const STATUS_PANEL_LOCAL_Y: float = -420.0
+const SCORE_PANEL_SIZE: Vector2 = Vector2(804.0, 320.0)
+const SCORE_PANEL_LOCAL_Y: float = 220.0
 const DEFAULT_TARGET_SCORE: int = 230
 const MOMENT_FEED_ITEM_PREFIX: String = "moment_"
 
@@ -61,6 +66,12 @@ const DEFAULT_SNAPSHOT: Dictionary = {
 			"team": TEAM_PLAYER,
 			"data_path": "res://src/resources/puffs/base/flame_melee.tres",
 			"cell": Vector2i(1, 3)
+		},
+		{
+			"name": "Leaf_Ally",
+			"team": TEAM_PLAYER,
+			"data_path": "res://src/resources/puffs/base/leaf_healer.tres",
+			"cell": Vector2i(0, 2)
 		},
 		{
 			"name": "Cloud_Guard",
@@ -176,8 +187,7 @@ func _ready() -> void:
 func _build_status_overlay() -> void:
 	_status_panel = ColorRect.new()
 	_status_panel.name = "StatusPanel"
-	_status_panel.position = Vector2(-402.0, -620.0)
-	_status_panel.size = Vector2(804.0, 170.0)
+	_layout_status_overlay()
 	_status_panel.color = Color(0.08, 0.11, 0.19, 0.68)
 	add_child(_status_panel)
 
@@ -210,8 +220,7 @@ func _build_status_overlay() -> void:
 func _build_score_overlay() -> void:
 	_score_panel = PanelContainer.new()
 	_score_panel.name = "ScorePanel"
-	_score_panel.position = Vector2(-402.0, 220.0)
-	_score_panel.size = Vector2(804.0, 320.0)
+	_layout_score_overlay()
 	_score_panel.visible = false
 	add_child(_score_panel)
 
@@ -328,21 +337,59 @@ func _layout_battle_snapshot() -> void:
 
 	_battle_root.scale = SNAPSHOT_SCALE
 
-	var map_width_pixels: float = _resolve_snapshot_map_width_pixels()
-	var centered_x_offset: float = -(map_width_pixels * 0.5) * SNAPSHOT_SCALE.x
+	var map_bounds: Rect2 = _resolve_snapshot_map_bounds_local()
+	var map_center_x: float = map_bounds.position.x + (map_bounds.size.x * 0.5)
+	var centered_x_offset: float = -map_center_x * SNAPSHOT_SCALE.x
 	_battle_root.position = Vector2(centered_x_offset, 0.0)
+	_layout_status_overlay()
+	_layout_score_overlay()
 
 
-func _resolve_snapshot_map_width_pixels() -> float:
+func _resolve_snapshot_map_bounds_local() -> Rect2:
 	if _battle_map == null:
-		return 640.0
+		return Rect2(Vector2.ZERO, SNAPSHOT_BOUNDS_FALLBACK_SIZE)
 
-	var tile_width: float = float(BattleMap.TILE_PIXEL_SIZE.x)
+	var tile_map_layer: TileMapLayer = _battle_map.get_node_or_null("TileMapLayer")
+	if tile_map_layer == null:
+		return Rect2(Vector2.ZERO, SNAPSHOT_BOUNDS_FALLBACK_SIZE)
+
+	var tile_half_size: Vector2 = Vector2(
+		float(BattleMap.TILE_PIXEL_SIZE.x) * 0.5,
+		float(BattleMap.TILE_PIXEL_SIZE.y) * 0.5
+	)
 	var map_size: Vector2i = _battle_map.map_size
 	if map_size.x <= 0 or map_size.y <= 0:
 		map_size = Constants.GRID_SIZE
 
-	return float(map_size.x + map_size.y) * tile_width * 0.5
+	var min_bounds: Vector2 = Vector2(INF, INF)
+	var max_bounds: Vector2 = Vector2(-INF, -INF)
+	for y in map_size.y:
+		for x in map_size.x:
+			var layer_local_center: Vector2 = tile_map_layer.map_to_local(Vector2i(x, y))
+			var map_local_center: Vector2 = _battle_map.to_local(tile_map_layer.to_global(layer_local_center))
+			min_bounds.x = minf(min_bounds.x, map_local_center.x - tile_half_size.x)
+			min_bounds.y = minf(min_bounds.y, map_local_center.y - tile_half_size.y)
+			max_bounds.x = maxf(max_bounds.x, map_local_center.x + tile_half_size.x)
+			max_bounds.y = maxf(max_bounds.y, map_local_center.y + tile_half_size.y)
+
+	if min_bounds.x == INF or min_bounds.y == INF:
+		return Rect2(Vector2.ZERO, SNAPSHOT_BOUNDS_FALLBACK_SIZE)
+
+	return Rect2(min_bounds, max_bounds - min_bounds)
+
+
+func _layout_status_overlay() -> void:
+	if _status_panel == null:
+		return
+	_status_panel.size = STATUS_PANEL_SIZE
+	_status_panel.position = Vector2(-_status_panel.size.x * 0.5, STATUS_PANEL_LOCAL_Y)
+
+
+func _layout_score_overlay() -> void:
+	if _score_panel == null:
+		return
+	_score_panel.size = SCORE_PANEL_SIZE
+	_score_panel.position = Vector2(-_score_panel.size.x * 0.5, SCORE_PANEL_LOCAL_Y)
 
 
 func _cache_battle_nodes() -> void:
