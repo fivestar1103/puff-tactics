@@ -307,6 +307,7 @@ func _rebuild_battle_snapshot() -> void:
 	_battle_root.scale = SNAPSHOT_SCALE
 
 	_cache_battle_nodes()
+	_suppress_battle_hud_for_feed_snapshot()
 	_connect_turn_manager_signals()
 	_apply_snapshot_map()
 	_spawn_snapshot_puffs()
@@ -340,6 +341,16 @@ func _cache_battle_nodes() -> void:
 	var intent_candidate: Node = _battle_root.get_node_or_null("EnemyIntent")
 	if intent_candidate is EnemyIntent:
 		_enemy_intent = intent_candidate
+
+
+func _suppress_battle_hud_for_feed_snapshot() -> void:
+	if _battle_root == null:
+		return
+
+	var hud_candidate: Node = _battle_root.get_node_or_null("HudLayer")
+	if hud_candidate is CanvasLayer:
+		var hud_layer: CanvasLayer = hud_candidate
+		hud_layer.visible = false
 
 
 func _connect_turn_manager_signals() -> void:

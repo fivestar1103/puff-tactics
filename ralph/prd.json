@@ -536,6 +536,96 @@
       "passes": true,
       "notes": "Styled StoryChapter1 dialogue and chapter-complete UI in story_chapter_1.gd: dialogue panel, speaker/line labels, next button, tutorial panel, and chapter complete panel now use VisualTheme helpers with palette/cream/sky/peach colors; buttons use PALETTE_MINT and PALETTE_LAVENDER themed pill styling. Added dedicated story UI theme application in _apply_story_ui_theme().",
       "dependsOn": ["US-021"]
+    },
+    {
+      "id": "US-029",
+      "title": "Suppress battle HUD in feed snapshot mode",
+      "description": "As a player, I want the feed to show only feed-level UI (title, subtitle, FABs), not battle HUD elements, so that the screen is not cluttered with overlapping panels.",
+      "acceptanceCriteria": [
+        "When TurnBattle is instantiated inside a FeedItem, the HudLayer CanvasLayer (containing TurnBanner, ScorePanel, ResultOverlay) is hidden or removed so it does not render on top of the feed UI",
+        "The 'Your Turn' banner from battle_hud.gd must NOT appear overlapping the feed title/subtitle area",
+        "The 'Turn 1' score panel from battle_hud.gd must NOT appear in the top-right of the feed screen",
+        "Battle HUD should still work normally when TurnBattle is used in FullBattle (non-feed) context",
+        "Run `bash ralph/take_screenshot.sh` and verify: no battle HUD elements visible in the feed header area",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 29,
+      "passes": true,
+      "notes": "Updated src/scripts/feed/feed_item.gd to call _suppress_battle_hud_for_feed_snapshot() when TurnBattle is instantiated in feed cards, forcing TurnBattle/HudLayer CanvasLayer invisible in feed snapshot context so TurnBanner/Turn panel no longer overlap feed header UI. FullBattle remains unchanged because suppression is FeedItem-only. Verified with headless runtime smoke check that TurnBattle/HudLayer exists and is hidden when created by FeedItem. Attempted required screenshot capture via `bash ralph/take_screenshot.sh` (and with HOME=/tmp plus Xvfb wrappers), but this sandbox cannot initialize X11/Wayland display, so visual capture is blocked in this environment.",
+      "dependsOn": ["US-025"]
+    },
+    {
+      "id": "US-030",
+      "title": "Center and scale up battle map in feed cards",
+      "description": "As a player, I want the battle map and puffs to be centered and large within the feed card so that I can clearly see the tactical puzzle.",
+      "acceptanceCriteria": [
+        "The isometric battle map is horizontally centered within the feed card viewport (not pushed to the right)",
+        "No tiles are clipped off-screen — all 5x5 grid tiles are fully visible",
+        "The SNAPSHOT_SCALE in feed_item.gd is increased so the battle map fills approximately 60-70% of the feed card width",
+        "The battle_root position within FeedItem is offset to account for the isometric map's origin being at the top-left corner of the grid (the map extends right and down from origin, so a negative X offset is needed to center it)",
+        "Run `bash ralph/take_screenshot.sh` and verify: map is centered, no tiles cut off, map fills a reasonable portion of the card",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 30,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-029"]
+    },
+    {
+      "id": "US-031",
+      "title": "Fix feed card layout spacing and status panel position",
+      "description": "As a player, I want the feed card elements (status panel, map, score info) to be well-spaced so there is no wasted empty space and everything is readable.",
+      "acceptanceCriteria": [
+        "The status panel ('Your turn: move, attack, or bump') is positioned above or below the battle map area, not overlapping the feed header title/subtitle",
+        "The feed title and subtitle at the top are fully visible and not obscured by any overlay",
+        "The vertical space between the title area, status panel, battle map, and FAB buttons is balanced — no huge empty gaps",
+        "The overall feed card layout fills the screen proportionally: header at top, battle content in middle, FABs at bottom",
+        "Run `bash ralph/take_screenshot.sh` and verify: no overlapping text, balanced layout, no huge empty areas",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 31,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-030"]
+    },
+    {
+      "id": "US-032",
+      "title": "Ensure multiple puffs visible in feed puzzle snapshots",
+      "description": "As a player, I want to see both friendly and enemy puffs on the feed puzzle map so that the tactical situation is clear and I can plan my move.",
+      "acceptanceCriteria": [
+        "Each feed item's bundled snapshot data includes at least 2 player puffs and 2 enemy puffs (check DEFAULT_FEED_SNAPSHOTS in feed_main.gd)",
+        "All puffs in the snapshot are spawned and visible on the battle map with correct team-colored rings (blue for player, pink/red for enemy)",
+        "Puffs are placed on different tiles so they don't overlap each other",
+        "Enemy intents (arrows/highlights from enemy_intent.gd) are visible for at least one enemy puff",
+        "Run `bash ralph/take_screenshot.sh` and verify: multiple colored puffs visible on the map with kawaii faces and team rings",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 32,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-030"]
+    },
+    {
+      "id": "US-033",
+      "title": "Visual QA verification pass",
+      "description": "As a developer, I want to run a final visual verification to confirm the feed screen looks production-ready with all elements properly positioned and styled.",
+      "acceptanceCriteria": [
+        "Run `bash ralph/take_screenshot.sh` and read `ralph/screenshots/latest.png`",
+        "Feed title 'Puff Tactics Feed' is visible at the top, not obscured by any overlay",
+        "Isometric battle map is centered and fully visible with all terrain tiles showing distinct symbols/colors",
+        "At least 4 puffs are visible on the map (2+ player with blue rings, 2+ enemy with pink/red rings) with kawaii faces",
+        "Enemy intent arrows/highlights are visible on the map",
+        "FAB buttons (Profile, Create, Leaderboard) are visible at the bottom with distinct pastel colors",
+        "Swipe hint text is visible near the bottom",
+        "No raw/unstyled Godot default elements visible (no gray panels, no default font buttons)",
+        "No overlapping text or UI elements that block readability",
+        "Overall layout feels balanced with content filling the screen proportionally",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 33,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-031", "US-032"]
     }
   ]
 }
