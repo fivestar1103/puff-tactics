@@ -9,7 +9,15 @@ const STORY_CHAPTER_1_SCENE_PATH: String = "res://src/scenes/story/StoryChapter1
 
 const SNAP_DURATION: float = 0.28
 const SWIPE_THRESHOLD_PX: float = 120.0
-const SNAPSHOT_Y_RATIO: float = 0.36
+const SNAPSHOT_Y_RATIO: float = 0.40
+const FAB_ROW_HALF_WIDTH: float = 364.0
+const FAB_ROW_HEIGHT: float = 128.0
+const FAB_ROW_BOTTOM_MARGIN_RATIO: float = 0.045
+const FAB_ROW_BOTTOM_MARGIN_MIN: float = 82.0
+const SWIPE_HINT_WIDTH: float = 520.0
+const SWIPE_HINT_HEIGHT: float = 42.0
+const SWIPE_HINT_GAP_RATIO: float = 0.10
+const SWIPE_HINT_GAP_MIN: float = 120.0
 const FEED_BATCH_SIZE: int = 50
 const MIN_PLAYER_PUFFS_PER_SNAPSHOT: int = 2
 const MIN_ENEMY_PUFFS_PER_SNAPSHOT: int = 2
@@ -252,6 +260,7 @@ func _ready() -> void:
 	_connect_fab_actions()
 	_style_header_labels()
 	_style_fab_buttons()
+	_layout_hud_overlays()
 	_layout_feed_items()
 	_set_active_item(0, false)
 	call_deferred("_fetch_next_batch_in_background")
@@ -259,6 +268,7 @@ func _ready() -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_node_ready():
+		_layout_hud_overlays()
 		_layout_feed_items()
 		_snap_to_active_item(false)
 
@@ -747,6 +757,36 @@ func _layout_feed_items() -> void:
 			viewport_size.x * 0.5,
 			float(item_index) * _page_height() + viewport_size.y * SNAPSHOT_Y_RATIO
 		)
+
+
+func _layout_hud_overlays() -> void:
+	var viewport_size: Vector2 = get_viewport_rect().size
+	var bottom_margin: float = maxf(FAB_ROW_BOTTOM_MARGIN_MIN, viewport_size.y * FAB_ROW_BOTTOM_MARGIN_RATIO)
+	var fab_bottom: float = -bottom_margin
+	var fab_top: float = fab_bottom - FAB_ROW_HEIGHT
+
+	profile_button.custom_minimum_size = Vector2(180.0, 76.0)
+	create_button.custom_minimum_size = Vector2(180.0, 76.0)
+	leaderboard_button.custom_minimum_size = Vector2(180.0, 76.0)
+
+	profile_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	create_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	leaderboard_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var fab_row: HBoxContainer = profile_button.get_parent() as HBoxContainer
+	if fab_row == null:
+		return
+	fab_row.offset_left = -FAB_ROW_HALF_WIDTH
+	fab_row.offset_right = FAB_ROW_HALF_WIDTH
+	fab_row.offset_top = fab_top
+	fab_row.offset_bottom = fab_bottom
+
+	var swipe_gap: float = maxf(SWIPE_HINT_GAP_MIN, viewport_size.y * SWIPE_HINT_GAP_RATIO)
+	var swipe_bottom: float = fab_top - swipe_gap
+	swipe_hint_label.offset_left = -SWIPE_HINT_WIDTH * 0.5
+	swipe_hint_label.offset_right = SWIPE_HINT_WIDTH * 0.5
+	swipe_hint_label.offset_top = swipe_bottom - SWIPE_HINT_HEIGHT
+	swipe_hint_label.offset_bottom = swipe_bottom
 
 
 func _sync_feed_item_activation() -> void:

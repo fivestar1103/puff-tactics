@@ -18,12 +18,12 @@ const RESULT_PHASE_SECONDS: float = 3.0
 const SCORE_PHASE_SECONDS: float = 2.0
 const SCORE_REVEAL_DURATION: float = 1.1
 
-const SNAPSHOT_SCALE: Vector2 = Vector2(1.14, 1.14)
+const SNAPSHOT_SCALE: Vector2 = Vector2(1.28, 1.28)
 const SNAPSHOT_BOUNDS_FALLBACK_SIZE: Vector2 = Vector2(640.0, 320.0)
 const STATUS_PANEL_SIZE: Vector2 = Vector2(804.0, 170.0)
-const STATUS_PANEL_LOCAL_Y: float = -420.0
+const STATUS_PANEL_LOCAL_Y: float = -310.0
 const SCORE_PANEL_SIZE: Vector2 = Vector2(804.0, 320.0)
-const SCORE_PANEL_LOCAL_Y: float = 220.0
+const SCORE_PANEL_LOCAL_Y: float = 300.0
 const DEFAULT_TARGET_SCORE: int = 230
 const MOMENT_FEED_ITEM_PREFIX: String = "moment_"
 
