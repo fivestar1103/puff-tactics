@@ -18,7 +18,7 @@ const RESULT_PHASE_SECONDS: float = 3.0
 const SCORE_PHASE_SECONDS: float = 2.0
 const SCORE_REVEAL_DURATION: float = 1.1
 
-const SNAPSHOT_SCALE: Vector2 = Vector2(0.68, 0.68)
+const SNAPSHOT_SCALE: Vector2 = Vector2(1.14, 1.14)
 const DEFAULT_TARGET_SCORE: int = 230
 const MOMENT_FEED_ITEM_PREFIX: String = "moment_"
 
@@ -304,12 +304,12 @@ func _rebuild_battle_snapshot() -> void:
 		turn_manager_candidate.auto_spawn_demo_puffs = false
 
 	add_child(_battle_root)
-	_battle_root.scale = SNAPSHOT_SCALE
 
 	_cache_battle_nodes()
 	_suppress_battle_hud_for_feed_snapshot()
 	_connect_turn_manager_signals()
 	_apply_snapshot_map()
+	_layout_battle_snapshot()
 	_spawn_snapshot_puffs()
 	_seed_snapshot_enemy_intents()
 
@@ -320,6 +320,29 @@ func _rebuild_battle_snapshot() -> void:
 		"One-turn puzzle: choose move, attack, or bump",
 		"Decision window %.0fs to %.0fs before result reveal." % [MIN_DECISION_SECONDS, MAX_DECISION_SECONDS]
 	)
+
+
+func _layout_battle_snapshot() -> void:
+	if _battle_root == null:
+		return
+
+	_battle_root.scale = SNAPSHOT_SCALE
+
+	var map_width_pixels: float = _resolve_snapshot_map_width_pixels()
+	var centered_x_offset: float = -(map_width_pixels * 0.5) * SNAPSHOT_SCALE.x
+	_battle_root.position = Vector2(centered_x_offset, 0.0)
+
+
+func _resolve_snapshot_map_width_pixels() -> float:
+	if _battle_map == null:
+		return 640.0
+
+	var tile_width: float = float(BattleMap.TILE_PIXEL_SIZE.x)
+	var map_size: Vector2i = _battle_map.map_size
+	if map_size.x <= 0 or map_size.y <= 0:
+		map_size = Constants.GRID_SIZE
+
+	return float(map_size.x + map_size.y) * tile_width * 0.5
 
 
 func _cache_battle_nodes() -> void:

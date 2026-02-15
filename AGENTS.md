@@ -38,6 +38,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "`TurnManager` now emits `battle_ended(winner)` in addition to `SignalBus` bus events; hook HUD-layer result UI to this signal for scene-local outcome updates."
 - "`src/scripts/ai/enemy_intent.gd` should render movement/skill intents with actor->target arrows and attack intents with crosshair/X overlays to keep intent direction and impact clear."
 - "CollectionScreen and PuzzleEditor UI style is driven from script with VisualTheme helpers (`create_panel_stylebox`, `apply_button_theme`, `apply_label_theme`) in `_ready()`-time setup for consistent button and panel treatment."
+- "`src/scripts/feed/feed_item.gd::_layout_battle_snapshot()` centers TurnBattle feed snapshots by applying a negative X offset of half the isometric map width (scaled), compensating for the map origin being top-left."
 
 ## Gotchas
 
@@ -83,3 +84,11 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "Supabase auth state is encrypted in `user://auth/supabase_auth.dat`; token refresh is scheduled ~60s before expiry and also checked before each API request."
 
 - "FeedMain UI uses VisualTheme.apply_label_theme() for title/subtitle/small labels and VisualTheme.apply_button_theme() for profile/create/leaderboard FABs to keep feed styling consistent."
+
+## Visual Verification
+
+- "Screenshot tool: `bash ralph/take_screenshot.sh` launches Godot with `-- --screenshot`, waits 4s, captures viewport to `ralph/screenshots/latest.png`, then quits. Requires DISPLAY (WSLg provides this)."
+- "`ScreenshotTool` autoload in `ralph/screenshot_tool.gd` checks `OS.get_cmdline_user_args()` for `--screenshot`; if absent, it calls `queue_free()` immediately and has zero runtime cost in normal play."
+- "Isometric map origin is top-left of the grid; the map extends right and down. When centering the battle in a feed card, apply a negative X offset to `_battle_root.position` to compensate."
+- "BattleHUD uses CanvasLayer which renders globally over the entire window, not relative to the battle Node2D. In feed snapshot mode, hide or remove the HudLayer to prevent HUD elements from overlapping feed-level UI."
+- "Feed card layout: FeedItem is placed at `(viewport.x * 0.5, page_offset + viewport.y * 0.34)`. The battle_root within FeedItem starts at local (0,0). Isometric tile_size is 128x64 for a 5x5 grid."
