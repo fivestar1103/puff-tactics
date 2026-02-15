@@ -19,6 +19,7 @@ const SCORE_PHASE_SECONDS: float = 2.0
 const SCORE_REVEAL_DURATION: float = 1.1
 
 const SNAPSHOT_SCALE: Vector2 = Vector2(1.28, 1.28)
+const SNAPSHOT_LOCAL_Y: float = 40.0
 const SNAPSHOT_BOUNDS_FALLBACK_SIZE: Vector2 = Vector2(640.0, 320.0)
 const STATUS_PANEL_SIZE: Vector2 = Vector2(804.0, 170.0)
 const STATUS_PANEL_LOCAL_Y: float = -310.0
@@ -340,7 +341,7 @@ func _layout_battle_snapshot() -> void:
 	var map_bounds: Rect2 = _resolve_snapshot_map_bounds_local()
 	var map_center_x: float = map_bounds.position.x + (map_bounds.size.x * 0.5)
 	var centered_x_offset: float = -map_center_x * SNAPSHOT_SCALE.x
-	_battle_root.position = Vector2(centered_x_offset, 0.0)
+	_battle_root.position = Vector2(centered_x_offset, SNAPSHOT_LOCAL_Y)
 	_layout_status_overlay()
 	_layout_score_overlay()
 

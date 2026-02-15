@@ -40,6 +40,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "`src/scripts/ai/enemy_intent.gd` should render movement/skill intents with actor->target arrows and attack intents with crosshair/X overlays to keep intent direction and impact clear."
 - "CollectionScreen and PuzzleEditor UI style is driven from script with VisualTheme helpers (`create_panel_stylebox`, `apply_button_theme`, `apply_label_theme`) in `_ready()`-time setup for consistent button and panel treatment."
 - "`src/scripts/feed/feed_item.gd::_layout_battle_snapshot()` centers TurnBattle feed snapshots by applying a negative X offset of half the isometric map width (scaled), compensating for the map origin being top-left."
+- "Portrait feed spacing is tuned by `src/scripts/feed/feed_main.gd` (`SNAPSHOT_Y_RATIO`, `SWIPE_HINT_GAP_RATIO`, `SWIPE_HINT_GAP_MIN`) plus `src/scripts/feed/feed_item.gd` `SNAPSHOT_LOCAL_Y`; adjust these together when rebalancing header/map/hint/FAB vertical flow."
 
 ## Gotchas
 
@@ -49,6 +50,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "GDScript `const` dictionaries must use literal arrays; constructor calls like `PackedStringArray()` are not valid constant expressions."
 - "When instantiating children from a node's `_ready()`, adding to a parent/sibling can hit `Parent node is busy setting up children`; use `call_deferred()` for spawn/setup."
 - "`godot --check-only --script` can fail to resolve cross-file `class_name` references in isolation; preload helper scripts (e.g. `const X_SCRIPT = preload(...); X_SCRIPT.new()`) for deterministic syntax checks."
+- "`godot --headless --check-only --script` can also report `Identifier not found` for autoload singletons (e.g. `VisualTheme`) when scripts are checked in isolation; prefer `godot --headless --scene <scene> --quit` parse checks for autoload-heavy UI scenes."
 - "Keep the new `VisualTheme` utility methods in sync with accepted button style state keys (`normal`, `hover`, `pressed`, `disabled`) and font override usage."
 - "`bash ralph/take_screenshot.sh` can crash in sandboxed Linux shells unless `HOME` points to a writable directory (e.g. `HOME=/tmp`) because Godot writes `user://logs/*` before scene boot."
 
