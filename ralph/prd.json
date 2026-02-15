@@ -687,6 +687,75 @@
       "passes": true,
       "notes": "Screenshot QA showed persistent oversized vertical whitespace in the lower feed lane. Updated `src/scripts/feed/feed_main.gd` to rebalance vertical flow by nudging `SNAPSHOT_Y_RATIO` from `0.22` to `0.24` and replacing the swipe hint spacing logic with a clamped gap (`ratio 0.11`, `min 96`, `max 240`) instead of the previous tall-viewport expansion path. This keeps battle/score content higher density and prevents the swipe hint from drifting too far from the FAB row on tall portrait layouts. Verified parse with `HOME=/tmp godot --headless --path /home/fives/projects/puff-tactics --scene res://src/scenes/feed/FeedMain.tscn --quit`.",
       "dependsOn": ["US-034"]
+    },
+    {
+      "id": "US-036",
+      "title": "Scale up battle map to fill card width",
+      "description": "The battle map is still too small — it only fills about 50% of the card width. Scale it up so the isometric grid fills 75-85% of the viewport width. Puffs should be large and clearly distinguishable.",
+      "acceptanceCriteria": [
+        "SNAPSHOT_SCALE in feed_item.gd is increased until the 5x5 isometric grid spans approximately 75-85% of the 1170px viewport width (try 1.6-1.9)",
+        "All 25 tiles are still fully visible (no tiles clipped off screen edges)",
+        "Puffs are large enough that kawaii face details (eyes, mouth, blush) are clearly visible",
+        "The map + puffs are the visual centerpiece of the feed card — they should dominate the card area",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 36,
+      "passes": true,
+      "notes": "Screenshot review showed the battle board still reading small for a feed centerpiece and puff face details were less legible than intended at the prior snapshot scale. Increased `src/scripts/feed/feed_item.gd` `SNAPSHOT_SCALE` from `Vector2(1.28, 1.28)` to `Vector2(1.52, 1.52)`, which brings a 5x5 (640px-wide) isometric map to ~83.1% of a 1170px portrait viewport while preserving existing centering/bounds logic so all 25 tiles remain on-screen. Follow-up visual QA found oversized lower-card whitespace; tightened vertical feed flow by reducing `src/scripts/feed/feed_main.gd` `SNAPSHOT_Y_RATIO` to `0.16`, and changed swipe/FAB placement to anchor from the active `FeedItem` score panel bottom (`get_score_panel_bottom_global_y()`) with fixed score->hint and hint->FAB gaps so the layout reads as one continuous stack. Verified scene parse with `HOME=/tmp godot --headless --path /home/fives/projects/puff-tactics --scene res://src/scenes/feed/FeedMain.tscn --quit`.",
+      "dependsOn": ["US-035"]
+    },
+    {
+      "id": "US-037",
+      "title": "Close vertical gaps — title to status to map to score to FABs",
+      "description": "There is still way too much empty space. The gap between title and status panel is ~120px of nothing, and the gap between score panel and swipe hint is ~45% of the screen. All content should be pushed together with minimal gaps.",
+      "acceptanceCriteria": [
+        "The gap between the title/subtitle and the status panel is at most 40-60px",
+        "The gap between the status panel bottom and the map top is at most 20px",
+        "The gap between the map bottom and the score panel top is at most 20px",
+        "The swipe hint text appears ~40-60px below the score panel, not floating in the middle of empty space",
+        "The FAB buttons are positioned ~60-80px below the swipe hint",
+        "SNAPSHOT_Y_RATIO in feed_main.gd should be very low (0.10-0.16) so the entire card content starts near the top",
+        "Total empty space across the entire card should be less than 25% of the viewport height",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 37,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-036"]
+    },
+    {
+      "id": "US-038",
+      "title": "Move FAB buttons up and add 4th enemy puff",
+      "description": "FAB buttons should sit right below the swipe hint with minimal gap, and there should be at least 2 enemy puffs visible in each feed snapshot.",
+      "acceptanceCriteria": [
+        "FAB buttons (Profile, Create, Leaderboard) are repositioned to sit ~60-80px below the swipe hint text, not pinned to the very bottom of the screen with massive gap above",
+        "Each fallback feed snapshot in feed_main.gd has at least 2 player puffs AND 2 enemy puffs on distinct tiles",
+        "All 4+ puffs are visible on the map in the screenshot with distinct team-colored rings",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 38,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-037"]
+    },
+    {
+      "id": "US-039",
+      "title": "Final visual polish — screenshot must look like a real game",
+      "description": "Look at the attached screenshot. If it doesn't look like a polished mobile game, fix whatever is wrong. No more excuses.",
+      "acceptanceCriteria": [
+        "The attached screenshot shows a feed card where content fills the screen from top to bottom with minimal gaps",
+        "Battle map is large, centered, and dominates the card (75-85% width)",
+        "4+ puffs clearly visible with kawaii faces and team rings",
+        "Status panel, map, score panel, swipe hint, and FABs flow tightly from top to bottom",
+        "No section has more than 100px of empty space",
+        "All text is readable",
+        "If the screenshot still has problems, FIX THEM. Do not mark this as pass unless the screenshot genuinely looks good.",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 39,
+      "passes": false,
+      "notes": "",
+      "dependsOn": ["US-038"]
     }
   ]
 }

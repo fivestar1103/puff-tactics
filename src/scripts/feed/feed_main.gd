@@ -9,16 +9,19 @@ const STORY_CHAPTER_1_SCENE_PATH: String = "res://src/scenes/story/StoryChapter1
 
 const SNAP_DURATION: float = 0.28
 const SWIPE_THRESHOLD_PX: float = 120.0
-const SNAPSHOT_Y_RATIO: float = 0.24
+const SNAPSHOT_Y_RATIO: float = 0.16
 const FAB_ROW_HALF_WIDTH: float = 364.0
 const FAB_ROW_HEIGHT: float = 128.0
-const FAB_ROW_BOTTOM_MARGIN_RATIO: float = 0.045
-const FAB_ROW_BOTTOM_MARGIN_MIN: float = 82.0
+const FAB_ROW_BOTTOM_MARGIN_RATIO: float = 0.03
+const FAB_ROW_BOTTOM_MARGIN_MIN: float = 42.0
+const FAB_ROW_VIEWPORT_PADDING: float = 24.0
 const SWIPE_HINT_WIDTH: float = 520.0
 const SWIPE_HINT_HEIGHT: float = 42.0
-const SWIPE_HINT_GAP_RATIO: float = 0.11
-const SWIPE_HINT_GAP_MIN: float = 96.0
-const SWIPE_HINT_GAP_MAX: float = 240.0
+const SWIPE_HINT_GAP_RATIO: float = 0.05
+const SWIPE_HINT_GAP_MIN: float = 56.0
+const SWIPE_HINT_GAP_MAX: float = 84.0
+const SCORE_TO_SWIPE_HINT_GAP: float = 52.0
+const SWIPE_HINT_TO_FAB_GAP: float = 66.0
 const FEED_BATCH_SIZE: int = 50
 const MIN_PLAYER_PUFFS_PER_SNAPSHOT: int = 2
 const MIN_ENEMY_PUFFS_PER_SNAPSHOT: int = 2
@@ -261,16 +264,16 @@ func _ready() -> void:
 	_connect_fab_actions()
 	_style_header_labels()
 	_style_fab_buttons()
-	_layout_hud_overlays()
 	_layout_feed_items()
+	_layout_hud_overlays()
 	_set_active_item(0, false)
 	call_deferred("_fetch_next_batch_in_background")
 
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_node_ready():
-		_layout_hud_overlays()
 		_layout_feed_items()
+		_layout_hud_overlays()
 		_snap_to_active_item(false)
 
 
@@ -347,6 +350,7 @@ func _set_active_item(index: int, animate: bool) -> void:
 	_active_item_index = clampi(index, 0, _feed_items.size() - 1)
 	_sync_feed_item_activation()
 	_snap_to_active_item(animate)
+	_layout_hud_overlays()
 	_update_header_text()
 
 
@@ -762,9 +766,6 @@ func _layout_feed_items() -> void:
 
 func _layout_hud_overlays() -> void:
 	var viewport_size: Vector2 = get_viewport_rect().size
-	var bottom_margin: float = maxf(FAB_ROW_BOTTOM_MARGIN_MIN, viewport_size.y * FAB_ROW_BOTTOM_MARGIN_RATIO)
-	var fab_bottom: float = -bottom_margin
-	var fab_top: float = fab_bottom - FAB_ROW_HEIGHT
 
 	profile_button.custom_minimum_size = Vector2(180.0, 76.0)
 	create_button.custom_minimum_size = Vector2(180.0, 76.0)
@@ -777,21 +778,51 @@ func _layout_hud_overlays() -> void:
 	var fab_row: HBoxContainer = profile_button.get_parent() as HBoxContainer
 	if fab_row == null:
 		return
+
+	var bottom_margin: float = maxf(FAB_ROW_BOTTOM_MARGIN_MIN, viewport_size.y * FAB_ROW_BOTTOM_MARGIN_RATIO)
+	var fallback_fab_top_y: float = viewport_size.y - bottom_margin - FAB_ROW_HEIGHT
+	var fallback_swipe_gap: float = clampf(
+		viewport_size.y * SWIPE_HINT_GAP_RATIO,
+		SWIPE_HINT_GAP_MIN,
+		SWIPE_HINT_GAP_MAX
+	)
+	var swipe_hint_top_y: float = fallback_fab_top_y - SWIPE_HINT_HEIGHT - fallback_swipe_gap
+	var score_panel_bottom_y: float = _resolve_active_score_panel_bottom_y()
+	if not is_nan(score_panel_bottom_y):
+		swipe_hint_top_y = score_panel_bottom_y + SCORE_TO_SWIPE_HINT_GAP
+
+	var fab_top_y: float = swipe_hint_top_y + SWIPE_HINT_HEIGHT + SWIPE_HINT_TO_FAB_GAP
+	var max_fab_top_y: float = viewport_size.y - FAB_ROW_HEIGHT - FAB_ROW_VIEWPORT_PADDING
+	if fab_top_y > max_fab_top_y:
+		fab_top_y = max_fab_top_y
+		swipe_hint_top_y = fab_top_y - SWIPE_HINT_HEIGHT - SWIPE_HINT_TO_FAB_GAP
+
+	var fab_top: float = fab_top_y - viewport_size.y
+	var fab_bottom: float = fab_top + FAB_ROW_HEIGHT
 	fab_row.offset_left = -FAB_ROW_HALF_WIDTH
 	fab_row.offset_right = FAB_ROW_HALF_WIDTH
 	fab_row.offset_top = fab_top
 	fab_row.offset_bottom = fab_bottom
 
-	var swipe_gap: float = clampf(
-		viewport_size.y * SWIPE_HINT_GAP_RATIO,
-		SWIPE_HINT_GAP_MIN,
-		SWIPE_HINT_GAP_MAX
-	)
-	var swipe_bottom: float = fab_top - swipe_gap
+	var swipe_top: float = swipe_hint_top_y - viewport_size.y
+	var swipe_bottom: float = swipe_top + SWIPE_HINT_HEIGHT
 	swipe_hint_label.offset_left = -SWIPE_HINT_WIDTH * 0.5
 	swipe_hint_label.offset_right = SWIPE_HINT_WIDTH * 0.5
-	swipe_hint_label.offset_top = swipe_bottom - SWIPE_HINT_HEIGHT
+	swipe_hint_label.offset_top = swipe_top
 	swipe_hint_label.offset_bottom = swipe_bottom
+
+
+func _resolve_active_score_panel_bottom_y() -> float:
+	var active_feed_item: Node2D = _get_active_feed_item()
+	if active_feed_item == null:
+		return NAN
+	if not active_feed_item.has_method("get_score_panel_bottom_global_y"):
+		return NAN
+
+	var bottom_variant: Variant = active_feed_item.call("get_score_panel_bottom_global_y")
+	if bottom_variant is float or bottom_variant is int:
+		return float(bottom_variant)
+	return NAN
 
 
 func _sync_feed_item_activation() -> void:

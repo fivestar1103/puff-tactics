@@ -42,6 +42,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "`src/scripts/feed/feed_item.gd::_layout_battle_snapshot()` centers TurnBattle feed snapshots by applying a negative X offset of half the isometric map width (scaled), compensating for the map origin being top-left."
 - "Portrait feed spacing is tuned by `src/scripts/feed/feed_main.gd` (`SNAPSHOT_Y_RATIO`, `SWIPE_HINT_GAP_RATIO`, `SWIPE_HINT_GAP_MIN`) plus `src/scripts/feed/feed_item.gd` `SNAPSHOT_LOCAL_Y`; adjust these together when rebalancing header/map/hint/FAB vertical flow."
 - "`src/scripts/feed/feed_item.gd` now anchors status/score overlays to map bounds (`STATUS_PANEL_MAP_GAP`, `SCORE_PANEL_MAP_GAP`) in `_layout_battle_snapshot()`; prefer map-relative panel spacing over fixed Y offsets when retuning feed-card layout."
+- "For a 5x5 isometric board using 128x64 tiles, feed map width is ~`640 * SNAPSHOT_SCALE.x`; target `SNAPSHOT_SCALE` around `1.37-1.55` for a 75-85% fill of a 1170px portrait viewport."
 
 ## Gotchas
 

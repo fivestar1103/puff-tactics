@@ -18,7 +18,7 @@ const RESULT_PHASE_SECONDS: float = 3.0
 const SCORE_PHASE_SECONDS: float = 2.0
 const SCORE_REVEAL_DURATION: float = 1.1
 
-const SNAPSHOT_SCALE: Vector2 = Vector2(1.28, 1.28)
+const SNAPSHOT_SCALE: Vector2 = Vector2(1.52, 1.52)
 const SNAPSHOT_LOCAL_Y: float = -160.0
 const SNAPSHOT_BOUNDS_FALLBACK_SIZE: Vector2 = Vector2(640.0, 320.0)
 const STATUS_PANEL_SIZE: Vector2 = Vector2(804.0, 170.0)
@@ -179,6 +179,13 @@ func get_status_text() -> String:
 	if _status_label == null:
 		return ""
 	return _status_label.text
+
+
+func get_score_panel_bottom_global_y() -> float:
+	if _score_panel == null:
+		return NAN
+	var local_bottom: Vector2 = _score_panel.position + Vector2(0.0, _score_panel.size.y)
+	return to_global(local_bottom).y
 
 
 func _ready() -> void:
