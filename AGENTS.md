@@ -43,6 +43,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "Portrait feed spacing is tuned by `src/scripts/feed/feed_main.gd` (`SNAPSHOT_Y_RATIO`, `SWIPE_HINT_GAP_RATIO`, `SWIPE_HINT_GAP_MIN`) plus `src/scripts/feed/feed_item.gd` `SNAPSHOT_LOCAL_Y`; adjust these together when rebalancing header/map/hint/FAB vertical flow."
 - "`src/scripts/feed/feed_item.gd` now anchors status/score overlays to map bounds (`STATUS_PANEL_MAP_GAP`, `SCORE_PANEL_MAP_GAP`) in `_layout_battle_snapshot()`; prefer map-relative panel spacing over fixed Y offsets when retuning feed-card layout."
 - "When tightening header-to-map spacing, tune `STATUS_PANEL_SIZE.y` with `STATUS_PANEL_MAP_GAP` together: the status panel is map-anchored, so panel height directly controls subtitle->status visual gap while preserving map-relative placement."
+- "FeedMain should run a deferred `_layout_hud_overlays()` after activating the first card; otherwise initial HUD placement can miss `FeedItem` score panel bounds (not ready yet) and fall back to bottom anchoring, creating a large middle empty gap."
 - "For a 5x5 isometric board using 128x64 tiles, feed map width is ~`640 * SNAPSHOT_SCALE.x`; target `SNAPSHOT_SCALE` around `1.37-1.55` for a 75-85% fill of a 1170px portrait viewport."
 
 ## Gotchas

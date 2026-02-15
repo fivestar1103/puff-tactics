@@ -267,6 +267,8 @@ func _ready() -> void:
 	_layout_feed_items()
 	_layout_hud_overlays()
 	_set_active_item(0, false)
+	# FeedItem builds score/status overlays in its own _ready; relayout HUD after that pass.
+	call_deferred("_layout_hud_overlays")
 	call_deferred("_fetch_next_batch_in_background")
 
 

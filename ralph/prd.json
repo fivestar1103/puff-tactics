@@ -753,8 +753,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 39,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Follow-up screenshot review exposed a visual regression: the first card was pushed too low (large empty lane under the header) and the map was oversized beyond the target card-width range. Kept the deferred `_layout_hud_overlays()` fix in `src/scripts/feed/feed_main.gd`, restored feed-stack and HUD spacing constants (`SNAPSHOT_Y_RATIO = 0.16`, `SCORE_TO_SWIPE_HINT_GAP = 46`, `SWIPE_HINT_TO_FAB_GAP = 64`), and restored FAB floor clamping (`maxf(..., fallback_fab_top_y)`) so controls do not drift upward. In `src/scripts/feed/feed_item.gd`, restored map/card sizing values to the balanced profile (`SNAPSHOT_SCALE = Vector2(1.46, 1.46)`, `SNAPSHOT_LOCAL_Y = -160`, map-relative status/score gaps at 16, score panel height 320) to keep all 25 tiles visible while filling about 75-80% width. Verified parse with `HOME=/tmp godot --headless --path /home/fives/projects/puff-tactics --scene res://src/scenes/feed/FeedMain.tscn --quit`.",
       "dependsOn": ["US-038"]
     }
   ]
