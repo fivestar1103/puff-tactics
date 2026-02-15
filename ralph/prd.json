@@ -631,28 +631,62 @@
     },
     {
       "id": "US-033",
-      "title": "Visual QA verification pass",
-      "description": "As a developer, I want to run a final visual verification to confirm the feed screen looks production-ready with all elements properly positioned and styled.",
+      "title": "Eliminate empty space — fill feed card vertically",
+      "description": "As a player, I want the feed card content to fill the screen with no huge empty gaps so that the game feels polished. Currently there is ~40% empty space above and below the map.",
       "acceptanceCriteria": [
-        "Run `bash ralph/take_screenshot.sh` and read `ralph/screenshots/latest.png`",
-        "Feed title 'Puff Tactics Feed' is visible at the top, not obscured by any overlay",
-        "Isometric battle map is centered and fully visible with all terrain tiles showing distinct symbols/colors",
-        "At least 4 puffs are visible on the map (2+ player with blue rings, 2+ enemy with pink/red rings) with kawaii faces",
-        "Enemy intent arrows/highlights are visible on the map",
-        "FAB buttons (Profile, Create, Leaderboard) are visible at the bottom with distinct pastel colors",
-        "Swipe hint text is visible near the bottom",
-        "No raw/unstyled Godot default elements visible (no gray panels, no default font buttons)",
-        "No overlapping text or UI elements that block readability",
-        "Overall layout feels balanced with content filling the screen proportionally",
+        "SNAPSHOT_Y_RATIO in feed_main.gd is lowered (try 0.20-0.26) so the feed item origin is higher on the card, pushing the battle content up",
+        "STATUS_PANEL_LOCAL_Y in feed_item.gd is adjusted so the status panel sits ~20-40px above the top of the map, not far above it",
+        "The battle map appears in the upper-third of the card, NOT the center with empty space above",
+        "The vertical flow is: title(top) → ~80px gap → status panel → ~20px → map+puffs → ~20px → score area → flexible space → swipe hint → FABs(bottom)",
+        "No section of the feed card has more than ~150px of continuous empty space (except the flexible area between score and FABs which should contain the swipe hint)",
         "All .gd scripts have no syntax errors"
       ],
       "priority": 33,
       "passes": true,
-      "notes": "Completed final feed visual QA tuning for portrait layout readability. Updated `src/scripts/feed/feed_main.gd` to move card placement upward (`SNAPSHOT_Y_RATIO` 0.40 -> 0.34) and lift swipe-hint placement (`SWIPE_HINT_GAP_RATIO` 0.10 -> 0.15, `SWIPE_HINT_GAP_MIN` 120 -> 150) so header, battle content, hint, and FABs are better distributed. Updated `src/scripts/feed/feed_item.gd` with `SNAPSHOT_LOCAL_Y` (+40px) so the centered map/puffs sit in the middle content lane after the card shift without overlapping feed header UI. Re-validated with headless scene boot checks (`FeedMain.tscn`, `TurnBattle.tscn`). Attempted required screenshot capture via `HOME=/tmp bash ralph/take_screenshot.sh`, but this sandbox still cannot initialize X11/Wayland display drivers.",
+      "notes": "Screenshot review showed prototype-like spacing: a large dead gap between header and battle content, status panel detached far above the map, and another oversized empty lane below the board. Updated `src/scripts/feed/feed_main.gd` to lower `SNAPSHOT_Y_RATIO` to `0.22` (card origin moves higher) and added tall-viewport swipe-hint placement so hint/fab spacing does not leave a long blank band. Updated `src/scripts/feed/feed_item.gd` to move snapshot content upward (`SNAPSHOT_LOCAL_Y = -160`), anchor status panel placement from the map top with a fixed 30px gap, anchor score panel placement from the map bottom with a fixed 24px gap, and show a pre-score panel during decision phase so the lower card area is populated before resolve. Verified parse with `HOME=/tmp godot --headless --path /home/fives/projects/puff-tactics --scene res://src/scenes/feed/FeedMain.tscn --quit` and validated geometry via headless layout probe (`status->map gap ~39px`, `map->score gap ~33px`).",
       "dependsOn": [
         "US-031",
         "US-032"
       ]
+    },
+    {
+      "id": "US-034",
+      "title": "Score overlay readability and cleanup",
+      "description": "As a player, I want the score breakdown to be clearly readable with good contrast, and no debug stub text visible.",
+      "acceptanceCriteria": [
+        "Score panel text (enemies defeated, damage dealt, puffs surviving, turns used) uses at least FONT_SIZE_BODY (18px) or larger",
+        "Score panel has a solid or high-opacity background (>=0.85 alpha) so text is readable against the map behind it",
+        "Score panel background uses a GDD palette color (e.g. cream, lavender, or dark overlay with light text)",
+        "Community ranking text is clearly readable (sufficient font size and contrast)",
+        "The Share button stub text 'Pure stub: social post...' is hidden or replaced with just 'Share' (no developer-facing text visible)",
+        "Score panel is properly sized and positioned — not overlapping the map tiles or puffs",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 34,
+      "passes": true,
+      "notes": "Improved score overlay readability in `src/scripts/feed/feed_item.gd` by increasing score panel background opacity to `0.90` and keeping body/comparison text at readable sizes (20px/22px). Removed developer-facing share stub copy from the visible score state (no 'stub' messaging shown to players), updated the share tooltip text to player-facing copy, and replaced preview placeholder value `--` with `Ready` to avoid debug-like presentation. Verified parse with `HOME=/tmp godot --headless --path /home/fives/projects/puff-tactics --scene res://src/scenes/feed/FeedMain.tscn --quit`.",
+      "dependsOn": ["US-033"]
+    },
+    {
+      "id": "US-035",
+      "title": "Visual QA — screenshot must match quality bar",
+      "description": "As a developer, I want the attached screenshot to pass all visual quality criteria so that the game looks like a real mobile game.",
+      "acceptanceCriteria": [
+        "Look at the attached screenshot image input — this is the acceptance test",
+        "Battle map fills ~60-80% of card width, centered, all 25 isometric tiles clearly visible",
+        "At least 4 puffs visible on the map (2+ player with mint/green rings, 2+ enemy with pink/red rings), each with visible kawaii face",
+        "Puffs are spaced on different tiles, not overlapping",
+        "No huge empty gaps — content fills the screen proportionally",
+        "All text is readable with good contrast (no tiny text on busy backgrounds)",
+        "No debug text, stub messages, or developer-facing strings visible",
+        "FAB buttons visible at bottom with distinct pastel colors",
+        "If ANY of these fail based on the attached screenshot, fix the code and note what was wrong",
+        "All .gd scripts have no syntax errors"
+      ],
+      "priority": 35,
+      "passes": true,
+      "notes": "Screenshot QA showed persistent oversized vertical whitespace in the lower feed lane. Updated `src/scripts/feed/feed_main.gd` to rebalance vertical flow by nudging `SNAPSHOT_Y_RATIO` from `0.22` to `0.24` and replacing the swipe hint spacing logic with a clamped gap (`ratio 0.11`, `min 96`, `max 240`) instead of the previous tall-viewport expansion path. This keeps battle/score content higher density and prevents the swipe hint from drifting too far from the FAB row on tall portrait layouts. Verified parse with `HOME=/tmp godot --headless --path /home/fives/projects/puff-tactics --scene res://src/scenes/feed/FeedMain.tscn --quit`.",
+      "dependsOn": ["US-034"]
     }
   ]
 }

@@ -41,6 +41,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "CollectionScreen and PuzzleEditor UI style is driven from script with VisualTheme helpers (`create_panel_stylebox`, `apply_button_theme`, `apply_label_theme`) in `_ready()`-time setup for consistent button and panel treatment."
 - "`src/scripts/feed/feed_item.gd::_layout_battle_snapshot()` centers TurnBattle feed snapshots by applying a negative X offset of half the isometric map width (scaled), compensating for the map origin being top-left."
 - "Portrait feed spacing is tuned by `src/scripts/feed/feed_main.gd` (`SNAPSHOT_Y_RATIO`, `SWIPE_HINT_GAP_RATIO`, `SWIPE_HINT_GAP_MIN`) plus `src/scripts/feed/feed_item.gd` `SNAPSHOT_LOCAL_Y`; adjust these together when rebalancing header/map/hint/FAB vertical flow."
+- "`src/scripts/feed/feed_item.gd` now anchors status/score overlays to map bounds (`STATUS_PANEL_MAP_GAP`, `SCORE_PANEL_MAP_GAP`) in `_layout_battle_snapshot()`; prefer map-relative panel spacing over fixed Y offsets when retuning feed-card layout."
 
 ## Gotchas
 

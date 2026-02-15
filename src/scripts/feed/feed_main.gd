@@ -9,15 +9,16 @@ const STORY_CHAPTER_1_SCENE_PATH: String = "res://src/scenes/story/StoryChapter1
 
 const SNAP_DURATION: float = 0.28
 const SWIPE_THRESHOLD_PX: float = 120.0
-const SNAPSHOT_Y_RATIO: float = 0.34
+const SNAPSHOT_Y_RATIO: float = 0.24
 const FAB_ROW_HALF_WIDTH: float = 364.0
 const FAB_ROW_HEIGHT: float = 128.0
 const FAB_ROW_BOTTOM_MARGIN_RATIO: float = 0.045
 const FAB_ROW_BOTTOM_MARGIN_MIN: float = 82.0
 const SWIPE_HINT_WIDTH: float = 520.0
 const SWIPE_HINT_HEIGHT: float = 42.0
-const SWIPE_HINT_GAP_RATIO: float = 0.15
-const SWIPE_HINT_GAP_MIN: float = 150.0
+const SWIPE_HINT_GAP_RATIO: float = 0.11
+const SWIPE_HINT_GAP_MIN: float = 96.0
+const SWIPE_HINT_GAP_MAX: float = 240.0
 const FEED_BATCH_SIZE: int = 50
 const MIN_PLAYER_PUFFS_PER_SNAPSHOT: int = 2
 const MIN_ENEMY_PUFFS_PER_SNAPSHOT: int = 2
@@ -781,7 +782,11 @@ func _layout_hud_overlays() -> void:
 	fab_row.offset_top = fab_top
 	fab_row.offset_bottom = fab_bottom
 
-	var swipe_gap: float = maxf(SWIPE_HINT_GAP_MIN, viewport_size.y * SWIPE_HINT_GAP_RATIO)
+	var swipe_gap: float = clampf(
+		viewport_size.y * SWIPE_HINT_GAP_RATIO,
+		SWIPE_HINT_GAP_MIN,
+		SWIPE_HINT_GAP_MAX
+	)
 	var swipe_bottom: float = fab_top - swipe_gap
 	swipe_hint_label.offset_left = -SWIPE_HINT_WIDTH * 0.5
 	swipe_hint_label.offset_right = SWIPE_HINT_WIDTH * 0.5

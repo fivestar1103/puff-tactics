@@ -19,12 +19,14 @@ const SCORE_PHASE_SECONDS: float = 2.0
 const SCORE_REVEAL_DURATION: float = 1.1
 
 const SNAPSHOT_SCALE: Vector2 = Vector2(1.28, 1.28)
-const SNAPSHOT_LOCAL_Y: float = 40.0
+const SNAPSHOT_LOCAL_Y: float = -160.0
 const SNAPSHOT_BOUNDS_FALLBACK_SIZE: Vector2 = Vector2(640.0, 320.0)
 const STATUS_PANEL_SIZE: Vector2 = Vector2(804.0, 170.0)
-const STATUS_PANEL_LOCAL_Y: float = -310.0
+const STATUS_PANEL_MAP_GAP: float = 30.0
+const STATUS_PANEL_FALLBACK_LOCAL_Y: float = -120.0
 const SCORE_PANEL_SIZE: Vector2 = Vector2(804.0, 320.0)
-const SCORE_PANEL_LOCAL_Y: float = 300.0
+const SCORE_PANEL_MAP_GAP: float = 24.0
+const SCORE_PANEL_FALLBACK_LOCAL_Y: float = 300.0
 const DEFAULT_TARGET_SCORE: int = 230
 const MOMENT_FEED_ITEM_PREFIX: String = "moment_"
 
@@ -226,7 +228,7 @@ func _build_score_overlay() -> void:
 	add_child(_score_panel)
 
 	var panel_style: StyleBoxFlat = StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.06, 0.09, 0.17, 0.82)
+	panel_style.bg_color = Color(0.06, 0.09, 0.17, 0.90)
 	panel_style.corner_radius_top_left = 28
 	panel_style.corner_radius_top_right = 28
 	panel_style.corner_radius_bottom_right = 28
@@ -288,6 +290,7 @@ func _build_score_overlay() -> void:
 	_share_stub_label.add_theme_font_size_override("font_size", 18)
 	_share_stub_label.add_theme_color_override("font_color", Color(0.95, 0.82, 0.58, 0.95))
 	_share_stub_label.text = ""
+	_share_stub_label.visible = false
 	root_layout.add_child(_share_stub_label)
 
 
@@ -330,6 +333,7 @@ func _rebuild_battle_snapshot() -> void:
 		"One-turn puzzle: choose move, attack, or bump",
 		"Decision window %.0fs to %.0fs before result reveal." % [MIN_DECISION_SECONDS, MAX_DECISION_SECONDS]
 	)
+	_show_score_preview_overlay()
 
 
 func _layout_battle_snapshot() -> void:
@@ -340,10 +344,12 @@ func _layout_battle_snapshot() -> void:
 
 	var map_bounds: Rect2 = _resolve_snapshot_map_bounds_local()
 	var map_center_x: float = map_bounds.position.x + (map_bounds.size.x * 0.5)
+	var map_top_local: float = SNAPSHOT_LOCAL_Y + map_bounds.position.y * SNAPSHOT_SCALE.y
+	var map_bottom_local: float = SNAPSHOT_LOCAL_Y + (map_bounds.position.y + map_bounds.size.y) * SNAPSHOT_SCALE.y
 	var centered_x_offset: float = -map_center_x * SNAPSHOT_SCALE.x
 	_battle_root.position = Vector2(centered_x_offset, SNAPSHOT_LOCAL_Y)
-	_layout_status_overlay()
-	_layout_score_overlay()
+	_layout_status_overlay(map_top_local)
+	_layout_score_overlay(map_bottom_local)
 
 
 func _resolve_snapshot_map_bounds_local() -> Rect2:
@@ -379,18 +385,24 @@ func _resolve_snapshot_map_bounds_local() -> Rect2:
 	return Rect2(min_bounds, max_bounds - min_bounds)
 
 
-func _layout_status_overlay() -> void:
+func _layout_status_overlay(map_top_local: float = NAN) -> void:
 	if _status_panel == null:
 		return
 	_status_panel.size = STATUS_PANEL_SIZE
-	_status_panel.position = Vector2(-_status_panel.size.x * 0.5, STATUS_PANEL_LOCAL_Y)
+	var panel_y: float = STATUS_PANEL_FALLBACK_LOCAL_Y
+	if not is_nan(map_top_local):
+		panel_y = map_top_local - _status_panel.size.y - STATUS_PANEL_MAP_GAP
+	_status_panel.position = Vector2(-_status_panel.size.x * 0.5, panel_y)
 
 
-func _layout_score_overlay() -> void:
+func _layout_score_overlay(map_bottom_local: float = NAN) -> void:
 	if _score_panel == null:
 		return
 	_score_panel.size = SCORE_PANEL_SIZE
-	_score_panel.position = Vector2(-_score_panel.size.x * 0.5, SCORE_PANEL_LOCAL_Y)
+	var panel_y: float = SCORE_PANEL_FALLBACK_LOCAL_Y
+	if not is_nan(map_bottom_local):
+		panel_y = map_bottom_local + SCORE_PANEL_MAP_GAP
+	_score_panel.position = Vector2(-_score_panel.size.x * 0.5, panel_y)
 
 
 func _cache_battle_nodes() -> void:
@@ -520,7 +532,7 @@ func _begin_decision_phase() -> void:
 	_decision_start_time_seconds = _now_seconds()
 	_decision_lock_time_seconds = 0.0
 	_cycle_completion_time_seconds = 0.0
-	_hide_score_overlay()
+	_show_score_preview_overlay()
 	_decision_timeout_timer.start(MAX_DECISION_SECONDS)
 
 	_set_status(
@@ -883,9 +895,10 @@ func _show_score_overlay(score_breakdown: Dictionary, comparison_text: String) -
 	_score_value_label.text = "0"
 	_score_breakdown_label.text = _build_score_breakdown_text(score_breakdown)
 	_score_comparison_label.text = comparison_text
-	_share_stub_label.text = "Share stub: social posting hook will be wired in a future story."
+	_share_stub_label.text = ""
+	_share_button.visible = true
 	_share_button.disabled = false
-	_share_button.tooltip_text = "Stub action for future social sharing"
+	_share_button.tooltip_text = "Share this result"
 
 	if final_score <= 0:
 		_set_score_display_value(0.0)
@@ -897,6 +910,21 @@ func _hide_score_overlay() -> void:
 	_score_panel.visible = false
 	if _share_stub_label != null:
 		_share_stub_label.text = ""
+
+
+func _show_score_preview_overlay() -> void:
+	if _score_panel == null:
+		return
+
+	_score_panel.visible = true
+	_score_title_label.text = "Score Preview"
+	_score_value_label.text = "Ready"
+	_score_breakdown_label.text = "Score comes from enemies defeated, damage dealt, allies surviving, and turn efficiency."
+	_score_comparison_label.text = "Play your turn to reveal your final score and ranking."
+	_share_button.visible = false
+	_share_button.disabled = true
+	_share_button.tooltip_text = ""
+	_share_stub_label.text = ""
 
 
 func _animate_score_countup(final_score: int, reveal_duration: float) -> void:
@@ -925,11 +953,9 @@ func _set_score_display_value(value: float) -> void:
 
 
 func _on_share_button_pressed() -> void:
-	if _share_stub_label != null:
-		_share_stub_label.text = "Share tapped. Stub only: wire this button to iOS share sheets in a future story."
 	_set_status(
-		"Share action (stub)",
-		"Share endpoint is intentionally a placeholder for future social features."
+		"Share action",
+		"Sharing is coming soon."
 	)
 
 
