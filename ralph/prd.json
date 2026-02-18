@@ -862,8 +862,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 44,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Screenshot QA showed a giant empty top card and uneven vertical rhythm. Root cause was FeedItem overlay Controls being laid out with Control.position after size assignment, which inflated StatusPanel height and broke map/status/score spacing. Updated feed_item.gd to lay out map backdrop, status panel, and score panel with explicit anchor+offset rects via _set_control_rect(), and updated score-bottom reporting to use offset_bottom so FeedMain HUD spacing reads the intended panel bounds. This restores stable map-anchored spacing and removes the oversized blank card artifact.",
       "dependsOn": [
         "US-043"
       ]
@@ -980,7 +980,7 @@
       ],
       "priority": 50,
       "passes": false,
-      "notes": "Visual QA on 2026-02-18 screenshot (portrait 384x768): map width/centering FAIL (~52% and not centered around the full board footprint), all 25 tiles visible FAIL, 4+ puffs visible PASS (2 player mint/green + 2 enemy pink), puff facial readability PASS, puff overlap PASS, no gap >15% FAIL (large top/map dead-zone), text readability FAIL (header/title contrast weak), no debug/placeholder text PASS, pastel kawaii palette PASS. Style-only remediation (no protected layout constants changed): updated `src/scripts/feed/feed_item.gd` map-backdrop card treatment (gradient + isometric pattern + blob polish) and score-preview copy, updated `src/scripts/feed/feed_main.gd` header/swipe contrast plus decorative header texture layers, and updated `src/scripts/core/battle_map.gd` terrain palette + edge highlight contrast so tile silhouettes read cleaner in feed snapshots. Parse check passed: `HOME=/tmp godot --headless --path /home/fives/projects/puff-tactics --scene res://src/scenes/feed/FeedMain.tscn --quit`.",
+      "notes": "Visual QA on attached screenshot (2026-02-18, portrait 384x768): checklist -> map width 60-80% centered: FAIL; all 25 tiles visible: FAIL; 4+ puffs (2+ player, 2+ enemy): PASS; puff face readability: PASS; no puff overlap: PASS; no vertical gap >15%: FAIL; text readability/contrast: PASS; no debug/stub text: PASS; pastel kawaii aesthetic: PASS. Applied style-only remediation without touching protected layout constants: improved feed atmosphere layering + decorative blob textures, upgraded swipe hint to chevron pulse styling, strengthened map backdrop guide-grid readability + copy polish, and increased terrain tile contrast/edge definition in BattleMap rendering. Headless parse checks passed for FeedMain.tscn and TurnBattle.tscn.",
       "dependsOn": [
         "US-049"
       ]

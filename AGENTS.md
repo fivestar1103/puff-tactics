@@ -64,6 +64,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "`godot --headless --check-only --script` can also report `Identifier not found` for autoload singletons (e.g. `VisualTheme`) when scripts are checked in isolation; prefer `godot --headless --scene <scene> --quit` parse checks for autoload-heavy UI scenes."
 - "Keep the new `VisualTheme` utility methods in sync with accepted button style state keys (`normal`, `hover`, `pressed`, `disabled`) and font override usage."
 - "`bash ralph/take_screenshot.sh` can crash in sandboxed Linux shells unless `HOME` points to a writable directory (e.g. `HOME=/tmp`) because Godot writes `user://logs/*` before scene boot."
+- "For `Control` overlays parented to `Node2D` (FeedItem map/status/score panels), avoid `size` + `position` layout math; set anchors to 0 and write `offset_left/top/right/bottom` explicitly (see `_set_control_rect()` in `feed_item.gd`) to prevent runaway panel sizes and broken vertical spacing."
 
 ## Conventions
 

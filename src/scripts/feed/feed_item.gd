@@ -154,6 +154,19 @@ var _decision_lock_time_seconds: float = 0.0
 var _cycle_completion_time_seconds: float = 0.0
 
 
+func _set_control_rect(control: Control, top_left: Vector2, rect_size: Vector2) -> void:
+	if control == null:
+		return
+	control.anchor_left = 0.0
+	control.anchor_top = 0.0
+	control.anchor_right = 0.0
+	control.anchor_bottom = 0.0
+	control.offset_left = top_left.x
+	control.offset_top = top_left.y
+	control.offset_right = top_left.x + rect_size.x
+	control.offset_bottom = top_left.y + rect_size.y
+
+
 func configure_snapshot(snapshot: Dictionary) -> void:
 	_snapshot = snapshot.duplicate(true)
 	if is_node_ready():
@@ -192,7 +205,7 @@ func get_status_text() -> String:
 func get_score_panel_bottom_global_y() -> float:
 	if _score_panel == null:
 		return NAN
-	var local_bottom: Vector2 = _score_panel.position + Vector2(0.0, _score_panel.size.y)
+	var local_bottom: Vector2 = Vector2(0.0, _score_panel.offset_bottom)
 	return to_global(local_bottom).y
 
 
@@ -376,11 +389,11 @@ func _ensure_map_backdrop() -> void:
 	_map_backdrop.add_theme_stylebox_override(
 		"panel",
 		_build_card_stylebox(
-			Color(0.99, 0.97, 0.96, 0.54),
+			Color(0.99, 0.96, 0.95, 0.68),
 			MAP_BACKDROP_RADIUS,
-			Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.14),
-			9,
-			Color(0.16, 0.12, 0.20, 0.10),
+			Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.22),
+			10,
+			Color(0.16, 0.12, 0.20, 0.11),
 			1,
 			2.0
 		)
@@ -413,7 +426,7 @@ func _build_map_backdrop_decor() -> void:
 	pattern_rect.texture = _create_map_backdrop_pattern_texture()
 	pattern_rect.stretch_mode = TextureRect.STRETCH_SCALE
 	pattern_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	pattern_rect.modulate = Color(1.0, 1.0, 1.0, 0.42)
+	pattern_rect.modulate = Color(1.0, 1.0, 1.0, 0.56)
 	pattern_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_map_backdrop.add_child(pattern_rect)
 	_map_backdrop.move_child(pattern_rect, 1)
@@ -488,6 +501,35 @@ func _create_map_backdrop_pattern_texture() -> Texture2D:
 				_set_backdrop_pixel(image, center_x, center_y, sparkle_color)
 				_set_backdrop_pixel(image, center_x + 1, center_y, Color(sparkle_color.r, sparkle_color.g, sparkle_color.b, 0.22))
 				_set_backdrop_pixel(image, center_x, center_y + 1, Color(sparkle_color.r, sparkle_color.g, sparkle_color.b, 0.22))
+
+	var guide_major: Color = Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.44)
+	var guide_minor: Color = Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.30)
+	var guide_glow: Color = Color(1.0, 1.0, 1.0, 0.44)
+	var guide_center: Vector2i = Vector2i(width / 2, int(height * 0.56))
+	var guide_half_width: int = 24
+	var guide_half_height: int = 13
+	for board_y in range(Constants.GRID_HEIGHT):
+		for board_x in range(Constants.GRID_WIDTH):
+			var cell_center_x: int = guide_center.x + (board_x - board_y) * guide_half_width
+			var cell_center_y: int = guide_center.y + (board_x + board_y) * guide_half_height
+			var edge_cell: bool = (
+				board_x == 0
+				or board_y == 0
+				or board_x == Constants.GRID_WIDTH - 1
+				or board_y == Constants.GRID_HEIGHT - 1
+			)
+			var line_color: Color = guide_major if edge_cell else guide_minor
+			_draw_backdrop_diamond_outline(
+				image,
+				Vector2i(cell_center_x, cell_center_y),
+				guide_half_width,
+				guide_half_height,
+				line_color
+			)
+			if ((board_x + board_y) % 2) == 0:
+				_set_backdrop_pixel(image, cell_center_x, cell_center_y, guide_glow)
+				_set_backdrop_pixel(image, cell_center_x + 1, cell_center_y, Color(guide_glow.r, guide_glow.g, guide_glow.b, 0.20))
+				_set_backdrop_pixel(image, cell_center_x, cell_center_y + 1, Color(guide_glow.r, guide_glow.g, guide_glow.b, 0.20))
 
 	return ImageTexture.create_from_image(image)
 
@@ -624,8 +666,11 @@ func _layout_map_backdrop(map_bounds: Rect2, centered_x_offset: float) -> void:
 		map_bounds.size.x * SNAPSHOT_SCALE.x + backdrop_padding.x * 2.0,
 		map_bounds.size.y * SNAPSHOT_SCALE.y + backdrop_padding.y * 2.0
 	)
-	_map_backdrop.size = backdrop_size
-	_map_backdrop.position = Vector2(map_left - backdrop_padding.x, map_top - backdrop_padding.y)
+	_set_control_rect(
+		_map_backdrop,
+		Vector2(map_left - backdrop_padding.x, map_top - backdrop_padding.y),
+		backdrop_size
+	)
 	_layout_map_backdrop_decor()
 
 
@@ -665,21 +710,29 @@ func _resolve_snapshot_map_bounds_local() -> Rect2:
 func _layout_status_overlay(map_top_local: float = NAN) -> void:
 	if _status_panel == null:
 		return
-	_status_panel.size = STATUS_PANEL_SIZE
+
 	var panel_y: float = STATUS_PANEL_FALLBACK_LOCAL_Y
 	if not is_nan(map_top_local):
-		panel_y = map_top_local - _status_panel.size.y - STATUS_PANEL_MAP_GAP
-	_status_panel.position = Vector2(-_status_panel.size.x * 0.5, panel_y)
+		panel_y = map_top_local - STATUS_PANEL_SIZE.y - STATUS_PANEL_MAP_GAP
+	_set_control_rect(
+		_status_panel,
+		Vector2(-STATUS_PANEL_SIZE.x * 0.5, panel_y),
+		STATUS_PANEL_SIZE
+	)
 
 
 func _layout_score_overlay(map_bottom_local: float = NAN) -> void:
 	if _score_panel == null:
 		return
-	_score_panel.size = SCORE_PANEL_SIZE
+
 	var panel_y: float = SCORE_PANEL_FALLBACK_LOCAL_Y
 	if not is_nan(map_bottom_local):
 		panel_y = map_bottom_local + SCORE_PANEL_MAP_GAP
-	_score_panel.position = Vector2(-_score_panel.size.x * 0.5, panel_y)
+	_set_control_rect(
+		_score_panel,
+		Vector2(-SCORE_PANEL_SIZE.x * 0.5, panel_y),
+		SCORE_PANEL_SIZE
+	)
 
 
 func _cache_battle_nodes() -> void:
@@ -1197,9 +1250,9 @@ func _show_score_preview_overlay() -> void:
 
 	_score_panel.visible = true
 	_score_title_label.text = "Score Preview"
-	_score_value_label.text = "Ready"
+	_score_value_label.text = "Go Time"
 	_score_breakdown_label.text = "Defeat enemies, protect allies, and finish clean for a higher score."
-	_score_comparison_label.text = "Plan one tactical move, then lock your result."
+	_score_comparison_label.text = "Line up one tactical move, then lock in your result."
 	_share_button.visible = false
 	_share_button.disabled = true
 	_share_button.tooltip_text = ""
