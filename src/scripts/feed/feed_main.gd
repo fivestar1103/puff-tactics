@@ -257,6 +257,7 @@ var _puzzle_editor: Node
 
 func _ready() -> void:
 	_setup_background_gradient()
+	_build_ambient_decoration()
 	_setup_feed_sync()
 	_setup_collection_screen()
 	_setup_puzzle_editor()
@@ -1013,6 +1014,50 @@ func _on_puzzle_editor_status_changed(status_text: String) -> void:
 
 func _on_puzzle_editor_published(_snapshot_id: String, status_text: String) -> void:
 	subtitle_label.text = status_text
+
+
+func _build_ambient_decoration() -> void:
+	var viewport_size: Vector2 = get_viewport_rect().size
+	var blob_configs: Array[Dictionary] = [
+		{"pos": Vector2(0.15, 0.10), "size": 200.0, "color": Constants.PALETTE_LAVENDER},
+		{"pos": Vector2(0.85, 0.06), "size": 160.0, "color": Constants.PALETTE_MINT},
+		{"pos": Vector2(0.78, 0.24), "size": 140.0, "color": Constants.PALETTE_PEACH},
+		{"pos": Vector2(0.10, 0.26), "size": 120.0, "color": Constants.PALETTE_SKY},
+		{"pos": Vector2(0.50, 0.88), "size": 180.0, "color": Constants.PALETTE_PINK},
+	]
+	var hud: Control = get_node_or_null("Hud")
+	for config in blob_configs:
+		var blob_size: float = config["size"]
+		var pos_ratio: Vector2 = config["pos"]
+		var base_color: Color = config["color"]
+
+		var gradient: Gradient = Gradient.new()
+		gradient.set_color(0, Color(base_color.r, base_color.g, base_color.b, 0.15))
+		gradient.set_color(1, Color(base_color.r, base_color.g, base_color.b, 0.0))
+		gradient.set_offset(0, 0.0)
+		gradient.set_offset(1, 1.0)
+
+		var tex: GradientTexture2D = GradientTexture2D.new()
+		tex.gradient = gradient
+		tex.fill = GradientTexture2D.FILL_RADIAL
+		tex.fill_from = Vector2(0.5, 0.5)
+		tex.fill_to = Vector2(1.0, 0.5)
+		tex.width = 64
+		tex.height = 64
+
+		var blob: TextureRect = TextureRect.new()
+		blob.texture = tex
+		blob.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		blob.custom_minimum_size = Vector2(blob_size, blob_size)
+		blob.size = Vector2(blob_size, blob_size)
+		blob.position = Vector2(
+			pos_ratio.x * viewport_size.x - blob_size * 0.5,
+			pos_ratio.y * viewport_size.y - blob_size * 0.5
+		)
+		blob.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		if hud != null:
+			add_child(blob)
+			move_child(blob, hud.get_index())
 
 
 func _setup_background_gradient() -> void:
