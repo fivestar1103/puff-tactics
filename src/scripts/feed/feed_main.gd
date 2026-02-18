@@ -457,7 +457,7 @@ func _load_initial_snapshots() -> void:
 		return
 
 	_feed_snapshots = cached_snapshots
-	subtitle_label.text = "Jump in. Fresh puzzles will appear as you play."
+	subtitle_label.text = "Jump in. New puzzles roll in while you play."
 
 
 func _fetch_next_batch_in_background() -> void:
@@ -474,7 +474,7 @@ func _fetch_next_batch_in_background() -> void:
 	var fetch_result: Dictionary = fetch_result_variant
 	if not bool(fetch_result.get("ok", false)):
 		if offset > 0:
-			subtitle_label.text = "You are all set. Keep playing this lineup."
+			subtitle_label.text = "Nice streak. Keep pushing this lineup."
 		return
 
 	var batch_variant: Variant = fetch_result.get("items", [])
@@ -916,7 +916,7 @@ func _get_active_feed_item() -> Node2D:
 
 
 func _update_subtitle_for_locked_swipe() -> void:
-	subtitle_label.text = "Finish this puzzle first, then swipe up."
+	subtitle_label.text = "Finish this turn first, then swipe up."
 
 
 func _on_feed_item_cycle_completed(score: int, cycle_duration_seconds: float, item_index: int) -> void:
@@ -924,7 +924,7 @@ func _on_feed_item_cycle_completed(score: int, cycle_duration_seconds: float, it
 
 	if item_index != _active_item_index:
 		return
-	subtitle_label.text = "Score %d in %.1fs. Swipe up for the next challenge." % [score, cycle_duration_seconds]
+	subtitle_label.text = "Score %d locked. Swipe up for the next challenge." % score
 
 
 func _on_feed_item_status_changed(status_text: String, swipe_unlocked: bool, item_index: int) -> void:
@@ -966,7 +966,7 @@ func _connect_fab_actions() -> void:
 
 func _on_profile_button_pressed() -> void:
 	if _is_puzzle_editor_visible():
-		subtitle_label.text = "Close the UGC editor before opening collection."
+		subtitle_label.text = "Close Creator before opening your collection."
 		return
 
 	if _collection_screen == null:
@@ -986,15 +986,15 @@ func _on_profile_button_pressed() -> void:
 		_collection_screen.call("show_collection")
 	else:
 		collection_canvas.visible = true
-	subtitle_label.text = "Collection open: view puff levels and owned accessories"
+	subtitle_label.text = "Collection open: check puff levels and accessories."
 
 
 func _on_create_button_pressed() -> void:
 	if _puzzle_editor == null:
-		subtitle_label.text = "UGC puzzle editor scene is unavailable."
+		subtitle_label.text = "Creator is taking a quick break. Try again in a moment."
 		return
 	if not (_puzzle_editor is CanvasItem):
-		subtitle_label.text = "UGC puzzle editor failed to initialize."
+		subtitle_label.text = "Creator needs a quick reset. Please reopen it."
 		return
 
 	if _is_collection_visible():
@@ -1016,13 +1016,13 @@ func _on_create_button_pressed() -> void:
 		_puzzle_editor.call("show_editor")
 	else:
 		puzzle_editor_canvas.visible = true
-	subtitle_label.text = "UGC editor open: drag terrain/puffs, test-play, then publish."
+	subtitle_label.text = "Creator open: build a puzzle, test it, then publish."
 
 
 func _on_leaderboard_button_pressed() -> void:
 	var scene_change_error: Error = get_tree().change_scene_to_file(STORY_CHAPTER_1_SCENE_PATH)
 	if scene_change_error != OK:
-		subtitle_label.text = "Story mode is unavailable in this build."
+		subtitle_label.text = "Story mode isn't ready yet. Stay tuned."
 
 
 func _is_collection_visible() -> bool:
@@ -1057,16 +1057,16 @@ func _style_fab_buttons() -> void:
 
 
 func _style_header_labels() -> void:
-	VisualTheme.apply_label_theme(title_label, Constants.FONT_SIZE_TITLE + 8, Constants.COLOR_TEXT_DARK.darkened(0.08))
-	VisualTheme.apply_label_theme(subtitle_label, Constants.FONT_SIZE_SUBTITLE + 2, Constants.COLOR_TEXT_DARK.lightened(0.12))
-	VisualTheme.apply_label_theme(swipe_hint_label, Constants.FONT_SIZE_BODY + 2, Color(Constants.COLOR_TEXT_DARK.r, Constants.COLOR_TEXT_DARK.g, Constants.COLOR_TEXT_DARK.b, 0.64))
+	VisualTheme.apply_label_theme(title_label, Constants.FONT_SIZE_TITLE + 10, Color(0.22, 0.15, 0.29, 1.0))
+	VisualTheme.apply_label_theme(subtitle_label, Constants.FONT_SIZE_SUBTITLE + 4, Color(0.27, 0.20, 0.34, 0.94))
+	VisualTheme.apply_label_theme(swipe_hint_label, Constants.FONT_SIZE_BODY + 4, Color(0.31, 0.24, 0.36, 0.78))
 	title_label.add_theme_constant_override("outline_size", 2)
-	title_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.72))
+	title_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.68))
 	subtitle_label.add_theme_constant_override("outline_size", 1)
-	subtitle_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.56))
+	subtitle_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.52))
 	swipe_hint_label.add_theme_constant_override("outline_size", 1)
-	swipe_hint_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.36))
-	swipe_hint_label.text = "Swipe up for your next puzzle"
+	swipe_hint_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.42))
+	swipe_hint_label.text = "Swipe up when your score appears"
 
 
 func _build_visual_atmosphere() -> void:
@@ -1080,11 +1080,11 @@ func _build_visual_atmosphere() -> void:
 		_header_panel.add_theme_stylebox_override(
 			"panel",
 			_build_rounded_shadow_stylebox(
-				Color(Constants.COLOR_BG_CREAM.r, Constants.COLOR_BG_CREAM.g, Constants.COLOR_BG_CREAM.b, 0.90),
+				Color(Constants.COLOR_BG_CREAM.r, Constants.COLOR_BG_CREAM.g, Constants.COLOR_BG_CREAM.b, 0.94),
 				30,
-				Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.22),
+				Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.30),
 				9,
-				Color(0.14, 0.12, 0.19, 0.08)
+				Color(0.14, 0.12, 0.19, 0.10)
 			)
 		)
 		top_margin.add_child(_header_panel)

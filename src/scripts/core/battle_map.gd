@@ -84,12 +84,12 @@ const TERRAIN_EFFECTS: Dictionary = {
 }
 
 const TERRAIN_COLORS: Dictionary = {
-	"cloud": Color(0.92, 0.95, 1.0, 1.0),
-	"high_cloud": Color(0.81, 0.89, 1.0, 1.0),
-	"cotton_candy": Color(0.98, 0.74, 0.86, 1.0),
-	"puddle": Color(0.52, 0.78, 1.0, 1.0),
-	"cliff": Color(0.68, 0.68, 0.75, 1.0),
-	"mushroom": Color(0.89, 0.75, 0.98, 1.0)
+	"cloud": Color(0.95, 0.97, 1.0, 1.0),
+	"high_cloud": Color(0.84, 0.92, 1.0, 1.0),
+	"cotton_candy": Color(0.99, 0.78, 0.90, 1.0),
+	"puddle": Color(0.58, 0.82, 1.0, 1.0),
+	"cliff": Color(0.74, 0.74, 0.80, 1.0),
+	"mushroom": Color(0.92, 0.79, 0.99, 1.0)
 }
 
 @onready var tile_map_layer: TileMapLayer = $TileMapLayer
@@ -197,15 +197,15 @@ func _create_terrain_texture() -> Texture2D:
 
 
 func _draw_isometric_diamond(image: Image, offset_x: int, fill_color: Color, terrain_type: String) -> void:
-	var light_tint: Color = fill_color.lerp(Color(1.0, 1.0, 1.0, 1.0), 0.30)
-	var dark_tint: Color = fill_color.lerp(Color(0.0, 0.0, 0.0, 1.0), 0.12)
+	var light_tint: Color = fill_color.lerp(Color(1.0, 1.0, 1.0, 1.0), 0.36)
+	var dark_tint: Color = fill_color.lerp(Color(0.0, 0.0, 0.0, 1.0), 0.18)
 	var half_width: float = float(TILE_PIXEL_SIZE.x) * 0.5
 	var half_height: float = float(TILE_PIXEL_SIZE.y) * 0.5
-	var border_limit: float = 0.97
-	var border_darkness: float = 0.13
+	var border_limit: float = 0.95
+	var border_darkness: float = 0.16
 	if terrain_type == "cliff":
 		border_limit = 0.93
-		border_darkness = 0.22
+		border_darkness = 0.24
 
 	for y in TILE_PIXEL_SIZE.y:
 		for x in TILE_PIXEL_SIZE.x:
@@ -222,8 +222,8 @@ func _draw_isometric_diamond(image: Image, offset_x: int, fill_color: Color, ter
 
 				if distance_to_center > border_limit:
 					tile_color = tile_color.darkened(border_darkness)
-				elif y < int(TILE_PIXEL_SIZE.y * 0.28):
-					tile_color = tile_color.lightened(0.06)
+				elif y < int(TILE_PIXEL_SIZE.y * 0.30):
+					tile_color = tile_color.lightened(0.08)
 
 				image.set_pixel(offset_x + x, y, tile_color)
 

@@ -3,7 +3,7 @@ class_name Puff
 
 const PLACEHOLDER_TEXTURE_SIZE: int = 128
 const PLACEHOLDER_RADIUS: float = 48.0
-const PLACEHOLDER_BORDER_WIDTH: float = 5.0
+const PLACEHOLDER_BORDER_WIDTH: float = 8.0
 const ACCESSORY_REFERENCE_TEXTURE_SIZE: float = 72.0
 
 const ACCESSORY_SLOT_HAT: StringName = &"hat"
@@ -242,9 +242,9 @@ func _resolve_team_color() -> Color:
 		return Constants.COLOR_TEAM_PLAYER
 
 	if team_name == "player" or team_name == "friendly":
-		return Constants.COLOR_TEAM_PLAYER
+		return Color(0.59, 0.92, 0.78, 1.0)
 	if team_name == "enemy":
-		return Constants.COLOR_TEAM_ENEMY
+		return Color(0.98, 0.56, 0.76, 1.0)
 	return Constants.COLOR_TEAM_PLAYER
 
 
@@ -304,8 +304,8 @@ func _paint_kawaii_face(image: Image, face_color: Color, blush_color: Color) -> 
 	var center_x: int = PLACEHOLDER_TEXTURE_SIZE / 2
 	var eye_y: int = int(round(float(PLACEHOLDER_TEXTURE_SIZE) * 0.36))
 	var eye_spacing: int = int(round(float(PLACEHOLDER_TEXTURE_SIZE) * 0.18))
-	var eye_radius_x: int = int(round(float(PLACEHOLDER_TEXTURE_SIZE) * 0.070))
-	var eye_radius_y: int = int(round(float(PLACEHOLDER_TEXTURE_SIZE) * 0.062))
+	var eye_radius_x: int = int(round(float(PLACEHOLDER_TEXTURE_SIZE) * 0.082))
+	var eye_radius_y: int = int(round(float(PLACEHOLDER_TEXTURE_SIZE) * 0.072))
 	var eye_color: Color = Color(0.12, 0.12, 0.12, 1.0)
 
 	_paint_ellipse(image, center_x - eye_spacing, eye_y, max(1, eye_radius_x), max(1, eye_radius_y), eye_color)
@@ -324,8 +324,8 @@ func _paint_kawaii_face(image: Image, face_color: Color, blush_color: Color) -> 
 		_set_pixel_safe(image, center_x + offset_x, smile_center_y + y_offset + 1, smile_color)
 
 	var cheek_y: int = int(round(float(PLACEHOLDER_TEXTURE_SIZE) * 0.64))
-	var cheek_radius_x: int = int(round(float(PLACEHOLDER_TEXTURE_SIZE) * 0.048))
-	var cheek_radius_y: int = int(round(float(PLACEHOLDER_TEXTURE_SIZE) * 0.038))
+	var cheek_radius_x: int = int(round(float(PLACEHOLDER_TEXTURE_SIZE) * 0.056))
+	var cheek_radius_y: int = int(round(float(PLACEHOLDER_TEXTURE_SIZE) * 0.046))
 	var cheek_dx: int = int(round(float(PLACEHOLDER_TEXTURE_SIZE) * 0.245))
 	_paint_ellipse(image, center_x - cheek_dx, cheek_y, max(1, cheek_radius_x), max(1, cheek_radius_y), blush_color)
 	_paint_ellipse(image, center_x + cheek_dx, cheek_y, max(1, cheek_radius_x), max(1, cheek_radius_y), blush_color)

@@ -48,6 +48,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "Keep `src/scripts/feed/feed_main.gd` `SNAPSHOT_Y_RATIO` near `0.16-0.22`; drifting toward `0.40+` pushes the whole feed card stack too low and creates an oversized subtitle-to-status empty zone on portrait layouts."
 - "`src/scripts/feed/feed_main.gd::_build_visual_atmosphere()` adds non-interactive pastel ambient blobs + a header card so tall portrait whitespace reads intentional when layout constants are locked."
 - "`src/scripts/feed/feed_item.gd` feed card polish should prefer style upgrades (`_build_card_stylebox()`, `_ensure_map_backdrop()`, elevated status/score panels) before touching protected spacing constants."
+- "Feed header/status/error copy should stay player-facing; avoid implementation-detail wording like `scene unavailable`, `failed to initialize`, or build-state messages in visible subtitles."
 
 ## Gotchas
 

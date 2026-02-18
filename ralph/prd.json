@@ -578,7 +578,7 @@
       "description": "As a player, I want the battle map and puffs to be centered and large within the feed card so that I can clearly see the tactical puzzle.",
       "acceptanceCriteria": [
         "The isometric battle map is horizontally centered within the feed card viewport (not pushed to the right)",
-        "No tiles are clipped off-screen \u2014 all 5x5 grid tiles are fully visible",
+        "No tiles are clipped off-screen — all 5x5 grid tiles are fully visible",
         "The SNAPSHOT_SCALE in feed_item.gd is increased so the battle map fills approximately 60-70% of the feed card width",
         "The battle_root position within FeedItem is offset to account for the isometric map's origin being at the top-left corner of the grid (the map extends right and down from origin, so a negative X offset is needed to center it)",
         "Run `bash ralph/take_screenshot.sh` and verify: map is centered, no tiles cut off, map fills a reasonable portion of the card",
@@ -598,7 +598,7 @@
       "acceptanceCriteria": [
         "The status panel ('Your turn: move, attack, or bump') is positioned above or below the battle map area, not overlapping the feed header title/subtitle",
         "The feed title and subtitle at the top are fully visible and not obscured by any overlay",
-        "The vertical space between the title area, status panel, battle map, and FAB buttons is balanced \u2014 no huge empty gaps",
+        "The vertical space between the title area, status panel, battle map, and FAB buttons is balanced — no huge empty gaps",
         "The overall feed card layout fills the screen proportionally: header at top, battle content in middle, FABs at bottom",
         "Run `bash ralph/take_screenshot.sh` and verify: no overlapping text, balanced layout, no huge empty areas",
         "All .gd scripts have no syntax errors"
@@ -631,13 +631,13 @@
     },
     {
       "id": "US-033",
-      "title": "Eliminate empty space \u2014 fill feed card vertically",
+      "title": "Eliminate empty space — fill feed card vertically",
       "description": "As a player, I want the feed card content to fill the screen with no huge empty gaps so that the game feels polished. Currently there is ~40% empty space above and below the map.",
       "acceptanceCriteria": [
         "SNAPSHOT_Y_RATIO in feed_main.gd is lowered (try 0.20-0.26) so the feed item origin is higher on the card, pushing the battle content up",
         "STATUS_PANEL_LOCAL_Y in feed_item.gd is adjusted so the status panel sits ~20-40px above the top of the map, not far above it",
         "The battle map appears in the upper-third of the card, NOT the center with empty space above",
-        "The vertical flow is: title(top) \u2192 ~80px gap \u2192 status panel \u2192 ~20px \u2192 map+puffs \u2192 ~20px \u2192 score area \u2192 flexible space \u2192 swipe hint \u2192 FABs(bottom)",
+        "The vertical flow is: title(top) → ~80px gap → status panel → ~20px → map+puffs → ~20px → score area → flexible space → swipe hint → FABs(bottom)",
         "No section of the feed card has more than ~150px of continuous empty space (except the flexible area between score and FABs which should contain the swipe hint)",
         "All .gd scripts have no syntax errors"
       ],
@@ -659,7 +659,7 @@
         "Score panel background uses a GDD palette color (e.g. cream, lavender, or dark overlay with light text)",
         "Community ranking text is clearly readable (sufficient font size and contrast)",
         "The Share button stub text 'Pure stub: social post...' is hidden or replaced with just 'Share' (no developer-facing text visible)",
-        "Score panel is properly sized and positioned \u2014 not overlapping the map tiles or puffs",
+        "Score panel is properly sized and positioned — not overlapping the map tiles or puffs",
         "All .gd scripts have no syntax errors"
       ],
       "priority": 34,
@@ -671,14 +671,14 @@
     },
     {
       "id": "US-035",
-      "title": "Visual QA \u2014 screenshot must match quality bar",
+      "title": "Visual QA — screenshot must match quality bar",
       "description": "As a developer, I want the attached screenshot to pass all visual quality criteria so that the game looks like a real mobile game.",
       "acceptanceCriteria": [
-        "Look at the attached screenshot image input \u2014 this is the acceptance test",
+        "Look at the attached screenshot image input — this is the acceptance test",
         "Battle map fills ~60-80% of card width, centered, all 25 isometric tiles clearly visible",
         "At least 4 puffs visible on the map (2+ player with mint/green rings, 2+ enemy with pink/red rings), each with visible kawaii face",
         "Puffs are spaced on different tiles, not overlapping",
-        "No huge empty gaps \u2014 content fills the screen proportionally",
+        "No huge empty gaps — content fills the screen proportionally",
         "All text is readable with good contrast (no tiny text on busy backgrounds)",
         "No debug text, stub messages, or developer-facing strings visible",
         "FAB buttons visible at bottom with distinct pastel colors",
@@ -695,12 +695,12 @@
     {
       "id": "US-036",
       "title": "Scale up battle map to fill card width",
-      "description": "The battle map is still too small \u2014 it only fills about 50% of the card width. Scale it up so the isometric grid fills 75-85% of the viewport width. Puffs should be large and clearly distinguishable.",
+      "description": "The battle map is still too small — it only fills about 50% of the card width. Scale it up so the isometric grid fills 75-85% of the viewport width. Puffs should be large and clearly distinguishable.",
       "acceptanceCriteria": [
         "SNAPSHOT_SCALE in feed_item.gd is increased until the 5x5 isometric grid spans approximately 75-85% of the 1170px viewport width (try 1.6-1.9)",
         "All 25 tiles are still fully visible (no tiles clipped off screen edges)",
         "Puffs are large enough that kawaii face details (eyes, mouth, blush) are clearly visible",
-        "The map + puffs are the visual centerpiece of the feed card \u2014 they should dominate the card area",
+        "The map + puffs are the visual centerpiece of the feed card — they should dominate the card area",
         "All .gd scripts have no syntax errors"
       ],
       "priority": 36,
@@ -712,7 +712,7 @@
     },
     {
       "id": "US-037",
-      "title": "Close vertical gaps \u2014 title to status to map to score to FABs",
+      "title": "Close vertical gaps — title to status to map to score to FABs",
       "description": "There is still way too much empty space. The gap between title and status panel is ~120px of nothing, and the gap between score panel and swipe hint is ~45% of the screen. All content should be pushed together with minimal gaps.",
       "acceptanceCriteria": [
         "The gap between the title/subtitle and the status panel is at most 40-60px",
@@ -750,7 +750,7 @@
     },
     {
       "id": "US-039",
-      "title": "Final visual polish \u2014 screenshot must look like a real game",
+      "title": "Final visual polish — screenshot must look like a real game",
       "description": "Look at the attached screenshot. If it doesn't look like a polished mobile game, fix whatever is wrong. No more excuses.",
       "acceptanceCriteria": [
         "The attached screenshot shows a feed card where content fills the screen from top to bottom with minimal gaps",
@@ -774,7 +774,7 @@
       "title": "Remove all debug and placeholder text from user-facing UI",
       "description": "Clean up every piece of text the user sees. No debug info, no implementation details, no placeholder stubs.",
       "acceptanceCriteria": [
-        "Title shows \"Puff Tactics\" (no feed count or debug info) \u2014 or is hidden entirely for immersive feed",
+        "Title shows \"Puff Tactics\" (no feed count or debug info) — or is hidden entirely for immersive feed",
         "Subtitle shows contextual gameplay hint (e.g. \"Solve the puzzle\") not \"Offline mode: playing cached feed items\"",
         "\"Decision timer: 30 seconds max\" replaced with friendlier copy like \"Take your time\" or removed",
         "Score Preview panel text is user-friendly, not technical",
@@ -782,8 +782,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 40,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Screenshot QA on 2026-02-18 showed placeholder-style copy and implementation-detail messaging in the feed UI (notably the score preview value 'Go!' and technical/edge-case subtitle text), which made the card read like a prototype. Updated user-facing feed copy in FeedMain/FeedItem to be player-friendly: title defaults to 'Puff Tactics', subtitle and swipe defaults are clean, score preview now uses 'Ready' with plain-language guidance, and Creator/Story/collection edge-case messages avoid technical wording. Verified parse with HOME=/tmp godot --headless --path /home/fives/projects/puff-tactics --scene res://src/scenes/feed/FeedMain.tscn --quit.",
       "dependsOn": [
         "US-039"
       ]
@@ -791,7 +791,7 @@
     {
       "id": "US-041",
       "title": "Rounded corners, soft shadows, and card elevation on all panels",
-      "description": "Every panel (status, score, FABs) should feel like a card with depth \u2014 rounded corners (20-28px radius), subtle drop shadow, consistent styling.",
+      "description": "Every panel (status, score, FABs) should feel like a card with depth — rounded corners (20-28px radius), subtle drop shadow, consistent styling.",
       "acceptanceCriteria": [
         "Status panel has 20-28px rounded corners with a subtle shadow (2-4px offset, 8-12px blur)",
         "Score panel has matching rounded corners and shadow style",
@@ -809,14 +809,14 @@
     },
     {
       "id": "US-042",
-      "title": "FAB buttons \u2014 pill shape with shadow and proper visual hierarchy",
-      "description": "FAB buttons should look like polished mobile buttons \u2014 full pill radius, subtle shadow, clear primary/secondary hierarchy.",
+      "title": "FAB buttons — pill shape with shadow and proper visual hierarchy",
+      "description": "FAB buttons should look like polished mobile buttons — full pill radius, subtle shadow, clear primary/secondary hierarchy.",
       "acceptanceCriteria": [
         "All three FAB buttons have full pill-shaped corners (corner_radius = height/2)",
         "Buttons have a subtle drop shadow matching the panel shadow style",
-        "Create button (primary action) is visually more prominent \u2014 slightly larger or bolder color",
+        "Create button (primary action) is visually more prominent — slightly larger or bolder color",
         "Button text has proper padding (at least 16px horizontal, 12px vertical)",
-        "Buttons feel tappable \u2014 minimum 44px touch target height (iOS HIG)",
+        "Buttons feel tappable — minimum 44px touch target height (iOS HIG)",
         "All .gd scripts have no syntax errors"
       ],
       "priority": 42,
@@ -828,7 +828,7 @@
     },
     {
       "id": "US-043",
-      "title": "Typography hierarchy \u2014 title, body, and caption sizes with proper contrast",
+      "title": "Typography hierarchy — title, body, and caption sizes with proper contrast",
       "description": "Establish a clear type scale: large titles, medium body, small captions. Use font size and color opacity to create visual hierarchy.",
       "acceptanceCriteria": [
         "App title (if visible) uses font_size >= 36 with full opacity dark text",
@@ -848,7 +848,7 @@
     },
     {
       "id": "US-044",
-      "title": "Vertical rhythm \u2014 even spacing from top safe area to bottom safe area",
+      "title": "Vertical rhythm — even spacing from top safe area to bottom safe area",
       "description": "Content should flow naturally from top to bottom with consistent spacing. No large empty gaps. Respect iOS safe areas.",
       "acceptanceCriteria": [
         "Top safe area padding: 44-60px before first UI element (iOS status bar + notch)",
@@ -870,13 +870,13 @@
     },
     {
       "id": "US-045",
-      "title": "Swipe hint \u2014 animated upward chevron instead of plain text",
+      "title": "Swipe hint — animated upward chevron instead of plain text",
       "description": "Replace the plain \"Swipe up for the next puzzle\" text with a subtle animated chevron arrow that pulses upward, with optional small label.",
       "acceptanceCriteria": [
         "Swipe hint shows an upward chevron (\"^\") or arrow icon, not just plain text",
         "Chevron has a subtle bounce or pulse animation (tween, 1.5-2s period, ease in-out)",
         "Optional small text label below or beside the chevron (\"Swipe up\")",
-        "Animation is subtle \u2014 does not distract from gameplay",
+        "Animation is subtle — does not distract from gameplay",
         "Hint only shows when swipe is available (cycle complete or not started)",
         "All .gd scripts have no syntax errors"
       ],
@@ -889,13 +889,13 @@
     },
     {
       "id": "US-046",
-      "title": "Status panel visual upgrade \u2014 frosted glass or soft card style",
+      "title": "Status panel visual upgrade — frosted glass or soft card style",
       "description": "The status panel should look premium, not like a plain dark rectangle. Use either a frosted glass effect (semi-transparent with blur) or a soft card style with gradient.",
       "acceptanceCriteria": [
         "Status panel background is either: (a) semi-transparent (alpha 0.75-0.85) with a subtle gradient, or (b) a softer dark color with slight transparency",
         "Panel has a very subtle top-to-bottom gradient (lighter at top, darker at bottom)",
         "Text inside has proper padding (20-28px on all sides)",
-        "Panel blends naturally with the pastel cream background \u2014 no harsh visual boundary",
+        "Panel blends naturally with the pastel cream background — no harsh visual boundary",
         "Panel width matches or slightly exceeds the map width for visual alignment",
         "All .gd scripts have no syntax errors"
       ],
@@ -908,12 +908,12 @@
     },
     {
       "id": "US-047",
-      "title": "Score panel visual upgrade \u2014 match status panel style",
+      "title": "Score panel visual upgrade — match status panel style",
       "description": "The score panel should use the same visual language as the status panel for consistency. Soft card, matching border radius, matching shadow.",
       "acceptanceCriteria": [
         "Score panel uses the same bg style as status panel (matching transparency, gradient, shadow)",
-        "Score value (\"Ready\" or number) is the visually dominant element \u2014 largest, boldest, brightest color",
-        "Breakdown text is clearly secondary \u2014 smaller, lower opacity",
+        "Score value (\"Ready\" or number) is the visually dominant element — largest, boldest, brightest color",
+        "Breakdown text is clearly secondary — smaller, lower opacity",
         "Share button (when visible) uses a contrasting accent color and pill shape",
         "Panel transitions smoothly between Preview and Breakdown states",
         "All .gd scripts have no syntax errors"
@@ -927,7 +927,7 @@
     },
     {
       "id": "US-048",
-      "title": "Battle map subtle container \u2014 soft rounded backdrop behind the play area",
+      "title": "Battle map subtle container — soft rounded backdrop behind the play area",
       "description": "Add a very subtle rounded rectangle backdrop behind the battle map to visually frame the play area and separate it from the UI panels.",
       "acceptanceCriteria": [
         "A subtle rounded rectangle (24-32px radius) sits behind the battle map area",
@@ -946,7 +946,7 @@
     },
     {
       "id": "US-049",
-      "title": "Color harmony final pass \u2014 consistent pastel palette across all UI elements",
+      "title": "Color harmony final pass — consistent pastel palette across all UI elements",
       "description": "Verify every UI element uses colors from the defined kawaii pastel palette. No off-brand colors, no harsh contrasts.",
       "acceptanceCriteria": [
         "Background is warm cream (Constants.COLOR_BG or similar)",
@@ -965,14 +965,14 @@
     },
     {
       "id": "US-050",
-      "title": "Production visual QA \u2014 screenshot must be App Store ready",
+      "title": "Production visual QA — screenshot must be App Store ready",
       "description": "Final visual QA pass. The screenshot should look like it belongs on the App Store. If you would not be proud to show this to a friend, it is not done.",
       "acceptanceCriteria": [
         "The screenshot looks like a polished mobile game, not a prototype",
         "A non-developer would understand what they are looking at within 2 seconds",
         "Content fills the screen from safe-area-top to safe-area-bottom with balanced margins",
         "All panels, buttons, and text follow a consistent visual language",
-        "The battle map is the visual centerpiece \u2014 large, clear, inviting",
+        "The battle map is the visual centerpiece — large, clear, inviting",
         "Puffs are cute and clearly distinguishable (team colors, faces visible)",
         "No debug text, no placeholder text, no technical jargon visible",
         "Overall impression: \"I want to play this game\"",
@@ -980,7 +980,7 @@
       ],
       "priority": 50,
       "passes": false,
-      "notes": "Visual QA on 2026-02-18 screenshot (portrait): estimated map width ~56% of screen, 0 visible puffs, and large low-information dark blocks reduced overall polish to 4/10. Checklist results: map fill FAIL; all 25 tiles FAIL; 4+ puffs FAIL; puff face readability FAIL; overlap PASS; no >15% vertical gap FAIL; text readability FAIL (small low-contrast detail text); no debug/stub text FAIL (network/offline implementation copy visible); pastel kawaii harmony FAIL (cards too dark vs cream background). Style-only remediation applied without protected layout constant changes: softened status/score/map card palettes and shadows, improved typography contrast/hierarchy and friendlier copy, promoted create FAB hierarchy, increased puff face legibility and team ring clarity, and brightened terrain tile rendering for better board readability. Parse checks: `godot --headless --scene src/scenes/feed/FeedMain.tscn --quit` passed; direct `--check-only --script` on autoload-dependent feed scripts still shows known `VisualTheme` singleton resolution limitation in isolated checks.",
+      "notes": "Visual QA on 2026-02-18 screenshot (portrait, 768x1365): estimated map width ~44% of screen, only a partial section of the 5x5 tile field visible, and 4 visible puffs (player side reads as mint/green plus warm orange, enemy side reads as lavender/blue with pink rings). Large vertical whitespace pockets and heavy navy overlays lowered polish to 5/10. Checklist results: map fill FAIL; all 25 tiles FAIL; 4+ puffs FAIL (team color readability does not clearly read as 2+ mint/green players + 2+ pink/red enemies); puff face readability PASS; overlap PASS; no >15% vertical gap FAIL; text readability FAIL; no debug/stub text PASS; pastel kawaii harmony FAIL. Style-only remediation applied without changing protected layout constants: converted status/score/map containers to lighter pastel card treatments with softer shadows and cleaner borders, raised text contrast/type hierarchy and friendlier feed copy, boosted puff team-ring/facial readability, and brightened terrain tile palette plus edge contrast for clearer board readability. Parse check passed: `HOME=/tmp godot --headless --path /home/fives/projects/puff-tactics --scene res://src/scenes/feed/FeedMain.tscn --quit`.",
       "dependsOn": [
         "US-049"
       ]

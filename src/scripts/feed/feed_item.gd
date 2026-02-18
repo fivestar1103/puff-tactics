@@ -204,11 +204,11 @@ func _build_status_overlay() -> void:
 	_status_panel.add_theme_stylebox_override(
 		"panel",
 		_build_card_stylebox(
-			Color(0.11, 0.16, 0.27, 0.82),
-			26,
-			Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.46),
+			Color(0.95, 0.96, 1.0, 0.93),
+			28,
+			Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.35),
 			10,
-			Color(0.08, 0.09, 0.15, 0.12)
+			Color(0.20, 0.16, 0.25, 0.09)
 		)
 	)
 	add_child(_status_panel)
@@ -226,10 +226,10 @@ func _build_status_overlay() -> void:
 	_status_label.custom_minimum_size = Vector2(0.0, 78.0)
 	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_status_label.add_theme_font_size_override("font_size", 34)
-	_status_label.add_theme_color_override("font_color", Color(0.98, 0.99, 1.0, 1.0))
-	_status_label.add_theme_constant_override("outline_size", 2)
-	_status_label.add_theme_color_override("font_outline_color", Color(0.03, 0.05, 0.10, 0.68))
+	_status_label.add_theme_font_size_override("font_size", 36)
+	_status_label.add_theme_color_override("font_color", Color(0.20, 0.16, 0.27, 1.0))
+	_status_label.add_theme_constant_override("outline_size", 1)
+	_status_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.54))
 	status_layout.add_child(_status_label)
 
 	_detail_label = Label.new()
@@ -237,10 +237,10 @@ func _build_status_overlay() -> void:
 	_detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_detail_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_detail_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_detail_label.add_theme_font_size_override("font_size", 23)
-	_detail_label.add_theme_color_override("font_color", Color(0.88, 0.95, 1.0, 0.94))
+	_detail_label.add_theme_font_size_override("font_size", 24)
+	_detail_label.add_theme_color_override("font_color", Color(0.25, 0.21, 0.31, 0.92))
 	_detail_label.add_theme_constant_override("outline_size", 1)
-	_detail_label.add_theme_color_override("font_outline_color", Color(0.03, 0.05, 0.10, 0.58))
+	_detail_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.40))
 	status_layout.add_child(_detail_label)
 
 	_build_score_overlay()
@@ -260,11 +260,11 @@ func _build_score_overlay() -> void:
 	add_child(_score_panel)
 
 	var panel_style: StyleBoxFlat = _build_card_stylebox(
-		Color(0.09, 0.14, 0.24, 0.88),
+		Color(0.96, 0.95, 1.0, 0.94),
 		28,
-		Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.50),
+		Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.36),
 		10,
-		Color(0.08, 0.09, 0.15, 0.12)
+		Color(0.20, 0.16, 0.24, 0.09)
 	)
 	_score_panel.add_theme_stylebox_override("panel", panel_style)
 
@@ -280,18 +280,18 @@ func _build_score_overlay() -> void:
 	_score_title_label = Label.new()
 	_score_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_score_title_label.add_theme_font_size_override("font_size", 30)
-	_score_title_label.add_theme_color_override("font_color", Color(0.95, 0.98, 1.0, 1.0))
+	_score_title_label.add_theme_color_override("font_color", Color(0.22, 0.17, 0.30, 1.0))
 	_score_title_label.add_theme_constant_override("outline_size", 1)
-	_score_title_label.add_theme_color_override("font_outline_color", Color(0.03, 0.06, 0.10, 0.52))
+	_score_title_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.34))
 	_score_title_label.text = "Score Breakdown"
 	root_layout.add_child(_score_title_label)
 
 	_score_value_label = Label.new()
 	_score_value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_score_value_label.add_theme_font_size_override("font_size", 62)
-	_score_value_label.add_theme_color_override("font_color", Color(0.99, 0.89, 0.59, 1.0))
+	_score_value_label.add_theme_color_override("font_color", Color(0.95, 0.58, 0.38, 1.0))
 	_score_value_label.add_theme_constant_override("outline_size", 2)
-	_score_value_label.add_theme_color_override("font_outline_color", Color(0.11, 0.08, 0.16, 0.72))
+	_score_value_label.add_theme_color_override("font_outline_color", Color(0.34, 0.21, 0.20, 0.44))
 	_score_value_label.text = "0"
 	root_layout.add_child(_score_value_label)
 
@@ -299,14 +299,14 @@ func _build_score_overlay() -> void:
 	_score_breakdown_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_score_breakdown_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_score_breakdown_label.add_theme_font_size_override("font_size", 20)
-	_score_breakdown_label.add_theme_color_override("font_color", Color(0.90, 0.95, 1.0, 0.93))
+	_score_breakdown_label.add_theme_color_override("font_color", Color(0.26, 0.22, 0.33, 0.90))
 	root_layout.add_child(_score_breakdown_label)
 
 	_score_comparison_label = Label.new()
 	_score_comparison_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_score_comparison_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_score_comparison_label.add_theme_font_size_override("font_size", 22)
-	_score_comparison_label.add_theme_color_override("font_color", Color(0.81, 0.97, 0.88, 0.98))
+	_score_comparison_label.add_theme_color_override("font_color", Color(0.19, 0.42, 0.35, 0.96))
 	root_layout.add_child(_score_comparison_label)
 
 	_share_button = Button.new()
@@ -326,7 +326,7 @@ func _build_score_overlay() -> void:
 	_share_stub_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_share_stub_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_share_stub_label.add_theme_font_size_override("font_size", 20)
-	_share_stub_label.add_theme_color_override("font_color", Color(0.96, 0.84, 0.61, 0.97))
+	_share_stub_label.add_theme_color_override("font_color", Color(0.47, 0.28, 0.24, 0.94))
 	_share_stub_label.text = ""
 	_share_stub_label.visible = false
 	root_layout.add_child(_share_stub_label)
@@ -368,11 +368,11 @@ func _ensure_map_backdrop() -> void:
 	_map_backdrop.add_theme_stylebox_override(
 		"panel",
 		_build_card_stylebox(
-			Color(0.96, 0.98, 1.0, 0.54),
-			30,
-			Color(1.0, 1.0, 1.0, 0.18),
+			Color(0.98, 0.97, 0.94, 0.78),
+			32,
+			Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.16),
 			8,
-			Color(0.12, 0.11, 0.18, 0.08)
+			Color(0.16, 0.12, 0.20, 0.07)
 		)
 	)
 	add_child(_map_backdrop)
@@ -1022,9 +1022,9 @@ func _show_score_preview_overlay() -> void:
 
 	_score_panel.visible = true
 	_score_title_label.text = "Score Preview"
-	_score_value_label.text = "Go!"
-	_score_breakdown_label.text = "Score comes from knockouts, damage, team safety, and turn efficiency."
-	_score_comparison_label.text = "Play your turn to reveal your score and community ranking."
+	_score_value_label.text = "Ready"
+	_score_breakdown_label.text = "Big plays, safe allies, and quick turns raise your score."
+	_score_comparison_label.text = "Take one tactical turn to lock your score."
 	_share_button.visible = false
 	_share_button.disabled = true
 	_share_button.tooltip_text = ""
