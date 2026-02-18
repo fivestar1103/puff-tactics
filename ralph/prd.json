@@ -900,8 +900,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 46,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Screenshot review on 2026-02-18 showed the status panel still reading like a flat opaque rectangle and visually narrower than the map lane. Updated `src/scripts/feed/feed_item.gd` with a frosted soft-card treatment: panel base alpha lowered to 0.82, softened lavender border alpha, and a subtle top-to-bottom gradient (lighter top, darker bottom) plus reduced pattern intensity for a glassy look that blends into the cream background. Kept text padding in-spec by tuning status content insets to 26px horizontal and 24px vertical, and aligned visual width to the battlefield by expanding status panel width to map width + 20px when map bounds are known. Verified parse with `HOME=/tmp godot --headless --path /home/fives/projects/puff-tactics --scene res://src/scenes/feed/FeedMain.tscn --quit`.",
       "dependsOn": [
         "US-045"
       ]
@@ -919,8 +919,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 47,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Implemented score-panel style parity in `src/scripts/feed/feed_item.gd`: score card now uses the same frosted/glass visual language as status (matching radius, shadow, and pastel border family), score value emphasis increased (56px warm accent), breakdown/comparison text hierarchy softened, share CTA upgraded to a contrasting pill-style accent button with elevated state styles, and score panel state swaps now fade in for smoother Preview->Breakdown transitions. Verified parse with `HOME=/tmp godot --headless --path /home/fives/projects/puff-tactics --scene res://src/scenes/feed/FeedMain.tscn --quit`.",
       "dependsOn": [
         "US-046"
       ]
@@ -938,8 +938,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 48,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Refined battle map framing in `src/scripts/feed/feed_item.gd` with a subtle rounded backdrop container: reduced container border alpha to the 0.05-0.10 range, softened shadow and fill, and tuned backdrop overscan to ~22px around map bounds to stay within the 16-24px target. Backdrop decoration was also softened while keeping readable board guidance via light 5x5 guide fills/outlines so the play area stays clear without obscuring puff/tile visibility. Verified parse with `HOME=/tmp godot --headless --path /home/fives/projects/puff-tactics --scene res://src/scenes/feed/FeedMain.tscn --quit`.",
       "dependsOn": [
         "US-047"
       ]
@@ -957,8 +957,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 49,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Completed a color-harmony pass across feed surfaces using the existing kawaii palette constants: score/status/map containers now share lavender/sky/mint pastel accents with consistent shadow language, ambient background treatment in `src/scripts/feed/feed_main.gd` was strengthened using palette-coherent overlays/blobs to reduce perceived empty whitespace, and typography opacity tiers remain consistent (primary near 1.0, secondary ~0.85-0.92, tertiary lower emphasis). Verified parse with `HOME=/tmp godot --headless --path /home/fives/projects/puff-tactics --scene res://src/scenes/feed/FeedMain.tscn --quit`.",
       "dependsOn": [
         "US-048"
       ]
@@ -980,7 +980,7 @@
       ],
       "priority": 50,
       "passes": false,
-      "notes": "Visual QA on attached screenshot (2026-02-18, portrait 384x768): checklist -> map width 60-80% centered: FAIL; all 25 tiles visible: FAIL; 4+ puffs (2+ player, 2+ enemy): PASS; puff face readability: PASS; no puff overlap: PASS; no vertical gap >15%: FAIL; text readability/contrast: PASS; no debug/stub text: PASS; pastel kawaii aesthetic: PASS. Applied style-only fixes without touching protected layout constants: `src/scripts/feed/feed_item.gd` now gives status/score cards frosted gradient + patterned surfaces and higher-contrast map guide tiles, score preview copy changed from 'Go Time' to 'Ready', and `src/scripts/feed/feed_main.gd` now uses stronger ambient blob/background texture treatment so top and bottom whitespace reads intentional instead of placeholder. Pending a fresh screenshot verification pass.",
+      "notes": "Visual QA on attached screenshot (2026-02-18, portrait 384x768): checklist -> map width 60-80% centered: FAIL; all 25 tiles visible: FAIL; 4+ puffs (2+ player, 2+ enemy): PASS; puff face readability: PASS; no puff overlap: PASS; no vertical gap >15%: FAIL; text readability/contrast: PASS; no debug/stub text: PASS; pastel kawaii aesthetic: PASS. Applied style-only fixes (no protected layout constant changes): `src/scripts/feed/feed_item.gd` now aligns score panel styling with status, upgrades share CTA pill styling, softens/subtly reframes map backdrop with clearer 5x5 guide fills, and adds smooth score-panel state fades; `src/scripts/feed/feed_main.gd` now adds a palette-matched atmosphere lane plus stronger ambient blob/pattern treatment so whitespace reads intentional. Verified parse with `HOME=/tmp godot --headless --path /home/fives/projects/puff-tactics --scene res://src/scenes/feed/FeedMain.tscn --quit`. Pending fresh screenshot verification.",
       "dependsOn": [
         "US-049"
       ]

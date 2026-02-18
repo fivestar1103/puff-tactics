@@ -35,36 +35,36 @@ const FALLBACK_PLAYER_DATA_PATH: String = "res://src/resources/puffs/base/flame_
 const FALLBACK_ENEMY_DATA_PATH: String = "res://src/resources/puffs/base/cloud_tank.tres"
 const AMBIENT_BLOB_LAYOUTS: Array[Dictionary] = [
 	{
-		"width_ratio": 0.74,
-		"height": 190.0,
-		"y_ratio": 0.16,
-		"x_offset": -62.0,
-		"radius": 96,
-		"color": Color(0.72, 0.84, 0.99, 0.36)
-	},
-	{
-		"width_ratio": 0.90,
-		"height": 220.0,
-		"y_ratio": 0.36,
-		"x_offset": 44.0,
+		"width_ratio": 0.80,
+		"height": 236.0,
+		"y_ratio": 0.15,
+		"x_offset": -72.0,
 		"radius": 104,
-		"color": Color(0.99, 0.83, 0.77, 0.34)
+		"color": Color(0.72, 0.84, 0.99, 0.44)
 	},
 	{
-		"width_ratio": 0.82,
-		"height": 188.0,
-		"y_ratio": 0.62,
-		"x_offset": -28.0,
-		"radius": 96,
-		"color": Color(0.77, 0.90, 0.82, 0.32)
+		"width_ratio": 0.94,
+		"height": 262.0,
+		"y_ratio": 0.34,
+		"x_offset": 54.0,
+		"radius": 112,
+		"color": Color(0.99, 0.83, 0.77, 0.40)
 	},
 	{
-		"width_ratio": 0.70,
-		"height": 170.0,
-		"y_ratio": 0.82,
-		"x_offset": 56.0,
-		"radius": 88,
-		"color": Color(0.93, 0.82, 0.99, 0.30)
+		"width_ratio": 0.86,
+		"height": 234.0,
+		"y_ratio": 0.60,
+		"x_offset": -36.0,
+		"radius": 104,
+		"color": Color(0.77, 0.90, 0.82, 0.38)
+	},
+	{
+		"width_ratio": 0.84,
+		"height": 258.0,
+		"y_ratio": 0.88,
+		"x_offset": 42.0,
+		"radius": 104,
+		"color": Color(0.93, 0.82, 0.99, 0.38)
 	}
 ]
 
@@ -299,6 +299,7 @@ var _header_panel: PanelContainer
 var _swipe_hint_panel: PanelContainer
 var _swipe_hint_chevron_label: Label
 var _swipe_hint_pulse_tween: Tween
+var _atmosphere_lane_panel: PanelContainer
 var _ambient_blobs: Array[PanelContainer] = []
 
 
@@ -1186,6 +1187,7 @@ func _build_visual_atmosphere() -> void:
 		return
 
 	_ensure_background_decor()
+	_ensure_atmosphere_lane_panel()
 
 	if _header_panel == null:
 		_header_panel = PanelContainer.new()
@@ -1258,10 +1260,106 @@ func _ensure_background_decor() -> void:
 		pattern_rect.texture = _create_background_pattern_texture()
 		pattern_rect.stretch_mode = TextureRect.STRETCH_SCALE
 		pattern_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		pattern_rect.modulate = Color(1.0, 1.0, 1.0, 0.60)
+		pattern_rect.modulate = Color(1.0, 1.0, 1.0, 0.74)
 		pattern_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 		background_rect.add_child(pattern_rect)
 		background_rect.move_child(pattern_rect, 1)
+
+
+func _ensure_atmosphere_lane_panel() -> void:
+	if _atmosphere_lane_panel != null and is_instance_valid(_atmosphere_lane_panel):
+		return
+
+	_atmosphere_lane_panel = PanelContainer.new()
+	_atmosphere_lane_panel.name = "AtmosphereLane"
+	_atmosphere_lane_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_atmosphere_lane_panel.add_theme_stylebox_override(
+		"panel",
+		_build_rounded_shadow_stylebox(
+			Color(1.0, 0.99, 1.0, 0.52),
+			44,
+			Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.18),
+			0,
+			Color(0.0, 0.0, 0.0, 0.0),
+			1,
+			0.0
+		)
+	)
+	background_rect.add_child(_atmosphere_lane_panel)
+	background_rect.move_child(_atmosphere_lane_panel, 2)
+	_build_atmosphere_lane_decor()
+
+
+func _build_atmosphere_lane_decor() -> void:
+	if _atmosphere_lane_panel == null:
+		return
+	if _atmosphere_lane_panel.get_node_or_null("LaneGradient") == null:
+		var gradient_rect: TextureRect = TextureRect.new()
+		gradient_rect.name = "LaneGradient"
+		gradient_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		gradient_rect.texture = _create_lane_gradient_texture()
+		gradient_rect.stretch_mode = TextureRect.STRETCH_SCALE
+		gradient_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		gradient_rect.modulate = Color(1.0, 1.0, 1.0, 0.90)
+		gradient_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_atmosphere_lane_panel.add_child(gradient_rect)
+		_atmosphere_lane_panel.move_child(gradient_rect, 0)
+
+	if _atmosphere_lane_panel.get_node_or_null("LanePattern") == null:
+		var pattern_rect: TextureRect = TextureRect.new()
+		pattern_rect.name = "LanePattern"
+		pattern_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		pattern_rect.texture = _create_lane_pattern_texture()
+		pattern_rect.stretch_mode = TextureRect.STRETCH_SCALE
+		pattern_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		pattern_rect.modulate = Color(1.0, 1.0, 1.0, 0.48)
+		pattern_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_atmosphere_lane_panel.add_child(pattern_rect)
+		_atmosphere_lane_panel.move_child(pattern_rect, 1)
+
+
+func _create_lane_gradient_texture() -> Texture2D:
+	var gradient: Gradient = Gradient.new()
+	gradient.offsets = PackedFloat32Array([0.0, 0.48, 1.0])
+	gradient.colors = PackedColorArray([
+		Color(1.0, 0.97, 0.99, 0.64),
+		Color(0.98, 0.97, 1.0, 0.52),
+		Color(0.98, 1.0, 0.99, 0.42)
+	])
+
+	var gradient_texture: GradientTexture2D = GradientTexture2D.new()
+	gradient_texture.gradient = gradient
+	gradient_texture.fill = GradientTexture2D.FILL_LINEAR
+	gradient_texture.fill_from = Vector2(0.5, 0.0)
+	gradient_texture.fill_to = Vector2(0.5, 1.0)
+	gradient_texture.width = 4
+	gradient_texture.height = 256
+	return gradient_texture
+
+
+func _create_lane_pattern_texture() -> Texture2D:
+	var width: int = 256
+	var height: int = 512
+	var image: Image = Image.create(width, height, false, Image.FORMAT_RGBA8)
+	image.fill(Color(0.0, 0.0, 0.0, 0.0))
+
+	var wave_color: Color = Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.17)
+	var dot_color: Color = Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.14)
+	for y in range(16, height, 28):
+		for x in range(width):
+			var wave_y: int = y + int(round(sin(float(x) * 0.07 + float(y) * 0.02) * 1.8))
+			if wave_y >= 0 and wave_y < height:
+				image.set_pixel(x, wave_y, wave_color)
+
+	for y in range(14, height, 32):
+		for x in range(12, width, 28):
+			image.set_pixel(x, y, dot_color)
+			if x + 1 < width:
+				image.set_pixel(x + 1, y, Color(dot_color.r, dot_color.g, dot_color.b, 0.10))
+			if y + 1 < height:
+				image.set_pixel(x, y + 1, Color(dot_color.r, dot_color.g, dot_color.b, 0.10))
+
+	return ImageTexture.create_from_image(image)
 
 
 func _build_header_panel_decor() -> void:
@@ -1486,6 +1584,15 @@ func _create_blob_pattern_texture(blob_index: int) -> Texture2D:
 
 func _layout_visual_atmosphere() -> void:
 	var viewport_size: Vector2 = get_viewport_rect().size
+	if _atmosphere_lane_panel != null:
+		var lane_width: float = viewport_size.x * 0.90
+		var lane_height: float = viewport_size.y * 0.80
+		_atmosphere_lane_panel.size = Vector2(lane_width, lane_height)
+		_atmosphere_lane_panel.position = Vector2(
+			(viewport_size.x - lane_width) * 0.5,
+			viewport_size.y * 0.14
+		)
+
 	for index in _ambient_blobs.size():
 		var blob: PanelContainer = _ambient_blobs[index]
 		var blob_spec: Dictionary = AMBIENT_BLOB_LAYOUTS[index]
