@@ -84,12 +84,12 @@ const TERRAIN_EFFECTS: Dictionary = {
 }
 
 const TERRAIN_COLORS: Dictionary = {
-	"cloud": Color(0.78, 0.88, 0.99, 1.0),
-	"high_cloud": Color(0.63, 0.77, 0.98, 1.0),
-	"cotton_candy": Color(0.97, 0.64, 0.84, 1.0),
-	"puddle": Color(0.40, 0.68, 0.95, 1.0),
-	"cliff": Color(0.56, 0.59, 0.73, 1.0),
-	"mushroom": Color(0.79, 0.64, 0.92, 1.0)
+	"cloud": Color(0.72, 0.84, 0.99, 1.0),
+	"high_cloud": Color(0.55, 0.73, 0.98, 1.0),
+	"cotton_candy": Color(0.96, 0.58, 0.82, 1.0),
+	"puddle": Color(0.34, 0.62, 0.93, 1.0),
+	"cliff": Color(0.50, 0.54, 0.71, 1.0),
+	"mushroom": Color(0.75, 0.56, 0.88, 1.0)
 }
 
 @onready var tile_map_layer: TileMapLayer = $TileMapLayer
@@ -236,10 +236,10 @@ func _draw_isometric_diamond(image: Image, offset_x: int, fill_color: Color, ter
 func _draw_diamond_edge_highlights(image: Image, offset_x: int, terrain_type: String) -> void:
 	var half_width: int = TILE_PIXEL_SIZE.x / 2
 	var half_height: int = TILE_PIXEL_SIZE.y / 2
-	var top_edge_color: Color = Color(1.0, 1.0, 1.0, 0.34)
-	var side_edge_color: Color = Color(0.16, 0.14, 0.23, 0.44)
+	var top_edge_color: Color = Color(1.0, 1.0, 1.0, 0.40)
+	var side_edge_color: Color = Color(0.15, 0.12, 0.22, 0.54)
 	if terrain_type == "cliff":
-		side_edge_color = Color(0.15, 0.13, 0.20, 0.56)
+		side_edge_color = Color(0.14, 0.12, 0.20, 0.64)
 
 	for y in range(TILE_PIXEL_SIZE.y):
 		var progress: float
@@ -253,9 +253,13 @@ func _draw_diamond_edge_highlights(image: Image, offset_x: int, terrain_type: St
 
 		_set_terrain_pixel(image, offset_x + left_x, y, side_edge_color)
 		_set_terrain_pixel(image, offset_x + right_x, y, side_edge_color)
+		if left_x + 1 < TILE_PIXEL_SIZE.x:
+			_set_terrain_pixel(image, offset_x + left_x + 1, y, Color(side_edge_color.r, side_edge_color.g, side_edge_color.b, side_edge_color.a * 0.36))
+		if right_x - 1 >= 0:
+			_set_terrain_pixel(image, offset_x + right_x - 1, y, Color(side_edge_color.r, side_edge_color.g, side_edge_color.b, side_edge_color.a * 0.36))
 
 		if y <= half_height:
-			var inner_highlight_alpha: float = lerpf(0.26, 0.06, float(y) / float(maxi(1, half_height)))
+			var inner_highlight_alpha: float = lerpf(0.30, 0.08, float(y) / float(maxi(1, half_height)))
 			var inner_highlight: Color = Color(top_edge_color.r, top_edge_color.g, top_edge_color.b, inner_highlight_alpha)
 			if left_x + 1 < TILE_PIXEL_SIZE.x:
 				_set_terrain_pixel(image, offset_x + left_x + 1, y, inner_highlight)

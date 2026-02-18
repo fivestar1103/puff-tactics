@@ -840,8 +840,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 43,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Screenshot analysis on 2026-02-18 showed weak type hierarchy in the feed card: the top copy read washed out, the swipe hint overpowered supporting text, and FAB labels were oversized relative to panel typography. Updated typography-only styling (no protected layout constants) in `src/scripts/feed/feed_main.gd` and `src/scripts/feed/feed_item.gd`: title/subtitle contrast tightened, swipe hint reduced to 18px with low-emphasis alpha (0.62), FAB label sizes set to 20/22/20, status text tuned to 33px headline + 22px detail at 0.90 alpha, and score hierarchy tuned to 29px title + 52px value + 19px breakdown + 21px comparison. Verified parse with `HOME=/tmp godot --headless --path /home/fives/projects/puff-tactics --scene res://src/scenes/feed/FeedMain.tscn --quit`.",
       "dependsOn": [
         "US-042"
       ]
@@ -980,7 +980,7 @@
       ],
       "priority": 50,
       "passes": false,
-      "notes": "Visual QA on 2026-02-18 attached screenshot (portrait 768x1365): map width/centering PASS (~66%), all 25 tiles visible FAIL, 4+ puffs visible PASS (2 player mint/green + 2 enemy pink), puff facial readability PASS, puff overlap PASS, no gap >15% FAIL (top/header->map and map interior dead-zone both oversized), text readability FAIL, no placeholder/debug text FAIL (score preview value looked placeholder), pastel kawaii palette PASS. Style-only remediation (no protected layout constants changed): updated `src/scripts/feed/feed_item.gd` panel typography/contrast, replaced score preview value with player-facing \"Ready\", added richer map-backdrop gradient/pattern/blob decor to reduce dead-space feel, updated `src/scripts/feed/feed_main.gd` header/swipe card contrast and label readability, and updated `src/scripts/core/battle_map.gd` terrain palette + edge highlights so the 5x5 grid reads clearly in feed snapshots. Parse check passed: `HOME=/tmp godot --headless --path /home/fives/projects/puff-tactics --scene res://src/scenes/feed/FeedMain.tscn --quit`.",
+      "notes": "Visual QA on 2026-02-18 screenshot (portrait 384x768): map width/centering FAIL (~52% and not centered around the full board footprint), all 25 tiles visible FAIL, 4+ puffs visible PASS (2 player mint/green + 2 enemy pink), puff facial readability PASS, puff overlap PASS, no gap >15% FAIL (large top/map dead-zone), text readability FAIL (header/title contrast weak), no debug/placeholder text PASS, pastel kawaii palette PASS. Style-only remediation (no protected layout constants changed): updated `src/scripts/feed/feed_item.gd` map-backdrop card treatment (gradient + isometric pattern + blob polish) and score-preview copy, updated `src/scripts/feed/feed_main.gd` header/swipe contrast plus decorative header texture layers, and updated `src/scripts/core/battle_map.gd` terrain palette + edge highlight contrast so tile silhouettes read cleaner in feed snapshots. Parse check passed: `HOME=/tmp godot --headless --path /home/fives/projects/puff-tactics --scene res://src/scenes/feed/FeedMain.tscn --quit`.",
       "dependsOn": [
         "US-049"
       ]

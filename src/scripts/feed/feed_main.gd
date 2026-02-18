@@ -1074,24 +1074,24 @@ func _style_fab_buttons() -> void:
 	var create_base: Color = Constants.PALETTE_PEACH.lerp(Constants.PALETTE_PINK, 0.20)
 	var leaderboard_base: Color = Constants.PALETTE_MINT
 
-	VisualTheme.apply_button_theme(profile_button, profile_base, Constants.COLOR_TEXT_DARK, FAB_PROFILE_MIN_SIZE, Constants.FONT_SIZE_BUTTON - 2)
-	VisualTheme.apply_button_theme(create_button, create_base, Constants.COLOR_TEXT_DARK, FAB_CREATE_MIN_SIZE, Constants.FONT_SIZE_BUTTON + 3)
-	VisualTheme.apply_button_theme(leaderboard_button, leaderboard_base, Constants.COLOR_TEXT_DARK, FAB_LEADERBOARD_MIN_SIZE, Constants.FONT_SIZE_BUTTON - 2)
+	VisualTheme.apply_button_theme(profile_button, profile_base, Constants.COLOR_TEXT_DARK, FAB_PROFILE_MIN_SIZE, 20)
+	VisualTheme.apply_button_theme(create_button, create_base, Constants.COLOR_TEXT_DARK, FAB_CREATE_MIN_SIZE, 22)
+	VisualTheme.apply_button_theme(leaderboard_button, leaderboard_base, Constants.COLOR_TEXT_DARK, FAB_LEADERBOARD_MIN_SIZE, 20)
 	_apply_fab_elevation(profile_button, profile_base)
 	_apply_fab_elevation(create_button, create_base, true)
 	_apply_fab_elevation(leaderboard_button, leaderboard_base)
 
 
 func _style_header_labels() -> void:
-	VisualTheme.apply_label_theme(title_label, Constants.FONT_SIZE_TITLE + 10, Color(0.14, 0.09, 0.23, 1.0))
-	VisualTheme.apply_label_theme(subtitle_label, Constants.FONT_SIZE_SUBTITLE + 5, Color(0.18, 0.12, 0.28, 0.98))
-	VisualTheme.apply_label_theme(swipe_hint_label, Constants.FONT_SIZE_BODY + 4, Color(0.22, 0.15, 0.31, 0.88))
+	VisualTheme.apply_label_theme(title_label, Constants.FONT_SIZE_TITLE + 8, Color(0.10, 0.07, 0.18, 1.0))
+	VisualTheme.apply_label_theme(subtitle_label, Constants.FONT_SIZE_SUBTITLE + 4, Color(0.15, 0.10, 0.24, 0.96))
+	VisualTheme.apply_label_theme(swipe_hint_label, Constants.FONT_SIZE_BODY, Color(0.19, 0.13, 0.28, 0.68))
 	title_label.add_theme_constant_override("outline_size", 4)
-	title_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.82))
+	title_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.88))
 	subtitle_label.add_theme_constant_override("outline_size", 2)
-	subtitle_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.70))
+	subtitle_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.74))
 	swipe_hint_label.add_theme_constant_override("outline_size", 1)
-	swipe_hint_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.78))
+	swipe_hint_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.56))
 	swipe_hint_label.text = "↑ Swipe up once score locks"
 
 
@@ -1140,11 +1140,11 @@ func _build_visual_atmosphere() -> void:
 		_header_panel.add_theme_stylebox_override(
 			"panel",
 			_build_rounded_shadow_stylebox(
-				Color(0.99, 0.98, 1.0, 0.97),
+				Color(0.99, 0.98, 1.0, 0.98),
 				30,
-				Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.50),
+				Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.56),
 				12,
-				Color(0.14, 0.12, 0.19, 0.15)
+				Color(0.14, 0.12, 0.19, 0.16)
 			)
 		)
 		top_margin.add_child(_header_panel)
@@ -1154,6 +1154,8 @@ func _build_visual_atmosphere() -> void:
 		_header_panel.offset_right = 8.0
 		_header_panel.offset_top = -4.0
 		_header_panel.offset_bottom = 8.0
+
+	_build_header_panel_decor()
 
 	if _ambient_blobs.is_empty():
 		for blob_spec in AMBIENT_BLOB_LAYOUTS:
@@ -1175,6 +1177,81 @@ func _build_visual_atmosphere() -> void:
 			_ambient_blobs.append(blob)
 
 	_layout_visual_atmosphere()
+
+
+func _build_header_panel_decor() -> void:
+	if _header_panel == null:
+		return
+	if _header_panel.get_node_or_null("HeaderGradient") != null:
+		return
+
+	var gradient_rect: TextureRect = TextureRect.new()
+	gradient_rect.name = "HeaderGradient"
+	gradient_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	gradient_rect.texture = _create_header_panel_gradient_texture()
+	gradient_rect.stretch_mode = TextureRect.STRETCH_SCALE
+	gradient_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	gradient_rect.modulate = Color(1.0, 1.0, 1.0, 0.95)
+	gradient_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_header_panel.add_child(gradient_rect)
+	_header_panel.move_child(gradient_rect, 0)
+
+	var pattern_rect: TextureRect = TextureRect.new()
+	pattern_rect.name = "HeaderPattern"
+	pattern_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pattern_rect.texture = _create_header_panel_pattern_texture()
+	pattern_rect.stretch_mode = TextureRect.STRETCH_SCALE
+	pattern_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pattern_rect.modulate = Color(1.0, 1.0, 1.0, 0.52)
+	pattern_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_header_panel.add_child(pattern_rect)
+	_header_panel.move_child(pattern_rect, 1)
+
+
+func _create_header_panel_gradient_texture() -> Texture2D:
+	var gradient: Gradient = Gradient.new()
+	gradient.offsets = PackedFloat32Array([0.0, 0.5, 1.0])
+	gradient.colors = PackedColorArray([
+		Color(1.0, 0.96, 0.99, 0.92),
+		Color(0.97, 0.95, 1.0, 0.76),
+		Color(0.96, 0.99, 1.0, 0.66)
+	])
+
+	var gradient_texture: GradientTexture2D = GradientTexture2D.new()
+	gradient_texture.gradient = gradient
+	gradient_texture.fill = GradientTexture2D.FILL_LINEAR
+	gradient_texture.fill_from = Vector2(0.5, 0.0)
+	gradient_texture.fill_to = Vector2(0.5, 1.0)
+	gradient_texture.width = 4
+	gradient_texture.height = 128
+	return gradient_texture
+
+
+func _create_header_panel_pattern_texture() -> Texture2D:
+	var width: int = 256
+	var height: int = 128
+	var image: Image = Image.create(width, height, false, Image.FORMAT_RGBA8)
+	image.fill(Color(0.0, 0.0, 0.0, 0.0))
+
+	var wave_color: Color = Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.18)
+	var dot_color: Color = Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.18)
+
+	for y in range(10, height, 20):
+		for x in range(width):
+			var wave_y: int = y + int(round(sin(float(x) * 0.06) * 2.0))
+			if wave_y >= 0 and wave_y < height:
+				image.set_pixel(x, wave_y, wave_color)
+
+	for y in range(12, height, 24):
+		for x in range(10, width, 26):
+			if x < width and y < height:
+				image.set_pixel(x, y, dot_color)
+			if x + 1 < width:
+				image.set_pixel(x + 1, y, Color(dot_color.r, dot_color.g, dot_color.b, 0.12))
+			if y + 1 < height:
+				image.set_pixel(x, y + 1, Color(dot_color.r, dot_color.g, dot_color.b, 0.12))
+
+	return ImageTexture.create_from_image(image)
 
 
 func _layout_visual_atmosphere() -> void:
