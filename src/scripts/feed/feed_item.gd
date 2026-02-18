@@ -196,6 +196,10 @@ func can_advance_to_next_item() -> bool:
 	return _cycle_done
 
 
+func should_show_swipe_hint() -> bool:
+	return _cycle_done or not _decision_started
+
+
 func get_status_text() -> String:
 	if _status_label == null:
 		return ""
@@ -223,14 +227,26 @@ func _build_status_overlay() -> void:
 	_status_panel.add_theme_stylebox_override(
 		"panel",
 		_build_card_stylebox(
-			Color(0.98, 0.97, 1.0, 0.97),
+			Color(0.98, 0.97, 1.0, 0.90),
 			CARD_PANEL_RADIUS,
-			Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.44),
+			Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.46),
 			CARD_PANEL_SHADOW_SIZE,
 			CARD_PANEL_SHADOW_COLOR
 		)
 	)
 	add_child(_status_panel)
+	_decorate_panel_surface(
+		_status_panel,
+		"StatusGradient",
+		"StatusPattern",
+		[
+			Color(1.0, 0.99, 1.0, 0.64),
+			Color(0.97, 0.95, 1.0, 0.54),
+			Color(0.95, 0.98, 0.99, 0.46)
+		],
+		Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.26),
+		Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.20)
+	)
 
 	var status_layout: VBoxContainer = VBoxContainer.new()
 	status_layout.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -279,13 +295,25 @@ func _build_score_overlay() -> void:
 	add_child(_score_panel)
 
 	var panel_style: StyleBoxFlat = _build_card_stylebox(
-		Color(0.98, 0.96, 1.0, 0.97),
+		Color(0.98, 0.96, 1.0, 0.90),
 		CARD_PANEL_RADIUS,
-		Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.42),
+		Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.44),
 		CARD_PANEL_SHADOW_SIZE,
 		CARD_PANEL_SHADOW_COLOR
 	)
 	_score_panel.add_theme_stylebox_override("panel", panel_style)
+	_decorate_panel_surface(
+		_score_panel,
+		"ScoreGradient",
+		"ScorePattern",
+		[
+			Color(1.0, 0.98, 1.0, 0.64),
+			Color(0.97, 0.96, 1.0, 0.55),
+			Color(0.95, 0.99, 1.0, 0.46)
+		],
+		Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.24),
+		Color(Constants.PALETTE_MINT.r, Constants.PALETTE_MINT.g, Constants.PALETTE_MINT.b, 0.19)
+	)
 
 	var root_layout: VBoxContainer = VBoxContainer.new()
 	root_layout.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -379,6 +407,103 @@ func _build_card_stylebox(
 	return stylebox
 
 
+func _decorate_panel_surface(
+	panel: PanelContainer,
+	gradient_name: String,
+	pattern_name: String,
+	gradient_colors: Array[Color],
+	pattern_primary: Color,
+	pattern_secondary: Color
+) -> void:
+	if panel == null:
+		return
+	if panel.get_node_or_null(gradient_name) == null:
+		var gradient_rect: TextureRect = TextureRect.new()
+		gradient_rect.name = gradient_name
+		gradient_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		gradient_rect.texture = _create_panel_gradient_texture(gradient_colors)
+		gradient_rect.stretch_mode = TextureRect.STRETCH_SCALE
+		gradient_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		gradient_rect.modulate = Color(1.0, 1.0, 1.0, 0.97)
+		gradient_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		panel.add_child(gradient_rect)
+		panel.move_child(gradient_rect, 0)
+
+	if panel.get_node_or_null(pattern_name) == null:
+		var pattern_rect: TextureRect = TextureRect.new()
+		pattern_rect.name = pattern_name
+		pattern_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		pattern_rect.texture = _create_panel_pattern_texture(pattern_primary, pattern_secondary)
+		pattern_rect.stretch_mode = TextureRect.STRETCH_SCALE
+		pattern_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		pattern_rect.modulate = Color(1.0, 1.0, 1.0, 0.65)
+		pattern_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		panel.add_child(pattern_rect)
+		panel.move_child(pattern_rect, 1)
+
+
+func _create_panel_gradient_texture(colors: Array[Color]) -> Texture2D:
+	var gradient: Gradient = Gradient.new()
+	var resolved_colors: PackedColorArray = PackedColorArray()
+	if colors.is_empty():
+		resolved_colors = PackedColorArray([
+			Color(1.0, 1.0, 1.0, 0.54),
+			Color(1.0, 1.0, 1.0, 0.32)
+		])
+	else:
+		for color in colors:
+			resolved_colors.append(color)
+
+	var offsets: PackedFloat32Array = PackedFloat32Array()
+	if resolved_colors.size() == 1:
+		offsets = PackedFloat32Array([0.0])
+	else:
+		for index in resolved_colors.size():
+			offsets.append(float(index) / float(resolved_colors.size() - 1))
+
+	gradient.offsets = offsets
+	gradient.colors = resolved_colors
+
+	var gradient_texture: GradientTexture2D = GradientTexture2D.new()
+	gradient_texture.gradient = gradient
+	gradient_texture.fill = GradientTexture2D.FILL_LINEAR
+	gradient_texture.fill_from = Vector2(0.45, 0.0)
+	gradient_texture.fill_to = Vector2(0.55, 1.0)
+	gradient_texture.width = 4
+	gradient_texture.height = 192
+	return gradient_texture
+
+
+func _create_panel_pattern_texture(primary_color: Color, secondary_color: Color) -> Texture2D:
+	var width: int = 320
+	var height: int = 180
+	var image: Image = Image.create(width, height, false, Image.FORMAT_RGBA8)
+	image.fill(Color(0.0, 0.0, 0.0, 0.0))
+
+	for y in range(16, height, 26):
+		for x in range(width):
+			var wave_y: int = y + int(round(sin(float(x) * 0.07 + float(y) * 0.02) * 1.6))
+			_set_backdrop_pixel(image, x, wave_y, primary_color)
+
+	for y in range(18, height, 34):
+		for x in range(12, width, 28):
+			_set_backdrop_pixel(image, x, y, secondary_color)
+			_set_backdrop_pixel(
+				image,
+				x + 1,
+				y,
+				Color(secondary_color.r, secondary_color.g, secondary_color.b, secondary_color.a * 0.40)
+			)
+			_set_backdrop_pixel(
+				image,
+				x,
+				y + 1,
+				Color(secondary_color.r, secondary_color.g, secondary_color.b, secondary_color.a * 0.40)
+			)
+
+	return ImageTexture.create_from_image(image)
+
+
 func _ensure_map_backdrop() -> void:
 	if _map_backdrop != null and is_instance_valid(_map_backdrop):
 		return
@@ -389,11 +514,11 @@ func _ensure_map_backdrop() -> void:
 	_map_backdrop.add_theme_stylebox_override(
 		"panel",
 		_build_card_stylebox(
-			Color(0.99, 0.96, 0.95, 0.68),
+			Color(0.99, 0.97, 0.96, 0.76),
 			MAP_BACKDROP_RADIUS,
-			Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.22),
-			10,
-			Color(0.16, 0.12, 0.20, 0.11),
+			Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.30),
+			12,
+			Color(0.16, 0.12, 0.20, 0.13),
 			1,
 			2.0
 		)
@@ -426,7 +551,7 @@ func _build_map_backdrop_decor() -> void:
 	pattern_rect.texture = _create_map_backdrop_pattern_texture()
 	pattern_rect.stretch_mode = TextureRect.STRETCH_SCALE
 	pattern_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	pattern_rect.modulate = Color(1.0, 1.0, 1.0, 0.56)
+	pattern_rect.modulate = Color(1.0, 1.0, 1.0, 0.72)
 	pattern_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_map_backdrop.add_child(pattern_rect)
 	_map_backdrop.move_child(pattern_rect, 1)
@@ -475,8 +600,8 @@ func _create_map_backdrop_pattern_texture() -> Texture2D:
 	var image: Image = Image.create(width, height, false, Image.FORMAT_RGBA8)
 	image.fill(Color(0.0, 0.0, 0.0, 0.0))
 
-	var major_line: Color = Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.24)
-	var minor_line: Color = Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.18)
+	var major_line: Color = Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.30)
+	var minor_line: Color = Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.24)
 	var sparkle_color: Color = Color(1.0, 1.0, 1.0, 0.34)
 
 	var tile_width: int = 58
@@ -502,12 +627,12 @@ func _create_map_backdrop_pattern_texture() -> Texture2D:
 				_set_backdrop_pixel(image, center_x + 1, center_y, Color(sparkle_color.r, sparkle_color.g, sparkle_color.b, 0.22))
 				_set_backdrop_pixel(image, center_x, center_y + 1, Color(sparkle_color.r, sparkle_color.g, sparkle_color.b, 0.22))
 
-	var guide_major: Color = Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.44)
-	var guide_minor: Color = Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.30)
+	var guide_major: Color = Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.62)
+	var guide_minor: Color = Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.42)
 	var guide_glow: Color = Color(1.0, 1.0, 1.0, 0.44)
 	var guide_center: Vector2i = Vector2i(width / 2, int(height * 0.56))
-	var guide_half_width: int = 24
-	var guide_half_height: int = 13
+	var guide_half_width: int = 25
+	var guide_half_height: int = 14
 	for board_y in range(Constants.GRID_HEIGHT):
 		for board_x in range(Constants.GRID_WIDTH):
 			var cell_center_x: int = guide_center.x + (board_x - board_y) * guide_half_width
@@ -525,6 +650,12 @@ func _create_map_backdrop_pattern_texture() -> Texture2D:
 				guide_half_width,
 				guide_half_height,
 				line_color
+			)
+			_set_backdrop_pixel(
+				image,
+				cell_center_x,
+				cell_center_y,
+				Color(line_color.r, line_color.g, line_color.b, 0.30)
 			)
 			if ((board_x + board_y) % 2) == 0:
 				_set_backdrop_pixel(image, cell_center_x, cell_center_y, guide_glow)
@@ -1250,7 +1381,7 @@ func _show_score_preview_overlay() -> void:
 
 	_score_panel.visible = true
 	_score_title_label.text = "Score Preview"
-	_score_value_label.text = "Go Time"
+	_score_value_label.text = "Ready"
 	_score_breakdown_label.text = "Defeat enemies, protect allies, and finish clean for a higher score."
 	_score_comparison_label.text = "Line up one tactical move, then lock in your result."
 	_share_button.visible = false

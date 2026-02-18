@@ -52,6 +52,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "`src/scripts/feed/feed_main.gd` FAB polish should derive each button's corner radius from its current minimum height (`height/2`) and set stylebox content margins (~18px horizontal, ~12px vertical) so pill geometry and label padding remain consistent across Profile/Create/Leaderboard."
 - "Feed typography hierarchy should stay explicit: `feed_item.gd` status headline/detail near 33/22 with detail alpha ~0.90, score text near 29/52/19/21; `feed_main.gd` swipe hint should stay low-emphasis (~18px, alpha 0.5-0.7) while FAB labels remain in the 20-22 range."
 - "Feed header/status/error copy should stay player-facing; avoid implementation-detail wording like `scene unavailable`, `failed to initialize`, or build-state messages in visible subtitles."
+- "`src/scripts/feed/feed_main.gd` swipe hint visibility should follow the active card state via `FeedItem.should_show_swipe_hint()`; when hidden, hide both label+panel and stop the chevron tween so locked turns never show swipe affordance."
 
 ## Gotchas
 
