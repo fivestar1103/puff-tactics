@@ -70,5 +70,9 @@ The game MUST look like a **polished mobile game**. Check these against the scre
 - Do NOT try to run `bash ralph/take_screenshot.sh` — it will fail in your sandbox.
 - When fixing visual issues, describe what was wrong in the screenshot and what you changed.
 - Do NOT mark a story as `passes: true` unless your changes specifically address what you saw in the screenshot.
-- **NEVER revert layout constants** (SNAPSHOT_SCALE, SNAPSHOT_LOCAL_Y, SNAPSHOT_Y_RATIO, gap sizes) unless the screenshot clearly shows they are causing a problem AND you describe specifically what is wrong. These values were tuned by visual iteration.
-- **NEVER "restore defaults"** or undo changes from previous iterations unless you can see in the screenshot that something is broken.
+- **PROTECTED CONSTANTS — DO NOT CHANGE**: The following constants are locked and will be automatically reverted by the build system if you change them. Do not waste time modifying them:
+  - `SNAPSHOT_SCALE`, `SNAPSHOT_LOCAL_Y`, `SNAPSHOT_BOUNDS_FALLBACK_SIZE` in feed_item.gd
+  - `STATUS_PANEL_MAP_GAP`, `SCORE_PANEL_SIZE`, `SCORE_PANEL_MAP_GAP` in feed_item.gd
+  - `SNAPSHOT_Y_RATIO`, `SCORE_TO_SWIPE_HINT_GAP`, `SWIPE_HINT_TO_FAB_GAP` in feed_main.gd
+  - The FAB positioning logic block in `_layout_hud_overlays()`
+- Focus on **visual style**: colors, rounded corners, text content, typography, shadows, panel styling. NOT layout positioning.
