@@ -27,6 +27,32 @@ const MIN_PLAYER_PUFFS_PER_SNAPSHOT: int = 2
 const MIN_ENEMY_PUFFS_PER_SNAPSHOT: int = 2
 const FALLBACK_PLAYER_DATA_PATH: String = "res://src/resources/puffs/base/flame_melee.tres"
 const FALLBACK_ENEMY_DATA_PATH: String = "res://src/resources/puffs/base/cloud_tank.tres"
+const AMBIENT_BLOB_LAYOUTS: Array[Dictionary] = [
+	{
+		"width_ratio": 0.74,
+		"height": 190.0,
+		"y_ratio": 0.16,
+		"x_offset": -62.0,
+		"radius": 96,
+		"color": Color(0.72, 0.84, 0.99, 0.18)
+	},
+	{
+		"width_ratio": 0.90,
+		"height": 220.0,
+		"y_ratio": 0.36,
+		"x_offset": 44.0,
+		"radius": 104,
+		"color": Color(0.99, 0.83, 0.77, 0.16)
+	},
+	{
+		"width_ratio": 0.82,
+		"height": 188.0,
+		"y_ratio": 0.62,
+		"x_offset": -28.0,
+		"radius": 96,
+		"color": Color(0.77, 0.90, 0.82, 0.16)
+	}
+]
 
 const SUPPLEMENTAL_PLAYER_PUFFS: Array[Dictionary] = [
 	{
@@ -236,6 +262,8 @@ const FALLBACK_FEED_PUZZLE_SNAPSHOTS: Array[Dictionary] = [
 ]
 
 @onready var feed_track: Node2D = $FeedTrack
+@onready var background_rect: ColorRect = $Background
+@onready var top_margin: MarginContainer = $Hud/TopMargin
 @onready var title_label: Label = $Hud/TopMargin/TopStack/TitleLabel
 @onready var subtitle_label: Label = $Hud/TopMargin/TopStack/SubtitleLabel
 @onready var swipe_hint_label: Label = $Hud/SwipeHintLabel
@@ -253,6 +281,8 @@ var _feed_snapshots: Array[Dictionary] = []
 var _feed_sync: Node
 var _collection_screen: Node
 var _puzzle_editor: Node
+var _header_panel: PanelContainer
+var _ambient_blobs: Array[PanelContainer] = []
 
 
 func _ready() -> void:
@@ -262,10 +292,12 @@ func _ready() -> void:
 	_load_initial_snapshots()
 	_build_feed_items()
 	_connect_fab_actions()
+	_build_visual_atmosphere()
 	_style_header_labels()
 	_style_fab_buttons()
 	_layout_feed_items()
 	_layout_hud_overlays()
+	_layout_visual_atmosphere()
 	_set_active_item(0, false)
 	# FeedItem builds score/status overlays in its own _ready; relayout HUD after that pass.
 	call_deferred("_layout_hud_overlays")
@@ -276,6 +308,7 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_node_ready():
 		_layout_feed_items()
 		_layout_hud_overlays()
+		_layout_visual_atmosphere()
 		_snap_to_active_item(false)
 
 
@@ -424,7 +457,7 @@ func _load_initial_snapshots() -> void:
 		return
 
 	_feed_snapshots = cached_snapshots
-	subtitle_label.text = "Loaded %d cached puzzles. Syncing next batch..." % _feed_snapshots.size()
+	subtitle_label.text = "Jump in. Fresh puzzles will appear as you play."
 
 
 func _fetch_next_batch_in_background() -> void:
@@ -441,7 +474,7 @@ func _fetch_next_batch_in_background() -> void:
 	var fetch_result: Dictionary = fetch_result_variant
 	if not bool(fetch_result.get("ok", false)):
 		if offset > 0:
-			subtitle_label.text = "Offline mode: playing cached feed items"
+			subtitle_label.text = "You are all set. Keep playing this lineup."
 		return
 
 	var batch_variant: Variant = fetch_result.get("items", [])
@@ -769,9 +802,9 @@ func _layout_feed_items() -> void:
 func _layout_hud_overlays() -> void:
 	var viewport_size: Vector2 = get_viewport_rect().size
 
-	profile_button.custom_minimum_size = Vector2(180.0, 76.0)
-	create_button.custom_minimum_size = Vector2(180.0, 76.0)
-	leaderboard_button.custom_minimum_size = Vector2(180.0, 76.0)
+	profile_button.custom_minimum_size = Vector2(172.0, 74.0)
+	create_button.custom_minimum_size = Vector2(196.0, 82.0)
+	leaderboard_button.custom_minimum_size = Vector2(172.0, 74.0)
 
 	profile_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	create_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -841,11 +874,11 @@ func _sync_feed_item_activation() -> void:
 
 func _update_header_text() -> void:
 	var total_items: int = _feed_items.size()
-	title_label.text = "Puff Tactics Feed (%d/%d)" % [_active_item_index + 1, total_items]
+	title_label.text = "Puff Tactics"
 
 	var active_feed_item: Node2D = _get_active_feed_item()
 	if active_feed_item == null:
-		subtitle_label.text = "Swipe up for the next tactical snapshot"
+		subtitle_label.text = "Puzzle %d of %d" % [_active_item_index + 1, maxi(1, total_items)]
 		return
 
 	if active_feed_item.has_method("get_status_text"):
@@ -854,7 +887,7 @@ func _update_header_text() -> void:
 			subtitle_label.text = status_text
 			return
 
-	subtitle_label.text = "Solve the turn, then swipe to the next puzzle"
+	subtitle_label.text = "Puzzle %d of %d" % [_active_item_index + 1, maxi(1, total_items)]
 
 
 func _active_track_position_y() -> float:
@@ -883,7 +916,7 @@ func _get_active_feed_item() -> Node2D:
 
 
 func _update_subtitle_for_locked_swipe() -> void:
-	subtitle_label.text = "Finish this 1-turn puzzle before swiping"
+	subtitle_label.text = "Finish this puzzle first, then swipe up."
 
 
 func _on_feed_item_cycle_completed(score: int, cycle_duration_seconds: float, item_index: int) -> void:
@@ -891,7 +924,7 @@ func _on_feed_item_cycle_completed(score: int, cycle_duration_seconds: float, it
 
 	if item_index != _active_item_index:
 		return
-	subtitle_label.text = "Score %d in %.1fs. Swipe up for next." % [score, cycle_duration_seconds]
+	subtitle_label.text = "Score %d in %.1fs. Swipe up for the next challenge." % [score, cycle_duration_seconds]
 
 
 func _on_feed_item_status_changed(status_text: String, swipe_unlocked: bool, item_index: int) -> void:
@@ -1015,12 +1048,132 @@ func _on_puzzle_editor_published(_snapshot_id: String, status_text: String) -> v
 
 
 func _style_fab_buttons() -> void:
-	VisualTheme.apply_button_theme(profile_button, Constants.PALETTE_SKY, Color.WHITE, Vector2(180.0, 76.0), Constants.FONT_SIZE_BUTTON)
-	VisualTheme.apply_button_theme(create_button, Constants.PALETTE_PEACH, Color.WHITE, Vector2(180.0, 76.0), Constants.FONT_SIZE_BUTTON)
-	VisualTheme.apply_button_theme(leaderboard_button, Constants.PALETTE_MINT, Color.WHITE, Vector2(180.0, 76.0), Constants.FONT_SIZE_BUTTON)
+	VisualTheme.apply_button_theme(profile_button, Constants.PALETTE_SKY, Constants.COLOR_TEXT_DARK, Vector2(172.0, 74.0), Constants.FONT_SIZE_BUTTON - 2)
+	VisualTheme.apply_button_theme(create_button, Constants.PALETTE_PEACH.lightened(0.03), Constants.COLOR_TEXT_DARK, Vector2(196.0, 82.0), Constants.FONT_SIZE_BUTTON + 2)
+	VisualTheme.apply_button_theme(leaderboard_button, Constants.PALETTE_MINT, Constants.COLOR_TEXT_DARK, Vector2(172.0, 74.0), Constants.FONT_SIZE_BUTTON - 2)
+	_apply_fab_elevation(profile_button, Constants.PALETTE_SKY)
+	_apply_fab_elevation(create_button, Constants.PALETTE_PEACH.lightened(0.03))
+	_apply_fab_elevation(leaderboard_button, Constants.PALETTE_MINT)
 
 
 func _style_header_labels() -> void:
-	VisualTheme.apply_label_theme(title_label, Constants.FONT_SIZE_TITLE, Constants.COLOR_TEXT_DARK)
-	VisualTheme.apply_label_theme(subtitle_label, Constants.FONT_SIZE_SUBTITLE, Constants.COLOR_TEXT_DARK.lightened(0.24))
-	VisualTheme.apply_label_theme(swipe_hint_label, Constants.FONT_SIZE_BODY, Constants.COLOR_TEXT_DARK.lightened(0.28))
+	VisualTheme.apply_label_theme(title_label, Constants.FONT_SIZE_TITLE + 8, Constants.COLOR_TEXT_DARK.darkened(0.08))
+	VisualTheme.apply_label_theme(subtitle_label, Constants.FONT_SIZE_SUBTITLE + 2, Constants.COLOR_TEXT_DARK.lightened(0.12))
+	VisualTheme.apply_label_theme(swipe_hint_label, Constants.FONT_SIZE_BODY + 2, Color(Constants.COLOR_TEXT_DARK.r, Constants.COLOR_TEXT_DARK.g, Constants.COLOR_TEXT_DARK.b, 0.64))
+	title_label.add_theme_constant_override("outline_size", 2)
+	title_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.72))
+	subtitle_label.add_theme_constant_override("outline_size", 1)
+	subtitle_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.56))
+	swipe_hint_label.add_theme_constant_override("outline_size", 1)
+	swipe_hint_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.36))
+	swipe_hint_label.text = "Swipe up for your next puzzle"
+
+
+func _build_visual_atmosphere() -> void:
+	if background_rect == null:
+		return
+
+	if _header_panel == null:
+		_header_panel = PanelContainer.new()
+		_header_panel.name = "HeaderPanel"
+		_header_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_header_panel.add_theme_stylebox_override(
+			"panel",
+			_build_rounded_shadow_stylebox(
+				Color(Constants.COLOR_BG_CREAM.r, Constants.COLOR_BG_CREAM.g, Constants.COLOR_BG_CREAM.b, 0.90),
+				30,
+				Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.22),
+				9,
+				Color(0.14, 0.12, 0.19, 0.08)
+			)
+		)
+		top_margin.add_child(_header_panel)
+		top_margin.move_child(_header_panel, 0)
+		_header_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_header_panel.offset_left = -8.0
+		_header_panel.offset_right = 8.0
+		_header_panel.offset_top = -4.0
+		_header_panel.offset_bottom = 8.0
+
+	if _ambient_blobs.is_empty():
+		for blob_spec in AMBIENT_BLOB_LAYOUTS:
+			var blob: PanelContainer = PanelContainer.new()
+			blob.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			var blob_color: Color = blob_spec.get("color", Color(1.0, 1.0, 1.0, 0.10))
+			var blob_radius: int = int(blob_spec.get("radius", 88))
+			blob.add_theme_stylebox_override(
+				"panel",
+				_build_rounded_shadow_stylebox(
+					blob_color,
+					blob_radius,
+					Color(1.0, 1.0, 1.0, 0.11),
+					12,
+					Color(0.16, 0.12, 0.20, 0.07)
+				)
+			)
+			background_rect.add_child(blob)
+			_ambient_blobs.append(blob)
+
+	_layout_visual_atmosphere()
+
+
+func _layout_visual_atmosphere() -> void:
+	var viewport_size: Vector2 = get_viewport_rect().size
+	for index in _ambient_blobs.size():
+		var blob: PanelContainer = _ambient_blobs[index]
+		var blob_spec: Dictionary = AMBIENT_BLOB_LAYOUTS[index]
+		var blob_width: float = viewport_size.x * float(blob_spec.get("width_ratio", 0.8))
+		var blob_height: float = float(blob_spec.get("height", 180.0))
+		var blob_y_center: float = viewport_size.y * float(blob_spec.get("y_ratio", 0.4))
+		var blob_x_offset: float = float(blob_spec.get("x_offset", 0.0))
+		blob.size = Vector2(blob_width, blob_height)
+		blob.position = Vector2(
+			(viewport_size.x - blob_width) * 0.5 + blob_x_offset,
+			blob_y_center - blob_height * 0.5
+		)
+
+
+func _build_rounded_shadow_stylebox(
+	background_color: Color,
+	corner_radius: int,
+	border_color: Color,
+	shadow_size: int,
+	shadow_color: Color
+) -> StyleBoxFlat:
+	var stylebox: StyleBoxFlat = StyleBoxFlat.new()
+	stylebox.bg_color = background_color
+	stylebox.corner_radius_top_left = corner_radius
+	stylebox.corner_radius_top_right = corner_radius
+	stylebox.corner_radius_bottom_left = corner_radius
+	stylebox.corner_radius_bottom_right = corner_radius
+	stylebox.border_width_left = 1
+	stylebox.border_width_top = 1
+	stylebox.border_width_right = 1
+	stylebox.border_width_bottom = 1
+	stylebox.border_color = border_color
+	stylebox.shadow_color = shadow_color
+	stylebox.shadow_size = shadow_size
+	stylebox.shadow_offset = Vector2(0.0, 4.0)
+	return stylebox
+
+
+func _apply_fab_elevation(button: Button, base_color: Color) -> void:
+	var button_states: Array[StringName] = [&"normal", &"hover", &"pressed", &"disabled"]
+	for state in button_states:
+		var state_color: Color = base_color
+		if state == &"hover":
+			state_color = base_color.lightened(0.06)
+		elif state == &"pressed":
+			state_color = base_color.darkened(0.10)
+		elif state == &"disabled":
+			state_color = base_color.darkened(0.18)
+			state_color.a = 0.74
+
+		var stylebox: StyleBoxFlat = _build_rounded_shadow_stylebox(
+			state_color,
+			38,
+			Color(1.0, 1.0, 1.0, 0.30),
+			10,
+			Color(0.16, 0.12, 0.20, 0.14)
+		)
+		button.add_theme_stylebox_override(String(state), stylebox)

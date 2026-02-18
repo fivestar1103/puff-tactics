@@ -46,6 +46,8 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "FeedMain should run a deferred `_layout_hud_overlays()` after activating the first card; otherwise initial HUD placement can miss `FeedItem` score panel bounds (not ready yet) and fall back to bottom anchoring, creating a large middle empty gap."
 - "For a 5x5 isometric board using 128x64 tiles, feed map width is ~`640 * SNAPSHOT_SCALE.x`; target `SNAPSHOT_SCALE` around `1.37-1.55` for a 75-85% fill of a 1170px portrait viewport."
 - "Keep `src/scripts/feed/feed_main.gd` `SNAPSHOT_Y_RATIO` near `0.16-0.22`; drifting toward `0.40+` pushes the whole feed card stack too low and creates an oversized subtitle-to-status empty zone on portrait layouts."
+- "`src/scripts/feed/feed_main.gd::_build_visual_atmosphere()` adds non-interactive pastel ambient blobs + a header card so tall portrait whitespace reads intentional when layout constants are locked."
+- "`src/scripts/feed/feed_item.gd` feed card polish should prefer style upgrades (`_build_card_stylebox()`, `_ensure_map_backdrop()`, elevated status/score panels) before touching protected spacing constants."
 
 ## Gotchas
 

@@ -197,15 +197,15 @@ func _create_terrain_texture() -> Texture2D:
 
 
 func _draw_isometric_diamond(image: Image, offset_x: int, fill_color: Color, terrain_type: String) -> void:
-	var light_tint: Color = fill_color.lerp(Color(1.0, 1.0, 1.0, 1.0), 0.2)
-	var dark_tint: Color = fill_color.lerp(Color(0.0, 0.0, 0.0, 1.0), 0.2)
+	var light_tint: Color = fill_color.lerp(Color(1.0, 1.0, 1.0, 1.0), 0.30)
+	var dark_tint: Color = fill_color.lerp(Color(0.0, 0.0, 0.0, 1.0), 0.12)
 	var half_width: float = float(TILE_PIXEL_SIZE.x) * 0.5
 	var half_height: float = float(TILE_PIXEL_SIZE.y) * 0.5
-	var border_limit: float = 0.96
-	var border_darkness: float = 0.22
+	var border_limit: float = 0.97
+	var border_darkness: float = 0.13
 	if terrain_type == "cliff":
-		border_limit = 0.90
-		border_darkness = 0.35
+		border_limit = 0.93
+		border_darkness = 0.22
 
 	for y in TILE_PIXEL_SIZE.y:
 		for x in TILE_PIXEL_SIZE.x:
@@ -222,6 +222,8 @@ func _draw_isometric_diamond(image: Image, offset_x: int, fill_color: Color, ter
 
 				if distance_to_center > border_limit:
 					tile_color = tile_color.darkened(border_darkness)
+				elif y < int(TILE_PIXEL_SIZE.y * 0.28):
+					tile_color = tile_color.lightened(0.06)
 
 				image.set_pixel(offset_x + x, y, tile_color)
 
