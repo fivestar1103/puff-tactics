@@ -8,12 +8,16 @@
 
 config_version=5
 
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
+
 [application]
 
 config/name="Puff Tactics"
 config/description="Tactical Feed - Swipe like Shorts, solve like puzzles, addicted by cuteness"
 run/main_scene="res://src/scenes/feed/FeedMain.tscn"
-config/features=PackedStringArray("4.3", "Mobile")
+config/features=PackedStringArray("4.6", "Mobile")
 config/icon="res://assets/icon.png"
 
 [autoload]
@@ -23,15 +27,16 @@ VisualTheme="*res://src/scripts/core/visual_theme.gd"
 SignalBus="*res://src/scripts/core/signal_bus.gd"
 SupabaseClient="*res://src/scripts/network/supabase_client.gd"
 PuffProgression="*res://src/scripts/puffs/puff_progression.gd"
+ScreenshotTool="*res://ralph/screenshot_tool.gd"
 
 [display]
 
 window/size/viewport_width=1170
 window/size/viewport_height=2532
-window/size/mode=2
-window/handheld/orientation=1
+window/size/window_width_override=420
+window/size/window_height_override=910
 window/stretch/mode="viewport"
-window/stretch/aspect="expand"
+window/handheld/orientation=1
 
 [input_devices]
 

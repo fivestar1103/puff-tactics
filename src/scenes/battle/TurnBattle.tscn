@@ -26,11 +26,11 @@ turn_manager_path = NodePath("../TurnManager")
 
 [node name="ScorePanel" type="PanelContainer" parent="HudLayer"]
 
-[node name="ScoreLabel" type="Label" parent="ScorePanel"]
+[node name="ScoreLabel" type="Label" parent="HudLayer/ScorePanel"]
 text = "Turn 1"
 
 [node name="ResultOverlay" type="ColorRect" parent="HudLayer"]
 visible = false
 color = Color(0, 0, 0, 0.45)
 
-[node name="ResultLabel" type="Label" parent="ResultOverlay"]
+[node name="ResultLabel" type="Label" parent="HudLayer/ResultOverlay"]

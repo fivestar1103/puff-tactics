@@ -181,13 +181,14 @@ func _post_feed_result(payload: Dictionary) -> Dictionary:
 			"error": "SupabaseClient does not implement request_rest()."
 		}
 
+	var headers: Array[String] = ["Prefer: return=minimal"]
 	return await supabase_client.call(
 		"request_rest",
 		HTTPClient.METHOD_POST,
 		FEED_RESULTS_TABLE,
 		{},
 		payload,
-		["Prefer: return=minimal"]
+		headers
 	)
 
 
