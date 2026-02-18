@@ -117,7 +117,8 @@ var _battle_map: BattleMap
 var _turn_manager: TurnManager
 var _enemy_intent: EnemyIntent
 
-var _status_panel: ColorRect
+var _card_backdrop: PanelContainer
+var _status_panel: PanelContainer
 var _status_label: Label
 var _detail_label: Label
 var _score_panel: PanelContainer
@@ -189,41 +190,88 @@ func get_score_panel_bottom_global_y() -> float:
 
 
 func _ready() -> void:
+	_build_card_backdrop()
 	_build_status_overlay()
 	_setup_decision_timeout_timer()
 	_rebuild_battle_snapshot()
 
 
+func _build_card_backdrop() -> void:
+	_card_backdrop = PanelContainer.new()
+	_card_backdrop.name = "CardBackdrop"
+	_card_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_card_backdrop)
+
+	var style: StyleBoxFlat = StyleBoxFlat.new()
+	style.bg_color = Color(0.22, 0.25, 0.35, 0.05)
+	style.corner_radius_top_left = 28
+	style.corner_radius_top_right = 28
+	style.corner_radius_bottom_right = 28
+	style.corner_radius_bottom_left = 28
+	style.border_width_left = 1
+	style.border_width_top = 1
+	style.border_width_right = 1
+	style.border_width_bottom = 1
+	style.border_color = Color(0.50, 0.50, 0.60, 0.12)
+	_card_backdrop.add_theme_stylebox_override("panel", style)
+
+
+func _layout_card_backdrop() -> void:
+	if _card_backdrop == null or _status_panel == null or _score_panel == null:
+		return
+	var top_y: float = _status_panel.position.y - 16.0
+	var bottom_y: float = _score_panel.position.y + _score_panel.size.y + 16.0
+	var panel_width: float = maxf(_status_panel.size.x, _score_panel.size.x) + 32.0
+	_card_backdrop.position = Vector2(-panel_width * 0.5, top_y)
+	_card_backdrop.custom_minimum_size = Vector2(panel_width, bottom_y - top_y)
+	_card_backdrop.size = Vector2(panel_width, bottom_y - top_y)
+
+
 func _build_status_overlay() -> void:
-	_status_panel = ColorRect.new()
+	_status_panel = PanelContainer.new()
 	_status_panel.name = "StatusPanel"
 	_layout_status_overlay()
-	_status_panel.color = Color(0.08, 0.11, 0.19, 0.68)
 	add_child(_status_panel)
 
+	var status_style: StyleBoxFlat = StyleBoxFlat.new()
+	status_style.bg_color = Color(0.08, 0.11, 0.19, 0.72)
+	status_style.corner_radius_top_left = 20
+	status_style.corner_radius_top_right = 20
+	status_style.corner_radius_bottom_right = 20
+	status_style.corner_radius_bottom_left = 20
+	status_style.content_margin_left = 24.0
+	status_style.content_margin_right = 24.0
+	status_style.content_margin_top = 20.0
+	status_style.content_margin_bottom = 20.0
+	status_style.border_width_left = 1
+	status_style.border_width_top = 1
+	status_style.border_width_right = 1
+	status_style.border_width_bottom = 1
+	status_style.border_color = Color(0.45, 0.58, 0.85, 0.35)
+	_status_panel.add_theme_stylebox_override("panel", status_style)
+
+	var status_vbox: VBoxContainer = VBoxContainer.new()
+	status_vbox.add_theme_constant_override("separation", 8)
+	_status_panel.add_child(status_vbox)
+
 	_status_label = Label.new()
-	_status_label.position = Vector2(24.0, 26.0)
-	_status_label.size = Vector2(756.0, 72.0)
 	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_status_label.add_theme_font_size_override("font_size", 34)
+	_status_label.add_theme_font_size_override("font_size", 30)
 	_status_label.add_theme_color_override("font_color", Color(0.98, 0.98, 1.0, 1.0))
-	_status_panel.add_child(_status_label)
+	status_vbox.add_child(_status_label)
 
 	_detail_label = Label.new()
-	_detail_label.position = Vector2(24.0, 110.0)
-	_detail_label.size = Vector2(756.0, 88.0)
+	_detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_detail_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_detail_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_detail_label.add_theme_font_size_override("font_size", 24)
-	_detail_label.add_theme_color_override("font_color", Color(0.88, 0.93, 1.0, 0.92))
-	_status_panel.add_child(_detail_label)
+	_detail_label.add_theme_font_size_override("font_size", 21)
+	_detail_label.add_theme_color_override("font_color", Color(0.85, 0.90, 1.0, 0.80))
+	status_vbox.add_child(_detail_label)
 
 	_build_score_overlay()
 
 	_set_status(
-		"One-turn puzzle: choose move, attack, or bump",
-		"Play the tactical turn, then watch 3s resolve + 2s scoring."
+		"Your turn: move, attack, or bump",
+		"Take your time and plan a one-turn masterpiece."
 	)
 
 
@@ -245,14 +293,13 @@ func _build_score_overlay() -> void:
 	panel_style.border_width_right = 2
 	panel_style.border_width_bottom = 2
 	panel_style.border_color = Color(0.53, 0.74, 0.98, 0.9)
+	panel_style.content_margin_left = 24.0
+	panel_style.content_margin_right = 24.0
+	panel_style.content_margin_top = 20.0
+	panel_style.content_margin_bottom = 20.0
 	_score_panel.add_theme_stylebox_override("panel", panel_style)
 
 	var root_layout: VBoxContainer = VBoxContainer.new()
-	root_layout.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root_layout.offset_left = 20.0
-	root_layout.offset_top = 16.0
-	root_layout.offset_right = -20.0
-	root_layout.offset_bottom = -16.0
 	root_layout.add_theme_constant_override("separation", 8)
 	_score_panel.add_child(root_layout)
 
@@ -337,8 +384,8 @@ func _rebuild_battle_snapshot() -> void:
 		_turn_manager.set_process_unhandled_input(false)
 
 	_set_status(
-		"One-turn puzzle: choose move, attack, or bump",
-		"Decision window %.0fs to %.0fs before result reveal." % [MIN_DECISION_SECONDS, MAX_DECISION_SECONDS]
+		"Your turn: move, attack, or bump",
+		"Take your time and plan a one-turn masterpiece."
 	)
 	_show_score_preview_overlay()
 
@@ -357,6 +404,7 @@ func _layout_battle_snapshot() -> void:
 	_battle_root.position = Vector2(centered_x_offset, SNAPSHOT_LOCAL_Y)
 	_layout_status_overlay(map_top_local)
 	_layout_score_overlay(map_bottom_local)
+	_layout_card_backdrop()
 
 
 func _resolve_snapshot_map_bounds_local() -> Rect2:
@@ -395,11 +443,12 @@ func _resolve_snapshot_map_bounds_local() -> Rect2:
 func _layout_status_overlay(map_top_local: float = NAN) -> void:
 	if _status_panel == null:
 		return
+	_status_panel.custom_minimum_size = STATUS_PANEL_SIZE
 	_status_panel.size = STATUS_PANEL_SIZE
 	var panel_y: float = STATUS_PANEL_FALLBACK_LOCAL_Y
 	if not is_nan(map_top_local):
-		panel_y = map_top_local - _status_panel.size.y - STATUS_PANEL_MAP_GAP
-	_status_panel.position = Vector2(-_status_panel.size.x * 0.5, panel_y)
+		panel_y = map_top_local - STATUS_PANEL_SIZE.y - STATUS_PANEL_MAP_GAP
+	_status_panel.position = Vector2(-STATUS_PANEL_SIZE.x * 0.5, panel_y)
 
 
 func _layout_score_overlay(map_bottom_local: float = NAN) -> void:
@@ -544,7 +593,7 @@ func _begin_decision_phase() -> void:
 
 	_set_status(
 		"Your turn: move, attack, or bump",
-		"Decision timer: %.0f seconds max" % MAX_DECISION_SECONDS
+		"Take your time and plan a one-turn masterpiece."
 	)
 
 
@@ -597,13 +646,13 @@ func _run_completion_flow(player_acted: bool) -> void:
 	if min_hold_seconds > 0.0:
 		_set_status(
 			"Locking tactical result...",
-			"Holding %.1fs so each feed cycle stays within 20-35 seconds." % min_hold_seconds
+			"Almost there..."
 		)
 		await get_tree().create_timer(min_hold_seconds).timeout
 
 	_set_status(
 		"Resolving turn result",
-		"Outcome animation (%.0f seconds)." % RESULT_PHASE_SECONDS
+		"Watch what happens next..."
 	)
 	await _play_result_animation()
 
@@ -614,7 +663,7 @@ func _run_completion_flow(player_acted: bool) -> void:
 
 	_set_status(
 		"Score reveal",
-		"%s Comparison screen (%.0f seconds)." % [comparison_text, SCORE_PHASE_SECONDS]
+		comparison_text
 	)
 
 	var reveal_duration: float = minf(SCORE_REVEAL_DURATION, SCORE_PHASE_SECONDS)
@@ -629,7 +678,7 @@ func _run_completion_flow(player_acted: bool) -> void:
 	_emit_feed_item_completed(final_score)
 	_set_status(
 		"Swipe up for next feed item",
-		"Cycle complete in %.1fs." % _cycle_duration_seconds()
+		"Swipe up for the next puzzle."
 	)
 
 	emit_signal("cycle_completed", final_score, _cycle_duration_seconds())
@@ -924,10 +973,10 @@ func _show_score_preview_overlay() -> void:
 		return
 
 	_score_panel.visible = true
-	_score_title_label.text = "Score Preview"
-	_score_value_label.text = "Ready"
-	_score_breakdown_label.text = "Score comes from enemies defeated, damage dealt, allies surviving, and turn efficiency."
-	_score_comparison_label.text = "Play your turn to reveal your final score and ranking."
+	_score_title_label.text = "Turn Objective"
+	_score_value_label.text = "Make Move"
+	_score_breakdown_label.text = "Defeat enemies, protect allies, and finish this turn clean for a higher score."
+	_score_comparison_label.text = "Pick one tactical move, then lock in your result."
 	_share_button.visible = false
 	_share_button.disabled = true
 	_share_button.tooltip_text = ""

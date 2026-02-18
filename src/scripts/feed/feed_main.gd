@@ -9,7 +9,7 @@ const STORY_CHAPTER_1_SCENE_PATH: String = "res://src/scenes/story/StoryChapter1
 
 const SNAP_DURATION: float = 0.28
 const SWIPE_THRESHOLD_PX: float = 120.0
-const SNAPSHOT_Y_RATIO: float = 0.46
+const SNAPSHOT_Y_RATIO: float = 0.40
 const FAB_ROW_HALF_WIDTH: float = 364.0
 const FAB_ROW_HEIGHT: float = 128.0
 const FAB_ROW_BOTTOM_MARGIN_RATIO: float = 0.03
@@ -424,7 +424,7 @@ func _load_initial_snapshots() -> void:
 		return
 
 	_feed_snapshots = cached_snapshots
-	subtitle_label.text = "Loaded %d cached puzzles. Syncing next batch..." % _feed_snapshots.size()
+	subtitle_label.text = "Loading your feed..."
 
 
 func _fetch_next_batch_in_background() -> void:
@@ -441,7 +441,7 @@ func _fetch_next_batch_in_background() -> void:
 	var fetch_result: Dictionary = fetch_result_variant
 	if not bool(fetch_result.get("ok", false)):
 		if offset > 0:
-			subtitle_label.text = "Offline mode: playing cached feed items"
+			subtitle_label.text = "Playing saved puzzles"
 		return
 
 	var batch_variant: Variant = fetch_result.get("items", [])
@@ -841,11 +841,11 @@ func _sync_feed_item_activation() -> void:
 
 func _update_header_text() -> void:
 	var total_items: int = _feed_items.size()
-	title_label.text = "Puff Tactics Feed (%d/%d)" % [_active_item_index + 1, total_items]
+	title_label.text = "Puff Tactics"
 
 	var active_feed_item: Node2D = _get_active_feed_item()
 	if active_feed_item == null:
-		subtitle_label.text = "Swipe up for the next tactical snapshot"
+		subtitle_label.text = "Solve the puzzle, then swipe up"
 		return
 
 	if active_feed_item.has_method("get_status_text"):
@@ -883,7 +883,7 @@ func _get_active_feed_item() -> Node2D:
 
 
 func _update_subtitle_for_locked_swipe() -> void:
-	subtitle_label.text = "Finish this 1-turn puzzle before swiping"
+	subtitle_label.text = "Make your move first!"
 
 
 func _on_feed_item_cycle_completed(score: int, cycle_duration_seconds: float, item_index: int) -> void:
@@ -891,7 +891,7 @@ func _on_feed_item_cycle_completed(score: int, cycle_duration_seconds: float, it
 
 	if item_index != _active_item_index:
 		return
-	subtitle_label.text = "Score %d in %.1fs. Swipe up for next." % [score, cycle_duration_seconds]
+	subtitle_label.text = "Nice! Score: %d" % score
 
 
 func _on_feed_item_status_changed(status_text: String, swipe_unlocked: bool, item_index: int) -> void:
@@ -933,7 +933,7 @@ func _connect_fab_actions() -> void:
 
 func _on_profile_button_pressed() -> void:
 	if _is_puzzle_editor_visible():
-		subtitle_label.text = "Close the UGC editor before opening collection."
+		subtitle_label.text = "Close the editor first"
 		return
 
 	if _collection_screen == null:
@@ -953,15 +953,15 @@ func _on_profile_button_pressed() -> void:
 		_collection_screen.call("show_collection")
 	else:
 		collection_canvas.visible = true
-	subtitle_label.text = "Collection open: view puff levels and owned accessories"
+	subtitle_label.text = "Your Puff collection"
 
 
 func _on_create_button_pressed() -> void:
 	if _puzzle_editor == null:
-		subtitle_label.text = "UGC puzzle editor scene is unavailable."
+		subtitle_label.text = "Editor coming soon!"
 		return
 	if not (_puzzle_editor is CanvasItem):
-		subtitle_label.text = "UGC puzzle editor failed to initialize."
+		subtitle_label.text = "Editor coming soon!"
 		return
 
 	if _is_collection_visible():
@@ -983,13 +983,13 @@ func _on_create_button_pressed() -> void:
 		_puzzle_editor.call("show_editor")
 	else:
 		puzzle_editor_canvas.visible = true
-	subtitle_label.text = "UGC editor open: drag terrain/puffs, test-play, then publish."
+	subtitle_label.text = "Create your own puzzle!"
 
 
 func _on_leaderboard_button_pressed() -> void:
 	var scene_change_error: Error = get_tree().change_scene_to_file(STORY_CHAPTER_1_SCENE_PATH)
 	if scene_change_error != OK:
-		subtitle_label.text = "Story mode is unavailable in this build."
+		subtitle_label.text = "Story mode coming soon!"
 
 
 func _is_collection_visible() -> bool:
@@ -1015,12 +1015,47 @@ func _on_puzzle_editor_published(_snapshot_id: String, status_text: String) -> v
 
 
 func _style_fab_buttons() -> void:
-	VisualTheme.apply_button_theme(profile_button, Constants.PALETTE_SKY, Color.WHITE, Vector2(180.0, 76.0), Constants.FONT_SIZE_BUTTON)
-	VisualTheme.apply_button_theme(create_button, Constants.PALETTE_PEACH, Color.WHITE, Vector2(180.0, 76.0), Constants.FONT_SIZE_BUTTON)
-	VisualTheme.apply_button_theme(leaderboard_button, Constants.PALETTE_MINT, Color.WHITE, Vector2(180.0, 76.0), Constants.FONT_SIZE_BUTTON)
+	var fab_size: Vector2 = Vector2(180.0, 76.0)
+	var pill_radius: int = int(fab_size.y * 0.5)
+	_apply_pill_button(profile_button, Constants.PALETTE_SKY, fab_size, pill_radius)
+	_apply_pill_button(create_button, Constants.PALETTE_PEACH, fab_size, pill_radius)
+	_apply_pill_button(leaderboard_button, Constants.PALETTE_MINT, fab_size, pill_radius)
+
+
+func _apply_pill_button(button: Button, base_color: Color, min_size: Vector2, corner_radius: int) -> void:
+	button.custom_minimum_size = min_size
+	button.add_theme_font_size_override("font_size", 20)
+	button.add_theme_color_override("font_color", Color(0.15, 0.15, 0.2, 1.0))
+	button.add_theme_color_override("font_hover_color", Color(0.1, 0.1, 0.15, 1.0))
+	button.add_theme_color_override("font_pressed_color", Color(0.2, 0.2, 0.25, 1.0))
+
+	for state_name in ["normal", "hover", "pressed", "disabled"]:
+		var style: StyleBoxFlat = StyleBoxFlat.new()
+		match state_name:
+			"normal":
+				style.bg_color = base_color
+			"hover":
+				style.bg_color = base_color.lightened(0.08)
+			"pressed":
+				style.bg_color = base_color.darkened(0.1)
+			"disabled":
+				style.bg_color = base_color.darkened(0.25)
+		style.corner_radius_top_left = corner_radius
+		style.corner_radius_top_right = corner_radius
+		style.corner_radius_bottom_right = corner_radius
+		style.corner_radius_bottom_left = corner_radius
+		style.content_margin_left = 18.0
+		style.content_margin_right = 18.0
+		style.content_margin_top = 12.0
+		style.content_margin_bottom = 12.0
+		if state_name == "normal":
+			style.shadow_color = Color(0.0, 0.0, 0.0, 0.12)
+			style.shadow_size = 8
+			style.shadow_offset = Vector2(0, 3)
+		button.add_theme_stylebox_override(state_name, style)
 
 
 func _style_header_labels() -> void:
 	VisualTheme.apply_label_theme(title_label, Constants.FONT_SIZE_TITLE, Constants.COLOR_TEXT_DARK)
 	VisualTheme.apply_label_theme(subtitle_label, Constants.FONT_SIZE_SUBTITLE, Constants.COLOR_TEXT_DARK.lightened(0.24))
-	VisualTheme.apply_label_theme(swipe_hint_label, Constants.FONT_SIZE_BODY, Constants.COLOR_TEXT_DARK.lightened(0.28))
+	VisualTheme.apply_label_theme(swipe_hint_label, 17, Color(0.35, 0.33, 0.40, 0.60))

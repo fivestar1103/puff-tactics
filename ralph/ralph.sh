@@ -66,10 +66,10 @@ guard_layout() {
     changed=1
   fi
 
-  # feed_main.gd: SNAPSHOT_Y_RATIO must be 0.46
-  if ! grep -q 'SNAPSHOT_Y_RATIO: float = 0.46' "$GUARD_FEED_MAIN"; then
-    echo "[Guard] RESTORING SNAPSHOT_Y_RATIO to 0.46"
-    sed -i 's/const SNAPSHOT_Y_RATIO: float = [^ ]*/const SNAPSHOT_Y_RATIO: float = 0.46/' "$GUARD_FEED_MAIN"
+  # feed_main.gd: SNAPSHOT_Y_RATIO must be 0.40
+  if ! grep -q 'SNAPSHOT_Y_RATIO: float = 0.40' "$GUARD_FEED_MAIN"; then
+    echo "[Guard] RESTORING SNAPSHOT_Y_RATIO to 0.40"
+    sed -i 's/const SNAPSHOT_Y_RATIO: float = [^ ]*/const SNAPSHOT_Y_RATIO: float = 0.40/' "$GUARD_FEED_MAIN"
     changed=1
   fi
 
