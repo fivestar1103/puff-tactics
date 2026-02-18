@@ -84,12 +84,12 @@ const TERRAIN_EFFECTS: Dictionary = {
 }
 
 const TERRAIN_COLORS: Dictionary = {
-	"cloud": Color(0.95, 0.97, 1.0, 1.0),
-	"high_cloud": Color(0.84, 0.92, 1.0, 1.0),
-	"cotton_candy": Color(0.99, 0.78, 0.90, 1.0),
-	"puddle": Color(0.58, 0.82, 1.0, 1.0),
-	"cliff": Color(0.74, 0.74, 0.80, 1.0),
-	"mushroom": Color(0.92, 0.79, 0.99, 1.0)
+	"cloud": Color(0.89, 0.94, 1.0, 1.0),
+	"high_cloud": Color(0.77, 0.86, 0.99, 1.0),
+	"cotton_candy": Color(0.98, 0.72, 0.88, 1.0),
+	"puddle": Color(0.50, 0.76, 0.98, 1.0),
+	"cliff": Color(0.67, 0.68, 0.78, 1.0),
+	"mushroom": Color(0.87, 0.73, 0.96, 1.0)
 }
 
 @onready var tile_map_layer: TileMapLayer = $TileMapLayer
@@ -197,15 +197,15 @@ func _create_terrain_texture() -> Texture2D:
 
 
 func _draw_isometric_diamond(image: Image, offset_x: int, fill_color: Color, terrain_type: String) -> void:
-	var light_tint: Color = fill_color.lerp(Color(1.0, 1.0, 1.0, 1.0), 0.36)
-	var dark_tint: Color = fill_color.lerp(Color(0.0, 0.0, 0.0, 1.0), 0.18)
+	var light_tint: Color = fill_color.lerp(Color(1.0, 1.0, 1.0, 1.0), 0.42)
+	var dark_tint: Color = fill_color.lerp(Color(0.0, 0.0, 0.0, 1.0), 0.24)
 	var half_width: float = float(TILE_PIXEL_SIZE.x) * 0.5
 	var half_height: float = float(TILE_PIXEL_SIZE.y) * 0.5
-	var border_limit: float = 0.95
-	var border_darkness: float = 0.16
+	var border_limit: float = 0.93
+	var border_darkness: float = 0.28
 	if terrain_type == "cliff":
-		border_limit = 0.93
-		border_darkness = 0.24
+		border_limit = 0.91
+		border_darkness = 0.34
 
 	for y in TILE_PIXEL_SIZE.y:
 		for x in TILE_PIXEL_SIZE.x:
@@ -222,8 +222,10 @@ func _draw_isometric_diamond(image: Image, offset_x: int, fill_color: Color, ter
 
 				if distance_to_center > border_limit:
 					tile_color = tile_color.darkened(border_darkness)
+				elif distance_to_center > 0.88:
+					tile_color = tile_color.darkened(0.16)
 				elif y < int(TILE_PIXEL_SIZE.y * 0.30):
-					tile_color = tile_color.lightened(0.08)
+					tile_color = tile_color.lightened(0.12)
 
 				image.set_pixel(offset_x + x, y, tile_color)
 

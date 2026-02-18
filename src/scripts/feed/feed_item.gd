@@ -29,6 +29,12 @@ const SCORE_PANEL_MAP_GAP: float = 10.0
 const SCORE_PANEL_FALLBACK_LOCAL_Y: float = 300.0
 const DEFAULT_TARGET_SCORE: int = 230
 const MOMENT_FEED_ITEM_PREFIX: String = "moment_"
+const CARD_PANEL_RADIUS: int = 26
+const CARD_PANEL_BORDER_WIDTH: int = 2
+const CARD_PANEL_SHADOW_SIZE: int = 10
+const CARD_PANEL_SHADOW_OFFSET_Y: float = 3.0
+const CARD_PANEL_SHADOW_COLOR: Color = Color(0.16, 0.12, 0.20, 0.12)
+const MAP_BACKDROP_RADIUS: int = 34
 
 const SCORE_ENEMY_DEFEATED_POINTS: int = 140
 const SCORE_DAMAGE_POINTS_PER_HP: int = 5
@@ -204,11 +210,11 @@ func _build_status_overlay() -> void:
 	_status_panel.add_theme_stylebox_override(
 		"panel",
 		_build_card_stylebox(
-			Color(0.95, 0.96, 1.0, 0.93),
-			28,
-			Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.35),
-			10,
-			Color(0.20, 0.16, 0.25, 0.09)
+			Color(0.97, 0.97, 1.0, 0.95),
+			CARD_PANEL_RADIUS,
+			Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.36),
+			CARD_PANEL_SHADOW_SIZE,
+			CARD_PANEL_SHADOW_COLOR
 		)
 	)
 	add_child(_status_panel)
@@ -227,9 +233,9 @@ func _build_status_overlay() -> void:
 	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_status_label.add_theme_font_size_override("font_size", 36)
-	_status_label.add_theme_color_override("font_color", Color(0.20, 0.16, 0.27, 1.0))
+	_status_label.add_theme_color_override("font_color", Color(0.18, 0.13, 0.26, 1.0))
 	_status_label.add_theme_constant_override("outline_size", 1)
-	_status_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.54))
+	_status_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.62))
 	status_layout.add_child(_status_label)
 
 	_detail_label = Label.new()
@@ -238,9 +244,9 @@ func _build_status_overlay() -> void:
 	_detail_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_detail_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_detail_label.add_theme_font_size_override("font_size", 24)
-	_detail_label.add_theme_color_override("font_color", Color(0.25, 0.21, 0.31, 0.92))
+	_detail_label.add_theme_color_override("font_color", Color(0.22, 0.18, 0.30, 0.96))
 	_detail_label.add_theme_constant_override("outline_size", 1)
-	_detail_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.40))
+	_detail_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.50))
 	status_layout.add_child(_detail_label)
 
 	_build_score_overlay()
@@ -260,11 +266,11 @@ func _build_score_overlay() -> void:
 	add_child(_score_panel)
 
 	var panel_style: StyleBoxFlat = _build_card_stylebox(
-		Color(0.96, 0.95, 1.0, 0.94),
-		28,
+		Color(0.97, 0.96, 1.0, 0.95),
+		CARD_PANEL_RADIUS,
 		Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.36),
-		10,
-		Color(0.20, 0.16, 0.24, 0.09)
+		CARD_PANEL_SHADOW_SIZE,
+		CARD_PANEL_SHADOW_COLOR
 	)
 	_score_panel.add_theme_stylebox_override("panel", panel_style)
 
@@ -279,10 +285,10 @@ func _build_score_overlay() -> void:
 
 	_score_title_label = Label.new()
 	_score_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_score_title_label.add_theme_font_size_override("font_size", 30)
-	_score_title_label.add_theme_color_override("font_color", Color(0.22, 0.17, 0.30, 1.0))
+	_score_title_label.add_theme_font_size_override("font_size", 32)
+	_score_title_label.add_theme_color_override("font_color", Color(0.20, 0.15, 0.29, 1.0))
 	_score_title_label.add_theme_constant_override("outline_size", 1)
-	_score_title_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.34))
+	_score_title_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.48))
 	_score_title_label.text = "Score Breakdown"
 	root_layout.add_child(_score_title_label)
 
@@ -299,14 +305,14 @@ func _build_score_overlay() -> void:
 	_score_breakdown_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_score_breakdown_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_score_breakdown_label.add_theme_font_size_override("font_size", 20)
-	_score_breakdown_label.add_theme_color_override("font_color", Color(0.26, 0.22, 0.33, 0.90))
+	_score_breakdown_label.add_theme_color_override("font_color", Color(0.23, 0.19, 0.31, 0.94))
 	root_layout.add_child(_score_breakdown_label)
 
 	_score_comparison_label = Label.new()
 	_score_comparison_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_score_comparison_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_score_comparison_label.add_theme_font_size_override("font_size", 22)
-	_score_comparison_label.add_theme_color_override("font_color", Color(0.19, 0.42, 0.35, 0.96))
+	_score_comparison_label.add_theme_color_override("font_color", Color(0.20, 0.39, 0.34, 0.98))
 	root_layout.add_child(_score_comparison_label)
 
 	_share_button = Button.new()
@@ -339,7 +345,9 @@ func _build_card_stylebox(
 	corner_radius: int,
 	border_color: Color,
 	shadow_size: int,
-	shadow_color: Color
+	shadow_color: Color,
+	border_width: int = CARD_PANEL_BORDER_WIDTH,
+	shadow_offset_y: float = CARD_PANEL_SHADOW_OFFSET_Y
 ) -> StyleBoxFlat:
 	var stylebox: StyleBoxFlat = StyleBoxFlat.new()
 	stylebox.bg_color = background_color
@@ -347,14 +355,14 @@ func _build_card_stylebox(
 	stylebox.corner_radius_top_right = corner_radius
 	stylebox.corner_radius_bottom_left = corner_radius
 	stylebox.corner_radius_bottom_right = corner_radius
-	stylebox.border_width_left = 2
-	stylebox.border_width_top = 2
-	stylebox.border_width_right = 2
-	stylebox.border_width_bottom = 2
+	stylebox.border_width_left = border_width
+	stylebox.border_width_top = border_width
+	stylebox.border_width_right = border_width
+	stylebox.border_width_bottom = border_width
 	stylebox.border_color = border_color
 	stylebox.shadow_color = shadow_color
 	stylebox.shadow_size = shadow_size
-	stylebox.shadow_offset = Vector2(0.0, 4.0)
+	stylebox.shadow_offset = Vector2(0.0, shadow_offset_y)
 	return stylebox
 
 
@@ -368,15 +376,111 @@ func _ensure_map_backdrop() -> void:
 	_map_backdrop.add_theme_stylebox_override(
 		"panel",
 		_build_card_stylebox(
-			Color(0.98, 0.97, 0.94, 0.78),
-			32,
-			Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.16),
-			8,
-			Color(0.16, 0.12, 0.20, 0.07)
+			Color(0.99, 0.98, 0.96, 0.46),
+			MAP_BACKDROP_RADIUS,
+			Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.10),
+			6,
+			Color(0.16, 0.12, 0.20, 0.05),
+			1,
+			2.0
 		)
 	)
 	add_child(_map_backdrop)
 	move_child(_map_backdrop, 0)
+	_build_map_backdrop_decor()
+
+
+func _build_map_backdrop_decor() -> void:
+	if _map_backdrop == null:
+		return
+	if _map_backdrop.get_node_or_null("BackdropGradient") != null:
+		return
+
+	var gradient_rect: TextureRect = TextureRect.new()
+	gradient_rect.name = "BackdropGradient"
+	gradient_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	gradient_rect.texture = _create_map_backdrop_gradient_texture()
+	gradient_rect.stretch_mode = TextureRect.STRETCH_SCALE
+	gradient_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	gradient_rect.modulate = Color(1.0, 1.0, 1.0, 0.96)
+	gradient_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_map_backdrop.add_child(gradient_rect)
+	_map_backdrop.move_child(gradient_rect, 0)
+
+	var top_blob: PanelContainer = _build_map_backdrop_blob(
+		"BackdropBlobTop",
+		Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.14)
+	)
+	var middle_blob: PanelContainer = _build_map_backdrop_blob(
+		"BackdropBlobMiddle",
+		Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.10)
+	)
+	var lower_blob: PanelContainer = _build_map_backdrop_blob(
+		"BackdropBlobLower",
+		Color(Constants.PALETTE_MINT.r, Constants.PALETTE_MINT.g, Constants.PALETTE_MINT.b, 0.10)
+	)
+	_map_backdrop.add_child(top_blob)
+	_map_backdrop.add_child(middle_blob)
+	_map_backdrop.add_child(lower_blob)
+	_layout_map_backdrop_decor()
+
+
+func _create_map_backdrop_gradient_texture() -> Texture2D:
+	var gradient: Gradient = Gradient.new()
+	gradient.offsets = PackedFloat32Array([0.0, 0.58, 1.0])
+	gradient.colors = PackedColorArray([
+		Color(1.0, 0.98, 1.0, 0.54),
+		Color(0.98, 0.98, 1.0, 0.28),
+		Color(0.98, 0.99, 0.97, 0.16)
+	])
+
+	var gradient_texture: GradientTexture2D = GradientTexture2D.new()
+	gradient_texture.gradient = gradient
+	gradient_texture.fill = GradientTexture2D.FILL_LINEAR
+	gradient_texture.fill_from = Vector2(0.5, 0.0)
+	gradient_texture.fill_to = Vector2(0.5, 1.0)
+	gradient_texture.width = 4
+	gradient_texture.height = 256
+	return gradient_texture
+
+
+func _build_map_backdrop_blob(name: String, color: Color) -> PanelContainer:
+	var blob: PanelContainer = PanelContainer.new()
+	blob.name = name
+	blob.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	blob.add_theme_stylebox_override(
+		"panel",
+		_build_card_stylebox(
+			color,
+			88,
+			Color(1.0, 1.0, 1.0, 0.16),
+			0,
+			Color(0.0, 0.0, 0.0, 0.0),
+			1,
+			0.0
+		)
+	)
+	return blob
+
+
+func _layout_map_backdrop_decor() -> void:
+	if _map_backdrop == null:
+		return
+
+	var top_blob: PanelContainer = _map_backdrop.get_node_or_null("BackdropBlobTop") as PanelContainer
+	if top_blob != null:
+		top_blob.size = Vector2(_map_backdrop.size.x * 0.50, _map_backdrop.size.y * 0.24)
+		top_blob.position = Vector2(_map_backdrop.size.x * 0.12, _map_backdrop.size.y * 0.08)
+
+	var middle_blob: PanelContainer = _map_backdrop.get_node_or_null("BackdropBlobMiddle") as PanelContainer
+	if middle_blob != null:
+		middle_blob.size = Vector2(_map_backdrop.size.x * 0.58, _map_backdrop.size.y * 0.22)
+		middle_blob.position = Vector2(_map_backdrop.size.x * 0.30, _map_backdrop.size.y * 0.40)
+
+	var lower_blob: PanelContainer = _map_backdrop.get_node_or_null("BackdropBlobLower") as PanelContainer
+	if lower_blob != null:
+		lower_blob.size = Vector2(_map_backdrop.size.x * 0.46, _map_backdrop.size.y * 0.20)
+		lower_blob.position = Vector2(_map_backdrop.size.x * 0.10, _map_backdrop.size.y * 0.68)
 
 
 func _setup_decision_timeout_timer() -> void:
@@ -452,6 +556,7 @@ func _layout_map_backdrop(map_bounds: Rect2, centered_x_offset: float) -> void:
 	)
 	_map_backdrop.size = backdrop_size
 	_map_backdrop.position = Vector2(map_left - backdrop_padding.x, map_top - backdrop_padding.y)
+	_layout_map_backdrop_decor()
 
 
 func _resolve_snapshot_map_bounds_local() -> Rect2:
@@ -1022,9 +1127,9 @@ func _show_score_preview_overlay() -> void:
 
 	_score_panel.visible = true
 	_score_title_label.text = "Score Preview"
-	_score_value_label.text = "Ready"
+	_score_value_label.text = "Plan"
 	_score_breakdown_label.text = "Big plays, safe allies, and quick turns raise your score."
-	_score_comparison_label.text = "Take one tactical turn to lock your score."
+	_score_comparison_label.text = "Take one tactical turn to lock in your score."
 	_share_button.visible = false
 	_share_button.disabled = true
 	_share_button.tooltip_text = ""

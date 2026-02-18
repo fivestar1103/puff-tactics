@@ -34,7 +34,7 @@ const AMBIENT_BLOB_LAYOUTS: Array[Dictionary] = [
 		"y_ratio": 0.16,
 		"x_offset": -62.0,
 		"radius": 96,
-		"color": Color(0.72, 0.84, 0.99, 0.18)
+		"color": Color(0.72, 0.84, 0.99, 0.26)
 	},
 	{
 		"width_ratio": 0.90,
@@ -42,7 +42,7 @@ const AMBIENT_BLOB_LAYOUTS: Array[Dictionary] = [
 		"y_ratio": 0.36,
 		"x_offset": 44.0,
 		"radius": 104,
-		"color": Color(0.99, 0.83, 0.77, 0.16)
+		"color": Color(0.99, 0.83, 0.77, 0.24)
 	},
 	{
 		"width_ratio": 0.82,
@@ -50,7 +50,15 @@ const AMBIENT_BLOB_LAYOUTS: Array[Dictionary] = [
 		"y_ratio": 0.62,
 		"x_offset": -28.0,
 		"radius": 96,
-		"color": Color(0.77, 0.90, 0.82, 0.16)
+		"color": Color(0.77, 0.90, 0.82, 0.22)
+	},
+	{
+		"width_ratio": 0.70,
+		"height": 170.0,
+		"y_ratio": 0.82,
+		"x_offset": 56.0,
+		"radius": 88,
+		"color": Color(0.93, 0.82, 0.99, 0.20)
 	}
 ]
 
@@ -282,6 +290,7 @@ var _feed_sync: Node
 var _collection_screen: Node
 var _puzzle_editor: Node
 var _header_panel: PanelContainer
+var _swipe_hint_panel: PanelContainer
 var _ambient_blobs: Array[PanelContainer] = []
 
 
@@ -293,6 +302,7 @@ func _ready() -> void:
 	_build_feed_items()
 	_connect_fab_actions()
 	_build_visual_atmosphere()
+	_ensure_swipe_hint_panel()
 	_style_header_labels()
 	_style_fab_buttons()
 	_layout_feed_items()
@@ -849,6 +859,13 @@ func _layout_hud_overlays() -> void:
 	swipe_hint_label.offset_right = SWIPE_HINT_WIDTH * 0.5
 	swipe_hint_label.offset_top = swipe_top
 	swipe_hint_label.offset_bottom = swipe_bottom
+	if _swipe_hint_panel != null:
+		var panel_padding_x: float = 24.0
+		var panel_padding_y: float = 10.0
+		_swipe_hint_panel.offset_left = swipe_hint_label.offset_left - panel_padding_x
+		_swipe_hint_panel.offset_right = swipe_hint_label.offset_right + panel_padding_x
+		_swipe_hint_panel.offset_top = swipe_hint_label.offset_top - panel_padding_y
+		_swipe_hint_panel.offset_bottom = swipe_hint_label.offset_bottom + panel_padding_y
 
 
 func _resolve_active_score_panel_bottom_y() -> float:
@@ -1057,16 +1074,50 @@ func _style_fab_buttons() -> void:
 
 
 func _style_header_labels() -> void:
-	VisualTheme.apply_label_theme(title_label, Constants.FONT_SIZE_TITLE + 10, Color(0.22, 0.15, 0.29, 1.0))
-	VisualTheme.apply_label_theme(subtitle_label, Constants.FONT_SIZE_SUBTITLE + 4, Color(0.27, 0.20, 0.34, 0.94))
-	VisualTheme.apply_label_theme(swipe_hint_label, Constants.FONT_SIZE_BODY + 4, Color(0.31, 0.24, 0.36, 0.78))
-	title_label.add_theme_constant_override("outline_size", 2)
-	title_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.68))
-	subtitle_label.add_theme_constant_override("outline_size", 1)
-	subtitle_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.52))
-	swipe_hint_label.add_theme_constant_override("outline_size", 1)
-	swipe_hint_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.42))
-	swipe_hint_label.text = "Swipe up when your score appears"
+	VisualTheme.apply_label_theme(title_label, Constants.FONT_SIZE_TITLE + 10, Color(0.18, 0.12, 0.26, 1.0))
+	VisualTheme.apply_label_theme(subtitle_label, Constants.FONT_SIZE_SUBTITLE + 5, Color(0.22, 0.17, 0.31, 0.98))
+	VisualTheme.apply_label_theme(swipe_hint_label, Constants.FONT_SIZE_BODY + 4, Color(0.26, 0.20, 0.34, 0.92))
+	title_label.add_theme_constant_override("outline_size", 3)
+	title_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.78))
+	subtitle_label.add_theme_constant_override("outline_size", 2)
+	subtitle_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.62))
+	swipe_hint_label.add_theme_constant_override("outline_size", 2)
+	swipe_hint_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.62))
+	swipe_hint_label.text = "↑ Swipe up when your score locks"
+
+
+func _ensure_swipe_hint_panel() -> void:
+	if _swipe_hint_panel != null:
+		return
+	var hud: Control = swipe_hint_label.get_parent() as Control
+	if hud == null:
+		return
+
+	_swipe_hint_panel = PanelContainer.new()
+	_swipe_hint_panel.name = "SwipeHintPanel"
+	_swipe_hint_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_swipe_hint_panel.layout_mode = 1
+	_swipe_hint_panel.anchors_preset = 10
+	_swipe_hint_panel.anchor_left = 0.5
+	_swipe_hint_panel.anchor_top = 1.0
+	_swipe_hint_panel.anchor_right = 0.5
+	_swipe_hint_panel.anchor_bottom = 1.0
+	_swipe_hint_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_swipe_hint_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_swipe_hint_panel.add_theme_stylebox_override(
+		"panel",
+		_build_rounded_shadow_stylebox(
+			Color(0.99, 0.98, 1.0, 0.90),
+			22,
+			Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.30),
+			8,
+			Color(0.16, 0.12, 0.20, 0.10),
+			1,
+			2.0
+		)
+	)
+	hud.add_child(_swipe_hint_panel)
+	hud.move_child(_swipe_hint_panel, swipe_hint_label.get_index())
 
 
 func _build_visual_atmosphere() -> void:
@@ -1080,11 +1131,11 @@ func _build_visual_atmosphere() -> void:
 		_header_panel.add_theme_stylebox_override(
 			"panel",
 			_build_rounded_shadow_stylebox(
-				Color(Constants.COLOR_BG_CREAM.r, Constants.COLOR_BG_CREAM.g, Constants.COLOR_BG_CREAM.b, 0.94),
+				Color(Constants.COLOR_BG_CREAM.r, Constants.COLOR_BG_CREAM.g, Constants.COLOR_BG_CREAM.b, 0.96),
 				30,
-				Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.30),
-				9,
-				Color(0.14, 0.12, 0.19, 0.10)
+				Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.40),
+				11,
+				Color(0.14, 0.12, 0.19, 0.12)
 			)
 		)
 		top_margin.add_child(_header_panel)
@@ -1106,7 +1157,7 @@ func _build_visual_atmosphere() -> void:
 				_build_rounded_shadow_stylebox(
 					blob_color,
 					blob_radius,
-					Color(1.0, 1.0, 1.0, 0.11),
+					Color(1.0, 1.0, 1.0, 0.14),
 					12,
 					Color(0.16, 0.12, 0.20, 0.07)
 				)
@@ -1138,7 +1189,9 @@ func _build_rounded_shadow_stylebox(
 	corner_radius: int,
 	border_color: Color,
 	shadow_size: int,
-	shadow_color: Color
+	shadow_color: Color,
+	border_width: int = 1,
+	shadow_offset_y: float = 3.0
 ) -> StyleBoxFlat:
 	var stylebox: StyleBoxFlat = StyleBoxFlat.new()
 	stylebox.bg_color = background_color
@@ -1146,14 +1199,14 @@ func _build_rounded_shadow_stylebox(
 	stylebox.corner_radius_top_right = corner_radius
 	stylebox.corner_radius_bottom_left = corner_radius
 	stylebox.corner_radius_bottom_right = corner_radius
-	stylebox.border_width_left = 1
-	stylebox.border_width_top = 1
-	stylebox.border_width_right = 1
-	stylebox.border_width_bottom = 1
+	stylebox.border_width_left = border_width
+	stylebox.border_width_top = border_width
+	stylebox.border_width_right = border_width
+	stylebox.border_width_bottom = border_width
 	stylebox.border_color = border_color
 	stylebox.shadow_color = shadow_color
 	stylebox.shadow_size = shadow_size
-	stylebox.shadow_offset = Vector2(0.0, 4.0)
+	stylebox.shadow_offset = Vector2(0.0, shadow_offset_y)
 	return stylebox
 
 
@@ -1172,8 +1225,10 @@ func _apply_fab_elevation(button: Button, base_color: Color) -> void:
 		var stylebox: StyleBoxFlat = _build_rounded_shadow_stylebox(
 			state_color,
 			38,
-			Color(1.0, 1.0, 1.0, 0.30),
+			Color(1.0, 1.0, 1.0, 0.34),
 			10,
-			Color(0.16, 0.12, 0.20, 0.14)
+			Color(0.16, 0.12, 0.20, 0.12),
+			2,
+			3.0
 		)
 		button.add_theme_stylebox_override(String(state), stylebox)

@@ -3,7 +3,7 @@ class_name Puff
 
 const PLACEHOLDER_TEXTURE_SIZE: int = 128
 const PLACEHOLDER_RADIUS: float = 48.0
-const PLACEHOLDER_BORDER_WIDTH: float = 8.0
+const PLACEHOLDER_BORDER_WIDTH: float = 10.0
 const ACCESSORY_REFERENCE_TEXTURE_SIZE: float = 72.0
 
 const ACCESSORY_SLOT_HAT: StringName = &"hat"
@@ -242,9 +242,9 @@ func _resolve_team_color() -> Color:
 		return Constants.COLOR_TEAM_PLAYER
 
 	if team_name == "player" or team_name == "friendly":
-		return Color(0.59, 0.92, 0.78, 1.0)
+		return Color(0.48, 0.90, 0.74, 1.0)
 	if team_name == "enemy":
-		return Color(0.98, 0.56, 0.76, 1.0)
+		return Color(0.98, 0.46, 0.70, 1.0)
 	return Constants.COLOR_TEAM_PLAYER
 
 

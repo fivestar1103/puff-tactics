@@ -801,8 +801,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 41,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Screenshot review on 2026-02-18 showed status/score/FAB surfaces reading too flat with barely-separated edges. Updated `src/scripts/feed/feed_item.gd` to use a shared card elevation profile for status and score panels (26px radius, 2px pastel border, shadow size 10 with y-offset 3 and alpha 0.12) so both panels match and read as elevated cards. Updated `src/scripts/feed/feed_main.gd` FAB state styleboxes to the same subtle shadow language (2px border, softer 0.12 shadow alpha) for consistent panel depth across the feed UI. Verified parse with HOME=/tmp godot --headless --path /home/fives/projects/puff-tactics --scene res://src/scenes/feed/FeedMain.tscn --quit.",
       "dependsOn": [
         "US-040"
       ]
@@ -980,7 +980,7 @@
       ],
       "priority": 50,
       "passes": false,
-      "notes": "Visual QA on 2026-02-18 screenshot (portrait, 768x1365): estimated map width ~44% of screen, only a partial section of the 5x5 tile field visible, and 4 visible puffs (player side reads as mint/green plus warm orange, enemy side reads as lavender/blue with pink rings). Large vertical whitespace pockets and heavy navy overlays lowered polish to 5/10. Checklist results: map fill FAIL; all 25 tiles FAIL; 4+ puffs FAIL (team color readability does not clearly read as 2+ mint/green players + 2+ pink/red enemies); puff face readability PASS; overlap PASS; no >15% vertical gap FAIL; text readability FAIL; no debug/stub text PASS; pastel kawaii harmony FAIL. Style-only remediation applied without changing protected layout constants: converted status/score/map containers to lighter pastel card treatments with softer shadows and cleaner borders, raised text contrast/type hierarchy and friendlier feed copy, boosted puff team-ring/facial readability, and brightened terrain tile palette plus edge contrast for clearer board readability. Parse check passed: `HOME=/tmp godot --headless --path /home/fives/projects/puff-tactics --scene res://src/scenes/feed/FeedMain.tscn --quit`.",
+      "notes": "Visual QA on 2026-02-18 attached screenshot (portrait, 768x1365): map frame reads centered at roughly 66% of screen width; 4 puffs are visible (2 player mint/green, 2 enemy pink-ringed). Empty-space estimate from the screenshot: top/header-to-map-card gap ~24% of screen height, map-card interior dead zone above the units ~18%, and score-to-bottom-control gap ~16%. Checklist from this screenshot: map width/centering PASS; all 25 tiles visible FAIL; 4+ puffs visible PASS; puff face readability PASS; no puff overlap PASS; no vertical gap >15% FAIL; text readability FAIL; no debug/stub/placeholder text FAIL (preview value looked placeholder); pastel kawaii palette PASS. Applied style-only remediation without changing protected layout constants: strengthened header/swipe-hint contrast with elevated pastel cards, replaced preview placeholder copy, softened the oversized map backdrop with gradient/blob treatment so empty areas read intentional, boosted terrain tile color/edge contrast so the 5x5 board reads more clearly, and strengthened team-ring color separation. Parse check passed: `HOME=/tmp godot --headless --path /home/fives/projects/puff-tactics --scene res://src/scenes/feed/FeedMain.tscn --quit`.",
       "dependsOn": [
         "US-049"
       ]
