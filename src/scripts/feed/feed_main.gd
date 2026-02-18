@@ -9,7 +9,7 @@ const STORY_CHAPTER_1_SCENE_PATH: String = "res://src/scenes/story/StoryChapter1
 
 const SNAP_DURATION: float = 0.28
 const SWIPE_THRESHOLD_PX: float = 120.0
-const SNAPSHOT_Y_RATIO: float = 0.16
+const SNAPSHOT_Y_RATIO: float = 0.46
 const FAB_ROW_HALF_WIDTH: float = 364.0
 const FAB_ROW_HEIGHT: float = 128.0
 const FAB_ROW_BOTTOM_MARGIN_RATIO: float = 0.03
@@ -20,8 +20,8 @@ const SWIPE_HINT_HEIGHT: float = 42.0
 const SWIPE_HINT_GAP_RATIO: float = 0.05
 const SWIPE_HINT_GAP_MIN: float = 56.0
 const SWIPE_HINT_GAP_MAX: float = 84.0
-const SCORE_TO_SWIPE_HINT_GAP: float = 46.0
-const SWIPE_HINT_TO_FAB_GAP: float = 64.0
+const SCORE_TO_SWIPE_HINT_GAP: float = 20.0
+const SWIPE_HINT_TO_FAB_GAP: float = 20.0
 const FEED_BATCH_SIZE: int = 50
 const MIN_PLAYER_PUFFS_PER_SNAPSHOT: int = 2
 const MIN_ENEMY_PUFFS_PER_SNAPSHOT: int = 2
@@ -783,22 +783,23 @@ func _layout_hud_overlays() -> void:
 
 	var bottom_margin: float = maxf(FAB_ROW_BOTTOM_MARGIN_MIN, viewport_size.y * FAB_ROW_BOTTOM_MARGIN_RATIO)
 	var fallback_fab_top_y: float = viewport_size.y - bottom_margin - FAB_ROW_HEIGHT
-	var fallback_swipe_gap: float = clampf(
-		viewport_size.y * SWIPE_HINT_GAP_RATIO,
-		SWIPE_HINT_GAP_MIN,
-		SWIPE_HINT_GAP_MAX
-	)
-	var fallback_swipe_hint_top_y: float = fallback_fab_top_y - SWIPE_HINT_HEIGHT - fallback_swipe_gap
-	var swipe_hint_top_y: float = fallback_swipe_hint_top_y
 	var score_panel_bottom_y: float = _resolve_active_score_panel_bottom_y()
+	var swipe_hint_top_y: float
+	var fab_top_y: float
+	var max_fab_top_y: float = viewport_size.y - FAB_ROW_HEIGHT - FAB_ROW_VIEWPORT_PADDING
+
 	if not is_nan(score_panel_bottom_y):
 		swipe_hint_top_y = score_panel_bottom_y + SCORE_TO_SWIPE_HINT_GAP
-
-	var fab_top_y: float = swipe_hint_top_y + SWIPE_HINT_HEIGHT + SWIPE_HINT_TO_FAB_GAP
-	fab_top_y = maxf(fab_top_y, fallback_fab_top_y)
-	var max_fab_top_y: float = viewport_size.y - FAB_ROW_HEIGHT - FAB_ROW_VIEWPORT_PADDING
-	if fab_top_y > max_fab_top_y:
-		fab_top_y = max_fab_top_y
+		fab_top_y = swipe_hint_top_y + SWIPE_HINT_HEIGHT + SWIPE_HINT_TO_FAB_GAP
+		fab_top_y = minf(fab_top_y, max_fab_top_y)
+	else:
+		fab_top_y = fallback_fab_top_y
+		var fallback_swipe_gap: float = clampf(
+			viewport_size.y * SWIPE_HINT_GAP_RATIO,
+			SWIPE_HINT_GAP_MIN,
+			SWIPE_HINT_GAP_MAX
+		)
+		swipe_hint_top_y = fab_top_y - SWIPE_HINT_HEIGHT - fallback_swipe_gap
 
 	swipe_hint_top_y = fab_top_y - SWIPE_HINT_HEIGHT - SWIPE_HINT_TO_FAB_GAP
 
