@@ -35,36 +35,36 @@ const FALLBACK_PLAYER_DATA_PATH: String = "res://src/resources/puffs/base/flame_
 const FALLBACK_ENEMY_DATA_PATH: String = "res://src/resources/puffs/base/cloud_tank.tres"
 const AMBIENT_BLOB_LAYOUTS: Array[Dictionary] = [
 	{
-		"width_ratio": 0.80,
-		"height": 236.0,
-		"y_ratio": 0.15,
-		"x_offset": -72.0,
-		"radius": 104,
-		"color": Color(0.72, 0.84, 0.99, 0.44)
-	},
-	{
-		"width_ratio": 0.94,
-		"height": 262.0,
-		"y_ratio": 0.34,
-		"x_offset": 54.0,
-		"radius": 112,
-		"color": Color(0.99, 0.83, 0.77, 0.40)
-	},
-	{
-		"width_ratio": 0.86,
-		"height": 234.0,
-		"y_ratio": 0.60,
-		"x_offset": -36.0,
-		"radius": 104,
-		"color": Color(0.77, 0.90, 0.82, 0.38)
-	},
-	{
 		"width_ratio": 0.84,
-		"height": 258.0,
-		"y_ratio": 0.88,
-		"x_offset": 42.0,
-		"radius": 104,
-		"color": Color(0.93, 0.82, 0.99, 0.38)
+		"height": 308.0,
+		"y_ratio": 0.14,
+		"x_offset": -64.0,
+		"radius": 112,
+		"color": Color(0.72, 0.84, 0.99, 0.52)
+	},
+	{
+		"width_ratio": 0.96,
+		"height": 334.0,
+		"y_ratio": 0.35,
+		"x_offset": 48.0,
+		"radius": 120,
+		"color": Color(0.99, 0.83, 0.77, 0.48)
+	},
+	{
+		"width_ratio": 0.90,
+		"height": 312.0,
+		"y_ratio": 0.60,
+		"x_offset": -28.0,
+		"radius": 112,
+		"color": Color(0.77, 0.90, 0.82, 0.46)
+	},
+	{
+		"width_ratio": 0.88,
+		"height": 320.0,
+		"y_ratio": 0.87,
+		"x_offset": 38.0,
+		"radius": 112,
+		"color": Color(0.93, 0.82, 0.99, 0.46)
 	}
 ]
 
@@ -1196,11 +1196,11 @@ func _build_visual_atmosphere() -> void:
 		_header_panel.add_theme_stylebox_override(
 			"panel",
 			_build_rounded_shadow_stylebox(
-				Color(0.99, 0.98, 1.0, 0.98),
+				Color(0.99, 0.98, 1.0, 0.99),
 				30,
-				Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.56),
-				12,
-				Color(0.14, 0.12, 0.19, 0.16)
+				Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.62),
+				14,
+				Color(0.14, 0.12, 0.19, 0.17)
 			)
 		)
 		top_margin.add_child(_header_panel)
@@ -1248,7 +1248,7 @@ func _ensure_background_decor() -> void:
 		gradient_rect.texture = _create_background_gradient_texture()
 		gradient_rect.stretch_mode = TextureRect.STRETCH_SCALE
 		gradient_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		gradient_rect.modulate = Color(1.0, 1.0, 1.0, 0.94)
+		gradient_rect.modulate = Color(1.0, 1.0, 1.0, 0.98)
 		gradient_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 		background_rect.add_child(gradient_rect)
 		background_rect.move_child(gradient_rect, 0)
@@ -1260,7 +1260,7 @@ func _ensure_background_decor() -> void:
 		pattern_rect.texture = _create_background_pattern_texture()
 		pattern_rect.stretch_mode = TextureRect.STRETCH_SCALE
 		pattern_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		pattern_rect.modulate = Color(1.0, 1.0, 1.0, 0.74)
+		pattern_rect.modulate = Color(1.0, 1.0, 1.0, 0.84)
 		pattern_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 		background_rect.add_child(pattern_rect)
 		background_rect.move_child(pattern_rect, 1)
@@ -1276,9 +1276,9 @@ func _ensure_atmosphere_lane_panel() -> void:
 	_atmosphere_lane_panel.add_theme_stylebox_override(
 		"panel",
 		_build_rounded_shadow_stylebox(
-			Color(1.0, 0.99, 1.0, 0.52),
-			44,
-			Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.18),
+			Color(1.0, 0.99, 1.0, 0.66),
+			52,
+			Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.24),
 			0,
 			Color(0.0, 0.0, 0.0, 0.0),
 			1,
@@ -1300,7 +1300,7 @@ func _build_atmosphere_lane_decor() -> void:
 		gradient_rect.texture = _create_lane_gradient_texture()
 		gradient_rect.stretch_mode = TextureRect.STRETCH_SCALE
 		gradient_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		gradient_rect.modulate = Color(1.0, 1.0, 1.0, 0.90)
+		gradient_rect.modulate = Color(1.0, 1.0, 1.0, 0.96)
 		gradient_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 		_atmosphere_lane_panel.add_child(gradient_rect)
 		_atmosphere_lane_panel.move_child(gradient_rect, 0)
@@ -1312,7 +1312,7 @@ func _build_atmosphere_lane_decor() -> void:
 		pattern_rect.texture = _create_lane_pattern_texture()
 		pattern_rect.stretch_mode = TextureRect.STRETCH_SCALE
 		pattern_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		pattern_rect.modulate = Color(1.0, 1.0, 1.0, 0.48)
+		pattern_rect.modulate = Color(1.0, 1.0, 1.0, 0.82)
 		pattern_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 		_atmosphere_lane_panel.add_child(pattern_rect)
 		_atmosphere_lane_panel.move_child(pattern_rect, 1)
@@ -1322,9 +1322,9 @@ func _create_lane_gradient_texture() -> Texture2D:
 	var gradient: Gradient = Gradient.new()
 	gradient.offsets = PackedFloat32Array([0.0, 0.48, 1.0])
 	gradient.colors = PackedColorArray([
-		Color(1.0, 0.97, 0.99, 0.64),
-		Color(0.98, 0.97, 1.0, 0.52),
-		Color(0.98, 1.0, 0.99, 0.42)
+		Color(1.0, 0.97, 0.99, 0.80),
+		Color(0.98, 0.97, 1.0, 0.68),
+		Color(0.98, 1.0, 0.99, 0.58)
 	])
 
 	var gradient_texture: GradientTexture2D = GradientTexture2D.new()
@@ -1343,8 +1343,10 @@ func _create_lane_pattern_texture() -> Texture2D:
 	var image: Image = Image.create(width, height, false, Image.FORMAT_RGBA8)
 	image.fill(Color(0.0, 0.0, 0.0, 0.0))
 
-	var wave_color: Color = Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.17)
-	var dot_color: Color = Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.14)
+	var wave_color: Color = Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.30)
+	var dot_color: Color = Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.24)
+	var grid_color: Color = Color(Constants.PALETTE_MINT.r, Constants.PALETTE_MINT.g, Constants.PALETTE_MINT.b, 0.22)
+	var sparkle_color: Color = Color(1.0, 1.0, 1.0, 0.28)
 	for y in range(16, height, 28):
 		for x in range(width):
 			var wave_y: int = y + int(round(sin(float(x) * 0.07 + float(y) * 0.02) * 1.8))
@@ -1358,6 +1360,28 @@ func _create_lane_pattern_texture() -> Texture2D:
 				image.set_pixel(x + 1, y, Color(dot_color.r, dot_color.g, dot_color.b, 0.10))
 			if y + 1 < height:
 				image.set_pixel(x, y + 1, Color(dot_color.r, dot_color.g, dot_color.b, 0.10))
+
+	var cell_half_width: int = 18
+	var cell_half_height: int = 10
+	for row in range(-2, int(ceil(float(height) / float(cell_half_height))) + 3):
+		var center_y: int = row * cell_half_height
+		var offset_x: int = cell_half_width if (row & 1) != 0 else 0
+		for column in range(-2, int(ceil(float(width) / float(cell_half_width * 2.0))) + 3):
+			var center_x: int = column * (cell_half_width * 2) + offset_x
+			for local_x in range(-cell_half_width, cell_half_width + 1):
+				var normalized_x: float = absf(float(local_x)) / float(maxi(1, cell_half_width))
+				var y_delta: int = int(round((1.0 - normalized_x) * float(cell_half_height)))
+				var top_y: int = center_y - y_delta
+				var bottom_y: int = center_y + y_delta
+				var draw_color: Color = grid_color
+				if (column + row) % 4 == 0:
+					draw_color = Color(grid_color.r, grid_color.g, grid_color.b, grid_color.a + 0.06)
+				if top_y >= 0 and top_y < height and center_x + local_x >= 0 and center_x + local_x < width:
+					image.set_pixel(center_x + local_x, top_y, draw_color)
+				if bottom_y >= 0 and bottom_y < height and center_x + local_x >= 0 and center_x + local_x < width:
+					image.set_pixel(center_x + local_x, bottom_y, draw_color)
+			if (column + row) % 5 == 0 and center_x >= 0 and center_x < width and center_y >= 0 and center_y < height:
+				image.set_pixel(center_x, center_y, sparkle_color)
 
 	return ImageTexture.create_from_image(image)
 
@@ -1414,9 +1438,9 @@ func _create_background_gradient_texture() -> Texture2D:
 	var gradient: Gradient = Gradient.new()
 	gradient.offsets = PackedFloat32Array([0.0, 0.45, 1.0])
 	gradient.colors = PackedColorArray([
-		Color(1.0, 0.98, 0.99, 0.92),
-		Color(0.99, 0.97, 0.95, 0.82),
-		Color(0.98, 0.97, 1.0, 0.88)
+		Color(1.0, 0.98, 0.99, 0.96),
+		Color(0.99, 0.97, 0.95, 0.88),
+		Color(0.98, 0.97, 1.0, 0.92)
 	])
 
 	var gradient_texture: GradientTexture2D = GradientTexture2D.new()
@@ -1435,8 +1459,8 @@ func _create_background_pattern_texture() -> Texture2D:
 	var image: Image = Image.create(width, height, false, Image.FORMAT_RGBA8)
 	image.fill(Color(0.0, 0.0, 0.0, 0.0))
 
-	var line_color: Color = Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.16)
-	var dot_color: Color = Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.24)
+	var line_color: Color = Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.27)
+	var dot_color: Color = Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.34)
 	for y in range(20, height, 34):
 		for x in range(width):
 			var wave_y: int = y + int(round(sin(float(x) * 0.07 + float(y) * 0.02) * 1.8))
@@ -1450,6 +1474,20 @@ func _create_background_pattern_texture() -> Texture2D:
 				image.set_pixel(x + 1, y, Color(dot_color.r, dot_color.g, dot_color.b, 0.12))
 			if y + 1 < height:
 				image.set_pixel(x, y + 1, Color(dot_color.r, dot_color.g, dot_color.b, 0.12))
+
+	for stripe in range(6):
+		var stripe_y: int = int(float(height) * (0.12 + float(stripe) * 0.15))
+		if stripe_y < 0 or stripe_y >= height:
+			continue
+		for x in range(width):
+			var drift_y: int = stripe_y + int(round(sin(float(x) * 0.03 + float(stripe) * 0.9) * 2.4))
+			if drift_y < 0 or drift_y >= height:
+				continue
+			image.set_pixel(
+				x,
+				drift_y,
+				Color(Constants.PALETTE_MINT.r, Constants.PALETTE_MINT.g, Constants.PALETTE_MINT.b, 0.16)
+			)
 
 	return ImageTexture.create_from_image(image)
 
@@ -1548,8 +1586,8 @@ func _create_blob_pattern_texture(blob_index: int) -> Texture2D:
 	var image: Image = Image.create(width, height, false, Image.FORMAT_RGBA8)
 	image.fill(Color(0.0, 0.0, 0.0, 0.0))
 
-	var stripe_color: Color = Color(1.0, 1.0, 1.0, 0.26)
-	var accent_color: Color = Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.28)
+	var stripe_color: Color = Color(1.0, 1.0, 1.0, 0.34)
+	var accent_color: Color = Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.34)
 	if blob_index == 1:
 		accent_color = Color(Constants.PALETTE_PEACH.r, Constants.PALETTE_PEACH.g, Constants.PALETTE_PEACH.b, 0.28)
 	elif blob_index == 2:
@@ -1579,18 +1617,42 @@ func _create_blob_pattern_texture(blob_index: int) -> Texture2D:
 			if y + 1 < height:
 				image.set_pixel(x, y + 1, Color(1.0, 1.0, 1.0, 0.10))
 
+	var tile_half_width: int = 14
+	var tile_half_height: int = 8
+	for row in range(-1, int(ceil(float(height) / float(tile_half_height))) + 2):
+		var row_center_y: int = row * tile_half_height
+		var row_x_offset: int = tile_half_width if (row & 1) != 0 else 0
+		for column in range(-1, int(ceil(float(width) / float(tile_half_width * 2.0))) + 2):
+			if (row + column + blob_index) % 3 != 0:
+				continue
+			var center_x: int = column * (tile_half_width * 2) + row_x_offset
+			var center_y: int = row_center_y
+			var line_color: Color = Color(accent_color.r, accent_color.g, accent_color.b, 0.24)
+			for local_x in range(-tile_half_width, tile_half_width + 1):
+				var normalized_x: float = absf(float(local_x)) / float(maxi(1, tile_half_width))
+				var y_offset: int = int(round((1.0 - normalized_x) * float(tile_half_height)))
+				var top_y: int = center_y - y_offset
+				var bottom_y: int = center_y + y_offset
+				var px: int = center_x + local_x
+				if px < 0 or px >= width:
+					continue
+				if top_y >= 0 and top_y < height:
+					image.set_pixel(px, top_y, line_color)
+				if bottom_y >= 0 and bottom_y < height:
+					image.set_pixel(px, bottom_y, line_color)
+
 	return ImageTexture.create_from_image(image)
 
 
 func _layout_visual_atmosphere() -> void:
 	var viewport_size: Vector2 = get_viewport_rect().size
 	if _atmosphere_lane_panel != null:
-		var lane_width: float = viewport_size.x * 0.90
-		var lane_height: float = viewport_size.y * 0.80
+		var lane_width: float = viewport_size.x * 0.94
+		var lane_height: float = viewport_size.y * 0.86
 		_atmosphere_lane_panel.size = Vector2(lane_width, lane_height)
 		_atmosphere_lane_panel.position = Vector2(
 			(viewport_size.x - lane_width) * 0.5,
-			viewport_size.y * 0.14
+			viewport_size.y * 0.10
 		)
 
 	for index in _ambient_blobs.size():

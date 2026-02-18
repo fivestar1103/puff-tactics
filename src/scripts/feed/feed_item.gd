@@ -35,7 +35,7 @@ const CARD_PANEL_SHADOW_SIZE: int = 10
 const CARD_PANEL_SHADOW_OFFSET_Y: float = 3.0
 const CARD_PANEL_SHADOW_COLOR: Color = Color(0.16, 0.12, 0.20, 0.12)
 const STATUS_PANEL_MAP_OVERSCAN_X: float = 20.0
-const MAP_BACKDROP_RADIUS: int = 34
+const MAP_BACKDROP_RADIUS: int = 36
 
 const SCORE_ENEMY_DEFEATED_POINTS: int = 140
 const SCORE_DAMAGE_POINTS_PER_HP: int = 5
@@ -555,13 +555,13 @@ func _ensure_map_backdrop() -> void:
 	_map_backdrop.add_theme_stylebox_override(
 		"panel",
 		_build_card_stylebox(
-			Color(0.99, 0.98, 0.96, 0.64),
+			Color(0.98, 0.98, 0.97, 0.78),
 			MAP_BACKDROP_RADIUS,
-			Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.09),
-			8,
-			Color(0.16, 0.12, 0.20, 0.09),
+			Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.17),
+			10,
+			Color(0.16, 0.12, 0.20, 0.12),
 			1,
-			2.0
+			2.4
 		)
 	)
 	add_child(_map_backdrop)
@@ -592,22 +592,22 @@ func _build_map_backdrop_decor() -> void:
 	pattern_rect.texture = _create_map_backdrop_pattern_texture()
 	pattern_rect.stretch_mode = TextureRect.STRETCH_SCALE
 	pattern_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	pattern_rect.modulate = Color(1.0, 1.0, 1.0, 0.68)
+	pattern_rect.modulate = Color(1.0, 1.0, 1.0, 0.94)
 	pattern_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_map_backdrop.add_child(pattern_rect)
 	_map_backdrop.move_child(pattern_rect, 1)
 
 	var top_blob: PanelContainer = _build_map_backdrop_blob(
 		"BackdropBlobTop",
-		Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.14)
+		Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.20)
 	)
 	var middle_blob: PanelContainer = _build_map_backdrop_blob(
 		"BackdropBlobMiddle",
-		Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.12)
+		Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.18)
 	)
 	var lower_blob: PanelContainer = _build_map_backdrop_blob(
 		"BackdropBlobLower",
-		Color(Constants.PALETTE_MINT.r, Constants.PALETTE_MINT.g, Constants.PALETTE_MINT.b, 0.11)
+		Color(Constants.PALETTE_MINT.r, Constants.PALETTE_MINT.g, Constants.PALETTE_MINT.b, 0.16)
 	)
 	_map_backdrop.add_child(top_blob)
 	_map_backdrop.add_child(middle_blob)
@@ -619,10 +619,10 @@ func _create_map_backdrop_gradient_texture() -> Texture2D:
 	var gradient: Gradient = Gradient.new()
 	gradient.offsets = PackedFloat32Array([0.0, 0.35, 0.72, 1.0])
 	gradient.colors = PackedColorArray([
-		Color(1.0, 0.95, 0.98, 0.88),
-		Color(0.98, 0.95, 1.0, 0.76),
-		Color(0.95, 0.98, 0.99, 0.68),
-		Color(0.94, 0.98, 0.96, 0.58)
+		Color(1.0, 0.97, 0.99, 0.94),
+		Color(0.98, 0.96, 1.0, 0.86),
+		Color(0.95, 0.98, 0.99, 0.78),
+		Color(0.94, 0.98, 0.96, 0.68)
 	])
 
 	var gradient_texture: GradientTexture2D = GradientTexture2D.new()
@@ -636,16 +636,16 @@ func _create_map_backdrop_gradient_texture() -> Texture2D:
 
 
 func _create_map_backdrop_pattern_texture() -> Texture2D:
-	var width: int = 256
-	var height: int = 256
+	var width: int = 320
+	var height: int = 320
 	var image: Image = Image.create(width, height, false, Image.FORMAT_RGBA8)
 	image.fill(Color(0.0, 0.0, 0.0, 0.0))
 
-	var major_line: Color = Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.30)
-	var minor_line: Color = Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.24)
-	var sparkle_color: Color = Color(1.0, 1.0, 1.0, 0.34)
+	var major_line: Color = Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.50)
+	var minor_line: Color = Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.40)
+	var sparkle_color: Color = Color(1.0, 1.0, 1.0, 0.42)
 
-	var tile_width: int = 58
+	var tile_width: int = 56
 	var tile_height: int = 30
 	var half_width: int = tile_width / 2
 	var half_height: int = tile_height / 2
@@ -668,12 +668,12 @@ func _create_map_backdrop_pattern_texture() -> Texture2D:
 				_set_backdrop_pixel(image, center_x + 1, center_y, Color(sparkle_color.r, sparkle_color.g, sparkle_color.b, 0.22))
 				_set_backdrop_pixel(image, center_x, center_y + 1, Color(sparkle_color.r, sparkle_color.g, sparkle_color.b, 0.22))
 
-	var guide_major: Color = Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.56)
-	var guide_minor: Color = Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.40)
-	var guide_glow: Color = Color(1.0, 1.0, 1.0, 0.34)
-	var guide_center: Vector2i = Vector2i(width / 2, int(height * 0.56))
-	var guide_half_width: int = 25
-	var guide_half_height: int = 14
+	var guide_major: Color = Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.84)
+	var guide_minor: Color = Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.70)
+	var guide_glow: Color = Color(1.0, 1.0, 1.0, 0.54)
+	var guide_center: Vector2i = Vector2i(width / 2, int(height * 0.54))
+	var guide_half_width: int = 29
+	var guide_half_height: int = 16
 	for board_y in range(Constants.GRID_HEIGHT):
 		for board_x in range(Constants.GRID_WIDTH):
 			var cell_center_x: int = guide_center.x + (board_x - board_y) * guide_half_width
@@ -692,7 +692,7 @@ func _create_map_backdrop_pattern_texture() -> Texture2D:
 				guide_half_height,
 				line_color
 			)
-			var fill_alpha: float = 0.06 if edge_cell else 0.04
+			var fill_alpha: float = 0.16 if edge_cell else 0.12
 			_fill_backdrop_diamond(
 				image,
 				Vector2i(cell_center_x, cell_center_y),
@@ -704,12 +704,34 @@ func _create_map_backdrop_pattern_texture() -> Texture2D:
 				image,
 				cell_center_x,
 				cell_center_y,
-				Color(line_color.r, line_color.g, line_color.b, 0.30)
+				Color(line_color.r, line_color.g, line_color.b, 0.42)
 			)
 			if ((board_x + board_y) % 2) == 0:
 				_set_backdrop_pixel(image, cell_center_x, cell_center_y, guide_glow)
-				_set_backdrop_pixel(image, cell_center_x + 1, cell_center_y, Color(guide_glow.r, guide_glow.g, guide_glow.b, 0.20))
-				_set_backdrop_pixel(image, cell_center_x, cell_center_y + 1, Color(guide_glow.r, guide_glow.g, guide_glow.b, 0.20))
+				_set_backdrop_pixel(image, cell_center_x + 1, cell_center_y, Color(guide_glow.r, guide_glow.g, guide_glow.b, 0.28))
+				_set_backdrop_pixel(image, cell_center_x, cell_center_y + 1, Color(guide_glow.r, guide_glow.g, guide_glow.b, 0.28))
+			if board_x < Constants.GRID_WIDTH - 1:
+				var right_center: Vector2i = Vector2i(
+					guide_center.x + (board_x + 1 - board_y) * guide_half_width,
+					guide_center.y + (board_x + 1 + board_y) * guide_half_height
+				)
+				_draw_backdrop_line(
+					image,
+					Vector2i(cell_center_x, cell_center_y),
+					right_center,
+					Color(line_color.r, line_color.g, line_color.b, 0.24)
+				)
+			if board_y < Constants.GRID_HEIGHT - 1:
+				var down_center: Vector2i = Vector2i(
+					guide_center.x + (board_x - (board_y + 1)) * guide_half_width,
+					guide_center.y + (board_x + board_y + 1) * guide_half_height
+				)
+				_draw_backdrop_line(
+					image,
+					Vector2i(cell_center_x, cell_center_y),
+					down_center,
+					Color(line_color.r, line_color.g, line_color.b, 0.20)
+				)
 
 	return ImageTexture.create_from_image(image)
 
@@ -742,6 +764,20 @@ func _fill_backdrop_diamond(
 		var y_limit: int = int(round((1.0 - normalized_x) * float(half_height)))
 		for local_y in range(-y_limit, y_limit + 1):
 			_set_backdrop_pixel(image, center.x + local_x, center.y + local_y, color)
+
+
+func _draw_backdrop_line(image: Image, start: Vector2i, finish: Vector2i, color: Color) -> void:
+	var delta: Vector2 = Vector2(finish - start)
+	var steps: int = int(maxf(absf(delta.x), absf(delta.y)))
+	if steps <= 0:
+		_set_backdrop_pixel(image, start.x, start.y, color)
+		return
+
+	for step in range(steps + 1):
+		var t: float = float(step) / float(steps)
+		var x: int = int(round(lerpf(float(start.x), float(finish.x), t)))
+		var y: int = int(round(lerpf(float(start.y), float(finish.y), t)))
+		_set_backdrop_pixel(image, x, y, color)
 
 
 func _set_backdrop_pixel(image: Image, x: int, y: int, color: Color) -> void:
@@ -777,18 +813,18 @@ func _layout_map_backdrop_decor() -> void:
 
 	var top_blob: PanelContainer = _map_backdrop.get_node_or_null("BackdropBlobTop") as PanelContainer
 	if top_blob != null:
-		top_blob.size = Vector2(_map_backdrop.size.x * 0.78, _map_backdrop.size.y * 0.32)
-		top_blob.position = Vector2(_map_backdrop.size.x * 0.08, _map_backdrop.size.y * 0.03)
+		top_blob.size = Vector2(_map_backdrop.size.x * 0.84, _map_backdrop.size.y * 0.36)
+		top_blob.position = Vector2(_map_backdrop.size.x * 0.06, _map_backdrop.size.y * 0.02)
 
 	var middle_blob: PanelContainer = _map_backdrop.get_node_or_null("BackdropBlobMiddle") as PanelContainer
 	if middle_blob != null:
-		middle_blob.size = Vector2(_map_backdrop.size.x * 0.70, _map_backdrop.size.y * 0.26)
-		middle_blob.position = Vector2(_map_backdrop.size.x * 0.24, _map_backdrop.size.y * 0.35)
+		middle_blob.size = Vector2(_map_backdrop.size.x * 0.80, _map_backdrop.size.y * 0.30)
+		middle_blob.position = Vector2(_map_backdrop.size.x * 0.18, _map_backdrop.size.y * 0.34)
 
 	var lower_blob: PanelContainer = _map_backdrop.get_node_or_null("BackdropBlobLower") as PanelContainer
 	if lower_blob != null:
-		lower_blob.size = Vector2(_map_backdrop.size.x * 0.64, _map_backdrop.size.y * 0.27)
-		lower_blob.position = Vector2(_map_backdrop.size.x * 0.12, _map_backdrop.size.y * 0.66)
+		lower_blob.size = Vector2(_map_backdrop.size.x * 0.76, _map_backdrop.size.y * 0.31)
+		lower_blob.position = Vector2(_map_backdrop.size.x * 0.10, _map_backdrop.size.y * 0.64)
 
 
 func _setup_decision_timeout_timer() -> void:
@@ -856,7 +892,7 @@ func _layout_battle_snapshot() -> void:
 func _layout_map_backdrop(map_bounds: Rect2, centered_x_offset: float) -> void:
 	if _map_backdrop == null:
 		return
-	var backdrop_padding: Vector2 = Vector2(22.0, 22.0)
+	var backdrop_padding: Vector2 = Vector2(32.0, 30.0)
 	var map_left: float = centered_x_offset + map_bounds.position.x * SNAPSHOT_SCALE.x
 	var map_top: float = SNAPSHOT_LOCAL_Y + map_bounds.position.y * SNAPSHOT_SCALE.y
 	var backdrop_size: Vector2 = Vector2(
@@ -1450,10 +1486,10 @@ func _show_score_preview_overlay() -> void:
 		return
 
 	_score_panel.visible = true
-	_score_title_label.text = "Score Preview"
-	_score_value_label.text = "Ready"
-	_score_breakdown_label.text = "Defeat enemies, protect allies, and finish clean for a higher score."
-	_score_comparison_label.text = "Line up one tactical move, then lock in your result."
+	_score_title_label.text = "Turn Objective"
+	_score_value_label.text = "Make Move"
+	_score_breakdown_label.text = "Defeat enemies, protect allies, and finish this turn clean for a higher score."
+	_score_comparison_label.text = "Pick one tactical move, then lock in your result."
 	_share_button.visible = false
 	_share_button.disabled = true
 	_share_button.tooltip_text = ""

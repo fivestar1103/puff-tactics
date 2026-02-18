@@ -84,12 +84,12 @@ const TERRAIN_EFFECTS: Dictionary = {
 }
 
 const TERRAIN_COLORS: Dictionary = {
-	"cloud": Color(0.79, 0.89, 1.0, 1.0),
-	"high_cloud": Color(0.63, 0.78, 0.99, 1.0),
-	"cotton_candy": Color(0.99, 0.67, 0.86, 1.0),
-	"puddle": Color(0.42, 0.70, 0.96, 1.0),
-	"cliff": Color(0.58, 0.60, 0.77, 1.0),
-	"mushroom": Color(0.82, 0.63, 0.92, 1.0)
+	"cloud": Color(0.74, 0.88, 1.0, 1.0),
+	"high_cloud": Color(0.52, 0.72, 0.96, 1.0),
+	"cotton_candy": Color(0.99, 0.67, 0.88, 1.0),
+	"puddle": Color(0.31, 0.60, 0.92, 1.0),
+	"cliff": Color(0.49, 0.55, 0.76, 1.0),
+	"mushroom": Color(0.80, 0.62, 0.94, 1.0)
 }
 
 @onready var tile_map_layer: TileMapLayer = $TileMapLayer
@@ -197,15 +197,15 @@ func _create_terrain_texture() -> Texture2D:
 
 
 func _draw_isometric_diamond(image: Image, offset_x: int, fill_color: Color, terrain_type: String) -> void:
-	var light_tint: Color = fill_color.lerp(Color(1.0, 1.0, 1.0, 1.0), 0.56)
-	var dark_tint: Color = fill_color.lerp(Color(0.0, 0.0, 0.0, 1.0), 0.34)
+	var light_tint: Color = fill_color.lerp(Color(1.0, 1.0, 1.0, 1.0), 0.64)
+	var dark_tint: Color = fill_color.lerp(Color(0.0, 0.0, 0.0, 1.0), 0.38)
 	var half_width: float = float(TILE_PIXEL_SIZE.x) * 0.5
 	var half_height: float = float(TILE_PIXEL_SIZE.y) * 0.5
-	var border_limit: float = 0.88
-	var border_darkness: float = 0.42
+	var border_limit: float = 0.86
+	var border_darkness: float = 0.46
 	if terrain_type == "cliff":
-		border_limit = 0.86
-		border_darkness = 0.50
+		border_limit = 0.84
+		border_darkness = 0.54
 
 	for y in TILE_PIXEL_SIZE.y:
 		for x in TILE_PIXEL_SIZE.x:
@@ -216,16 +216,16 @@ func _draw_isometric_diamond(image: Image, offset_x: int, fill_color: Color, ter
 				var gradient_t: float = float(y) / float(TILE_PIXEL_SIZE.y - 1)
 				var tile_color: Color = fill_color
 				if gradient_t < 0.5:
-					tile_color = fill_color.lerp(light_tint, (0.5 - gradient_t) * 0.35)
+					tile_color = fill_color.lerp(light_tint, (0.5 - gradient_t) * 0.44)
 				else:
-					tile_color = fill_color.lerp(dark_tint, (gradient_t - 0.5) * 0.35)
+					tile_color = fill_color.lerp(dark_tint, (gradient_t - 0.5) * 0.46)
 
 				if distance_to_center > border_limit:
 					tile_color = tile_color.darkened(border_darkness)
-				elif distance_to_center > 0.81:
-					tile_color = tile_color.darkened(0.26)
+				elif distance_to_center > 0.79:
+					tile_color = tile_color.darkened(0.30)
 				elif y < int(TILE_PIXEL_SIZE.y * 0.30):
-					tile_color = tile_color.lightened(0.20)
+					tile_color = tile_color.lightened(0.26)
 
 				image.set_pixel(offset_x + x, y, tile_color)
 
@@ -237,10 +237,10 @@ func _draw_isometric_diamond(image: Image, offset_x: int, fill_color: Color, ter
 func _draw_diamond_edge_highlights(image: Image, offset_x: int, terrain_type: String) -> void:
 	var half_width: int = TILE_PIXEL_SIZE.x / 2
 	var half_height: int = TILE_PIXEL_SIZE.y / 2
-	var top_edge_color: Color = Color(1.0, 1.0, 1.0, 0.50)
-	var side_edge_color: Color = Color(0.15, 0.12, 0.22, 0.66)
+	var top_edge_color: Color = Color(1.0, 1.0, 1.0, 0.62)
+	var side_edge_color: Color = Color(0.15, 0.12, 0.22, 0.80)
 	if terrain_type == "cliff":
-		side_edge_color = Color(0.14, 0.12, 0.20, 0.74)
+		side_edge_color = Color(0.14, 0.12, 0.20, 0.86)
 
 	for y in range(TILE_PIXEL_SIZE.y):
 		var progress: float
@@ -271,11 +271,11 @@ func _draw_diamond_edge_highlights(image: Image, offset_x: int, terrain_type: St
 func _draw_tile_center_ridge(image: Image, offset_x: int, terrain_type: String) -> void:
 	var center_x: int = offset_x + TILE_PIXEL_SIZE.x / 2
 	var center_y: int = TILE_PIXEL_SIZE.y / 2
-	var ridge_color: Color = Color(1.0, 1.0, 1.0, 0.24)
-	var shadow_color: Color = Color(0.15, 0.12, 0.22, 0.24)
+	var ridge_color: Color = Color(1.0, 1.0, 1.0, 0.34)
+	var shadow_color: Color = Color(0.15, 0.12, 0.22, 0.30)
 	if terrain_type == "cliff":
-		ridge_color = Color(1.0, 1.0, 1.0, 0.18)
-		shadow_color = Color(0.13, 0.11, 0.20, 0.30)
+		ridge_color = Color(1.0, 1.0, 1.0, 0.24)
+		shadow_color = Color(0.13, 0.11, 0.20, 0.36)
 
 	for dx in range(-20, 21):
 		var normalized: float = absf(float(dx)) / 20.0
