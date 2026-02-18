@@ -256,6 +256,7 @@ var _puzzle_editor: Node
 
 
 func _ready() -> void:
+	_setup_background_gradient()
 	_setup_feed_sync()
 	_setup_collection_screen()
 	_setup_puzzle_editor()
@@ -1014,6 +1015,31 @@ func _on_puzzle_editor_published(_snapshot_id: String, status_text: String) -> v
 	subtitle_label.text = status_text
 
 
+func _setup_background_gradient() -> void:
+	var bg: ColorRect = get_node_or_null("Background")
+	if bg == null:
+		return
+	# Replace flat cream with a subtle top-to-bottom gradient
+	var gradient: Gradient = Gradient.new()
+	gradient.set_color(0, Color(0.96, 0.94, 0.92, 1.0))  # warm cream top
+	gradient.set_color(1, Color(0.90, 0.88, 0.87, 1.0))  # slightly deeper bottom
+	var gradient_texture: GradientTexture2D = GradientTexture2D.new()
+	gradient_texture.gradient = gradient
+	gradient_texture.fill_from = Vector2(0.5, 0.0)
+	gradient_texture.fill_to = Vector2(0.5, 1.0)
+	gradient_texture.width = 4
+	gradient_texture.height = 256
+	# Add TextureRect over the ColorRect
+	var tex_rect: TextureRect = TextureRect.new()
+	tex_rect.texture = gradient_texture
+	tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tex_rect.stretch_mode = TextureRect.STRETCH_TILE
+	tex_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	tex_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bg.add_sibling(tex_rect)
+	bg.visible = false  # hide old flat background
+
+
 func _style_fab_buttons() -> void:
 	var fab_size: Vector2 = Vector2(180.0, 76.0)
 	var pill_radius: int = int(fab_size.y * 0.5)
@@ -1056,6 +1082,6 @@ func _apply_pill_button(button: Button, base_color: Color, min_size: Vector2, co
 
 
 func _style_header_labels() -> void:
-	VisualTheme.apply_label_theme(title_label, Constants.FONT_SIZE_TITLE, Constants.COLOR_TEXT_DARK)
-	VisualTheme.apply_label_theme(subtitle_label, Constants.FONT_SIZE_SUBTITLE, Constants.COLOR_TEXT_DARK.lightened(0.24))
-	VisualTheme.apply_label_theme(swipe_hint_label, 17, Color(0.35, 0.33, 0.40, 0.60))
+	VisualTheme.apply_label_theme(title_label, 42, Constants.PALETTE_LAVENDER.darkened(0.15))
+	VisualTheme.apply_label_theme(subtitle_label, 19, Color(0.45, 0.42, 0.50, 0.75))
+	VisualTheme.apply_label_theme(swipe_hint_label, 17, Color(0.35, 0.33, 0.40, 0.55))

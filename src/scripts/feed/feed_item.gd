@@ -203,7 +203,7 @@ func _build_card_backdrop() -> void:
 	add_child(_card_backdrop)
 
 	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = Color(0.22, 0.25, 0.35, 0.05)
+	style.bg_color = Color(0.30, 0.30, 0.42, 0.06)
 	style.corner_radius_top_left = 28
 	style.corner_radius_top_right = 28
 	style.corner_radius_bottom_right = 28
