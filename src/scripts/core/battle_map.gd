@@ -84,12 +84,12 @@ const TERRAIN_EFFECTS: Dictionary = {
 }
 
 const TERRAIN_COLORS: Dictionary = {
-	"cloud": Color(0.74, 0.88, 1.0, 1.0),
-	"high_cloud": Color(0.52, 0.72, 0.96, 1.0),
-	"cotton_candy": Color(0.99, 0.67, 0.88, 1.0),
-	"puddle": Color(0.31, 0.60, 0.92, 1.0),
-	"cliff": Color(0.49, 0.55, 0.76, 1.0),
-	"mushroom": Color(0.80, 0.62, 0.94, 1.0)
+	"cloud": Color(0.92, 0.95, 1.0, 1.0),
+	"high_cloud": Color(0.81, 0.89, 1.0, 1.0),
+	"cotton_candy": Color(0.98, 0.74, 0.86, 1.0),
+	"puddle": Color(0.52, 0.78, 1.0, 1.0),
+	"cliff": Color(0.68, 0.68, 0.75, 1.0),
+	"mushroom": Color(0.89, 0.75, 0.98, 1.0)
 }
 
 @onready var tile_map_layer: TileMapLayer = $TileMapLayer
@@ -197,15 +197,15 @@ func _create_terrain_texture() -> Texture2D:
 
 
 func _draw_isometric_diamond(image: Image, offset_x: int, fill_color: Color, terrain_type: String) -> void:
-	var light_tint: Color = fill_color.lerp(Color(1.0, 1.0, 1.0, 1.0), 0.64)
-	var dark_tint: Color = fill_color.lerp(Color(0.0, 0.0, 0.0, 1.0), 0.38)
+	var light_tint: Color = fill_color.lerp(Color(1.0, 1.0, 1.0, 1.0), 0.2)
+	var dark_tint: Color = fill_color.lerp(Color(0.0, 0.0, 0.0, 1.0), 0.2)
 	var half_width: float = float(TILE_PIXEL_SIZE.x) * 0.5
 	var half_height: float = float(TILE_PIXEL_SIZE.y) * 0.5
-	var border_limit: float = 0.86
-	var border_darkness: float = 0.46
+	var border_limit: float = 0.96
+	var border_darkness: float = 0.22
 	if terrain_type == "cliff":
-		border_limit = 0.84
-		border_darkness = 0.54
+		border_limit = 0.90
+		border_darkness = 0.35
 
 	for y in TILE_PIXEL_SIZE.y:
 		for x in TILE_PIXEL_SIZE.x:
@@ -216,72 +216,16 @@ func _draw_isometric_diamond(image: Image, offset_x: int, fill_color: Color, ter
 				var gradient_t: float = float(y) / float(TILE_PIXEL_SIZE.y - 1)
 				var tile_color: Color = fill_color
 				if gradient_t < 0.5:
-					tile_color = fill_color.lerp(light_tint, (0.5 - gradient_t) * 0.44)
+					tile_color = fill_color.lerp(light_tint, (0.5 - gradient_t) * 0.35)
 				else:
-					tile_color = fill_color.lerp(dark_tint, (gradient_t - 0.5) * 0.46)
+					tile_color = fill_color.lerp(dark_tint, (gradient_t - 0.5) * 0.35)
 
 				if distance_to_center > border_limit:
 					tile_color = tile_color.darkened(border_darkness)
-				elif distance_to_center > 0.79:
-					tile_color = tile_color.darkened(0.30)
-				elif y < int(TILE_PIXEL_SIZE.y * 0.30):
-					tile_color = tile_color.lightened(0.26)
 
 				image.set_pixel(offset_x + x, y, tile_color)
 
-	_draw_diamond_edge_highlights(image, offset_x, terrain_type)
-	_draw_tile_center_ridge(image, offset_x, terrain_type)
 	_draw_terrain_symbol(image, offset_x, terrain_type, fill_color)
-
-
-func _draw_diamond_edge_highlights(image: Image, offset_x: int, terrain_type: String) -> void:
-	var half_width: int = TILE_PIXEL_SIZE.x / 2
-	var half_height: int = TILE_PIXEL_SIZE.y / 2
-	var top_edge_color: Color = Color(1.0, 1.0, 1.0, 0.62)
-	var side_edge_color: Color = Color(0.15, 0.12, 0.22, 0.80)
-	if terrain_type == "cliff":
-		side_edge_color = Color(0.14, 0.12, 0.20, 0.86)
-
-	for y in range(TILE_PIXEL_SIZE.y):
-		var progress: float
-		if y <= half_height:
-			progress = float(y) / float(maxi(1, half_height))
-		else:
-			progress = float(TILE_PIXEL_SIZE.y - 1 - y) / float(maxi(1, half_height))
-		var span: int = int(round(float(half_width) * maxf(0.0, progress)))
-		var left_x: int = clampi(half_width - span, 0, TILE_PIXEL_SIZE.x - 1)
-		var right_x: int = clampi(half_width + span, 0, TILE_PIXEL_SIZE.x - 1)
-
-		_set_terrain_pixel(image, offset_x + left_x, y, side_edge_color)
-		_set_terrain_pixel(image, offset_x + right_x, y, side_edge_color)
-		if left_x + 1 < TILE_PIXEL_SIZE.x:
-			_set_terrain_pixel(image, offset_x + left_x + 1, y, Color(side_edge_color.r, side_edge_color.g, side_edge_color.b, side_edge_color.a * 0.36))
-		if right_x - 1 >= 0:
-			_set_terrain_pixel(image, offset_x + right_x - 1, y, Color(side_edge_color.r, side_edge_color.g, side_edge_color.b, side_edge_color.a * 0.36))
-
-		if y <= half_height:
-			var inner_highlight_alpha: float = lerpf(0.38, 0.12, float(y) / float(maxi(1, half_height)))
-			var inner_highlight: Color = Color(top_edge_color.r, top_edge_color.g, top_edge_color.b, inner_highlight_alpha)
-			if left_x + 1 < TILE_PIXEL_SIZE.x:
-				_set_terrain_pixel(image, offset_x + left_x + 1, y, inner_highlight)
-			if right_x - 1 >= 0:
-				_set_terrain_pixel(image, offset_x + right_x - 1, y, inner_highlight)
-
-
-func _draw_tile_center_ridge(image: Image, offset_x: int, terrain_type: String) -> void:
-	var center_x: int = offset_x + TILE_PIXEL_SIZE.x / 2
-	var center_y: int = TILE_PIXEL_SIZE.y / 2
-	var ridge_color: Color = Color(1.0, 1.0, 1.0, 0.34)
-	var shadow_color: Color = Color(0.15, 0.12, 0.22, 0.30)
-	if terrain_type == "cliff":
-		ridge_color = Color(1.0, 1.0, 1.0, 0.24)
-		shadow_color = Color(0.13, 0.11, 0.20, 0.36)
-
-	for dx in range(-20, 21):
-		var normalized: float = absf(float(dx)) / 20.0
-		var ridge_y: int = center_y - int(round((1.0 - normalized) * 3.0))
-		_set_terrain_pixel(image, center_x + dx, ridge_y, ridge_color)
-		_set_terrain_pixel(image, center_x + dx, ridge_y + 1, shadow_color)
 
 
 func _draw_terrain_symbol(image: Image, offset_x: int, terrain_type: String, fill_color: Color) -> void:

@@ -22,51 +22,11 @@ const SWIPE_HINT_GAP_MIN: float = 56.0
 const SWIPE_HINT_GAP_MAX: float = 84.0
 const SCORE_TO_SWIPE_HINT_GAP: float = 20.0
 const SWIPE_HINT_TO_FAB_GAP: float = 20.0
-const SWIPE_HINT_PULSE_DURATION: float = 0.90
-const FAB_PROFILE_MIN_SIZE: Vector2 = Vector2(170.0, 74.0)
-const FAB_CREATE_MIN_SIZE: Vector2 = Vector2(212.0, 88.0)
-const FAB_LEADERBOARD_MIN_SIZE: Vector2 = Vector2(170.0, 74.0)
-const FAB_TEXT_PADDING_X: float = 18.0
-const FAB_TEXT_PADDING_Y: float = 12.0
 const FEED_BATCH_SIZE: int = 50
 const MIN_PLAYER_PUFFS_PER_SNAPSHOT: int = 2
 const MIN_ENEMY_PUFFS_PER_SNAPSHOT: int = 2
 const FALLBACK_PLAYER_DATA_PATH: String = "res://src/resources/puffs/base/flame_melee.tres"
 const FALLBACK_ENEMY_DATA_PATH: String = "res://src/resources/puffs/base/cloud_tank.tres"
-const AMBIENT_BLOB_LAYOUTS: Array[Dictionary] = [
-	{
-		"width_ratio": 0.84,
-		"height": 308.0,
-		"y_ratio": 0.14,
-		"x_offset": -64.0,
-		"radius": 112,
-		"color": Color(0.72, 0.84, 0.99, 0.52)
-	},
-	{
-		"width_ratio": 0.96,
-		"height": 334.0,
-		"y_ratio": 0.35,
-		"x_offset": 48.0,
-		"radius": 120,
-		"color": Color(0.99, 0.83, 0.77, 0.48)
-	},
-	{
-		"width_ratio": 0.90,
-		"height": 312.0,
-		"y_ratio": 0.60,
-		"x_offset": -28.0,
-		"radius": 112,
-		"color": Color(0.77, 0.90, 0.82, 0.46)
-	},
-	{
-		"width_ratio": 0.88,
-		"height": 320.0,
-		"y_ratio": 0.87,
-		"x_offset": 38.0,
-		"radius": 112,
-		"color": Color(0.93, 0.82, 0.99, 0.46)
-	}
-]
 
 const SUPPLEMENTAL_PLAYER_PUFFS: Array[Dictionary] = [
 	{
@@ -276,8 +236,6 @@ const FALLBACK_FEED_PUZZLE_SNAPSHOTS: Array[Dictionary] = [
 ]
 
 @onready var feed_track: Node2D = $FeedTrack
-@onready var background_rect: ColorRect = $Background
-@onready var top_margin: MarginContainer = $Hud/TopMargin
 @onready var title_label: Label = $Hud/TopMargin/TopStack/TitleLabel
 @onready var subtitle_label: Label = $Hud/TopMargin/TopStack/SubtitleLabel
 @onready var swipe_hint_label: Label = $Hud/SwipeHintLabel
@@ -295,12 +253,6 @@ var _feed_snapshots: Array[Dictionary] = []
 var _feed_sync: Node
 var _collection_screen: Node
 var _puzzle_editor: Node
-var _header_panel: PanelContainer
-var _swipe_hint_panel: PanelContainer
-var _swipe_hint_chevron_label: Label
-var _swipe_hint_pulse_tween: Tween
-var _atmosphere_lane_panel: PanelContainer
-var _ambient_blobs: Array[PanelContainer] = []
 
 
 func _ready() -> void:
@@ -310,14 +262,10 @@ func _ready() -> void:
 	_load_initial_snapshots()
 	_build_feed_items()
 	_connect_fab_actions()
-	_build_visual_atmosphere()
-	_ensure_swipe_hint_panel()
 	_style_header_labels()
 	_style_fab_buttons()
 	_layout_feed_items()
 	_layout_hud_overlays()
-	_layout_visual_atmosphere()
-	_restart_swipe_hint_animation()
 	_set_active_item(0, false)
 	# FeedItem builds score/status overlays in its own _ready; relayout HUD after that pass.
 	call_deferred("_layout_hud_overlays")
@@ -328,8 +276,6 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_node_ready():
 		_layout_feed_items()
 		_layout_hud_overlays()
-		_layout_visual_atmosphere()
-		_restart_swipe_hint_animation()
 		_snap_to_active_item(false)
 
 
@@ -478,7 +424,7 @@ func _load_initial_snapshots() -> void:
 		return
 
 	_feed_snapshots = cached_snapshots
-	subtitle_label.text = "Jump in. New puzzles roll in while you play."
+	subtitle_label.text = "Loaded %d cached puzzles. Syncing next batch..." % _feed_snapshots.size()
 
 
 func _fetch_next_batch_in_background() -> void:
@@ -495,7 +441,7 @@ func _fetch_next_batch_in_background() -> void:
 	var fetch_result: Dictionary = fetch_result_variant
 	if not bool(fetch_result.get("ok", false)):
 		if offset > 0:
-			subtitle_label.text = "Nice streak. Keep pushing this lineup."
+			subtitle_label.text = "Offline mode: playing cached feed items"
 		return
 
 	var batch_variant: Variant = fetch_result.get("items", [])
@@ -823,9 +769,9 @@ func _layout_feed_items() -> void:
 func _layout_hud_overlays() -> void:
 	var viewport_size: Vector2 = get_viewport_rect().size
 
-	profile_button.custom_minimum_size = FAB_PROFILE_MIN_SIZE
-	create_button.custom_minimum_size = FAB_CREATE_MIN_SIZE
-	leaderboard_button.custom_minimum_size = FAB_LEADERBOARD_MIN_SIZE
+	profile_button.custom_minimum_size = Vector2(180.0, 76.0)
+	create_button.custom_minimum_size = Vector2(180.0, 76.0)
+	leaderboard_button.custom_minimum_size = Vector2(180.0, 76.0)
 
 	profile_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	create_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -870,16 +816,6 @@ func _layout_hud_overlays() -> void:
 	swipe_hint_label.offset_right = SWIPE_HINT_WIDTH * 0.5
 	swipe_hint_label.offset_top = swipe_top
 	swipe_hint_label.offset_bottom = swipe_bottom
-	if _swipe_hint_panel != null:
-		var panel_padding_x: float = 24.0
-		var panel_padding_top: float = 28.0
-		var panel_padding_bottom: float = 10.0
-		_swipe_hint_panel.offset_left = swipe_hint_label.offset_left - panel_padding_x
-		_swipe_hint_panel.offset_right = swipe_hint_label.offset_right + panel_padding_x
-		_swipe_hint_panel.offset_top = swipe_hint_label.offset_top - panel_padding_top
-		_swipe_hint_panel.offset_bottom = swipe_hint_label.offset_bottom + panel_padding_bottom
-
-	_set_swipe_hint_visible(_should_show_swipe_hint())
 
 
 func _resolve_active_score_panel_bottom_y() -> float:
@@ -895,32 +831,6 @@ func _resolve_active_score_panel_bottom_y() -> float:
 	return NAN
 
 
-func _should_show_swipe_hint() -> bool:
-	var active_feed_item: Node2D = _get_active_feed_item()
-	if active_feed_item == null:
-		return true
-	if active_feed_item.has_method("should_show_swipe_hint"):
-		return bool(active_feed_item.call("should_show_swipe_hint"))
-	return _active_item_can_advance()
-
-
-func _set_swipe_hint_visible(is_visible: bool) -> void:
-	swipe_hint_label.visible = is_visible
-	if _swipe_hint_panel != null:
-		_swipe_hint_panel.visible = is_visible
-	if _swipe_hint_chevron_label != null:
-		_swipe_hint_chevron_label.visible = is_visible
-
-	if is_visible:
-		if _swipe_hint_pulse_tween == null or not _swipe_hint_pulse_tween.is_running():
-			_restart_swipe_hint_animation()
-		return
-
-	if _swipe_hint_pulse_tween != null and _swipe_hint_pulse_tween.is_running():
-		_swipe_hint_pulse_tween.kill()
-	_swipe_hint_pulse_tween = null
-
-
 func _sync_feed_item_activation() -> void:
 	for item_index in _feed_items.size():
 		var feed_item: Node2D = _feed_items[item_index]
@@ -931,11 +841,11 @@ func _sync_feed_item_activation() -> void:
 
 func _update_header_text() -> void:
 	var total_items: int = _feed_items.size()
-	title_label.text = "Puff Tactics"
+	title_label.text = "Puff Tactics Feed (%d/%d)" % [_active_item_index + 1, total_items]
 
 	var active_feed_item: Node2D = _get_active_feed_item()
 	if active_feed_item == null:
-		subtitle_label.text = "Puzzle %d of %d" % [_active_item_index + 1, maxi(1, total_items)]
+		subtitle_label.text = "Swipe up for the next tactical snapshot"
 		return
 
 	if active_feed_item.has_method("get_status_text"):
@@ -944,7 +854,7 @@ func _update_header_text() -> void:
 			subtitle_label.text = status_text
 			return
 
-	subtitle_label.text = "Puzzle %d of %d" % [_active_item_index + 1, maxi(1, total_items)]
+	subtitle_label.text = "Solve the turn, then swipe to the next puzzle"
 
 
 func _active_track_position_y() -> float:
@@ -973,7 +883,7 @@ func _get_active_feed_item() -> Node2D:
 
 
 func _update_subtitle_for_locked_swipe() -> void:
-	subtitle_label.text = "Finish this turn first, then swipe up."
+	subtitle_label.text = "Finish this 1-turn puzzle before swiping"
 
 
 func _on_feed_item_cycle_completed(score: int, cycle_duration_seconds: float, item_index: int) -> void:
@@ -981,8 +891,7 @@ func _on_feed_item_cycle_completed(score: int, cycle_duration_seconds: float, it
 
 	if item_index != _active_item_index:
 		return
-	subtitle_label.text = "Score %d locked. Swipe up for the next challenge." % score
-	_set_swipe_hint_visible(_should_show_swipe_hint())
+	subtitle_label.text = "Score %d in %.1fs. Swipe up for next." % [score, cycle_duration_seconds]
 
 
 func _on_feed_item_status_changed(status_text: String, swipe_unlocked: bool, item_index: int) -> void:
@@ -990,10 +899,8 @@ func _on_feed_item_status_changed(status_text: String, swipe_unlocked: bool, ite
 		return
 	if swipe_unlocked:
 		subtitle_label.text = "%s" % status_text
-		_set_swipe_hint_visible(_should_show_swipe_hint())
 		return
 	subtitle_label.text = status_text
-	_set_swipe_hint_visible(_should_show_swipe_hint())
 
 
 func _submit_feed_result(item_index: int, score: int, cycle_duration_seconds: float) -> void:
@@ -1026,7 +933,7 @@ func _connect_fab_actions() -> void:
 
 func _on_profile_button_pressed() -> void:
 	if _is_puzzle_editor_visible():
-		subtitle_label.text = "Close Creator before opening your collection."
+		subtitle_label.text = "Close the UGC editor before opening collection."
 		return
 
 	if _collection_screen == null:
@@ -1046,15 +953,15 @@ func _on_profile_button_pressed() -> void:
 		_collection_screen.call("show_collection")
 	else:
 		collection_canvas.visible = true
-	subtitle_label.text = "Collection open: check puff levels and accessories."
+	subtitle_label.text = "Collection open: view puff levels and owned accessories"
 
 
 func _on_create_button_pressed() -> void:
 	if _puzzle_editor == null:
-		subtitle_label.text = "Creator is taking a quick break. Try again in a moment."
+		subtitle_label.text = "UGC puzzle editor scene is unavailable."
 		return
 	if not (_puzzle_editor is CanvasItem):
-		subtitle_label.text = "Creator needs a quick reset. Please reopen it."
+		subtitle_label.text = "UGC puzzle editor failed to initialize."
 		return
 
 	if _is_collection_visible():
@@ -1076,13 +983,13 @@ func _on_create_button_pressed() -> void:
 		_puzzle_editor.call("show_editor")
 	else:
 		puzzle_editor_canvas.visible = true
-	subtitle_label.text = "Creator open: build a puzzle, test it, then publish."
+	subtitle_label.text = "UGC editor open: drag terrain/puffs, test-play, then publish."
 
 
 func _on_leaderboard_button_pressed() -> void:
 	var scene_change_error: Error = get_tree().change_scene_to_file(STORY_CHAPTER_1_SCENE_PATH)
 	if scene_change_error != OK:
-		subtitle_label.text = "Story mode isn't ready yet. Stay tuned."
+		subtitle_label.text = "Story mode is unavailable in this build."
 
 
 func _is_collection_visible() -> bool:
@@ -1108,648 +1015,12 @@ func _on_puzzle_editor_published(_snapshot_id: String, status_text: String) -> v
 
 
 func _style_fab_buttons() -> void:
-	var profile_base: Color = Constants.PALETTE_SKY
-	var create_base: Color = Constants.PALETTE_PEACH.lerp(Constants.PALETTE_PINK, 0.20)
-	var leaderboard_base: Color = Constants.PALETTE_MINT
-
-	VisualTheme.apply_button_theme(profile_button, profile_base, Constants.COLOR_TEXT_DARK, FAB_PROFILE_MIN_SIZE, 20)
-	VisualTheme.apply_button_theme(create_button, create_base, Constants.COLOR_TEXT_DARK, FAB_CREATE_MIN_SIZE, 22)
-	VisualTheme.apply_button_theme(leaderboard_button, leaderboard_base, Constants.COLOR_TEXT_DARK, FAB_LEADERBOARD_MIN_SIZE, 20)
-	_apply_fab_elevation(profile_button, profile_base)
-	_apply_fab_elevation(create_button, create_base, true)
-	_apply_fab_elevation(leaderboard_button, leaderboard_base)
+	VisualTheme.apply_button_theme(profile_button, Constants.PALETTE_SKY, Color.WHITE, Vector2(180.0, 76.0), Constants.FONT_SIZE_BUTTON)
+	VisualTheme.apply_button_theme(create_button, Constants.PALETTE_PEACH, Color.WHITE, Vector2(180.0, 76.0), Constants.FONT_SIZE_BUTTON)
+	VisualTheme.apply_button_theme(leaderboard_button, Constants.PALETTE_MINT, Color.WHITE, Vector2(180.0, 76.0), Constants.FONT_SIZE_BUTTON)
 
 
 func _style_header_labels() -> void:
-	VisualTheme.apply_label_theme(title_label, Constants.FONT_SIZE_TITLE + 8, Color(0.10, 0.07, 0.18, 1.0))
-	VisualTheme.apply_label_theme(subtitle_label, Constants.FONT_SIZE_SUBTITLE + 4, Color(0.15, 0.10, 0.24, 0.96))
-	VisualTheme.apply_label_theme(swipe_hint_label, Constants.FONT_SIZE_BODY, Color(0.19, 0.13, 0.28, 0.64))
-	title_label.add_theme_constant_override("outline_size", 4)
-	title_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.88))
-	subtitle_label.add_theme_constant_override("outline_size", 2)
-	subtitle_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.74))
-	swipe_hint_label.add_theme_constant_override("outline_size", 1)
-	swipe_hint_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.56))
-	swipe_hint_label.text = "Swipe up"
-
-
-func _ensure_swipe_hint_panel() -> void:
-	if _swipe_hint_panel != null:
-		return
-	var hud: Control = swipe_hint_label.get_parent() as Control
-	if hud == null:
-		return
-
-	_swipe_hint_panel = PanelContainer.new()
-	_swipe_hint_panel.name = "SwipeHintPanel"
-	_swipe_hint_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_swipe_hint_panel.layout_mode = 1
-	_swipe_hint_panel.anchors_preset = 10
-	_swipe_hint_panel.anchor_left = 0.5
-	_swipe_hint_panel.anchor_top = 1.0
-	_swipe_hint_panel.anchor_right = 0.5
-	_swipe_hint_panel.anchor_bottom = 1.0
-	_swipe_hint_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_swipe_hint_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_swipe_hint_panel.add_theme_stylebox_override(
-		"panel",
-		_build_rounded_shadow_stylebox(
-			Color(0.99, 0.98, 1.0, 0.95),
-			22,
-			Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.40),
-			10,
-			Color(0.16, 0.12, 0.20, 0.12),
-			1,
-			2.0
-		)
-	)
-	hud.add_child(_swipe_hint_panel)
-	hud.move_child(_swipe_hint_panel, swipe_hint_label.get_index())
-
-	_swipe_hint_chevron_label = Label.new()
-	_swipe_hint_chevron_label.name = "SwipeHintChevron"
-	_swipe_hint_chevron_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_swipe_hint_chevron_label.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	_swipe_hint_chevron_label.offset_top = 2.0
-	_swipe_hint_chevron_label.offset_bottom = 34.0
-	_swipe_hint_chevron_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_swipe_hint_chevron_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_swipe_hint_chevron_label.text = "^"
-	_swipe_hint_chevron_label.add_theme_font_size_override("font_size", 30)
-	_swipe_hint_chevron_label.add_theme_color_override("font_color", Color(0.22, 0.15, 0.33, 0.86))
-	_swipe_hint_chevron_label.add_theme_constant_override("outline_size", 1)
-	_swipe_hint_chevron_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.56))
-	_swipe_hint_panel.add_child(_swipe_hint_chevron_label)
-
-
-func _build_visual_atmosphere() -> void:
-	if background_rect == null:
-		return
-
-	_ensure_background_decor()
-	_ensure_atmosphere_lane_panel()
-
-	if _header_panel == null:
-		_header_panel = PanelContainer.new()
-		_header_panel.name = "HeaderPanel"
-		_header_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_header_panel.add_theme_stylebox_override(
-			"panel",
-			_build_rounded_shadow_stylebox(
-				Color(0.99, 0.98, 1.0, 0.99),
-				30,
-				Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.62),
-				14,
-				Color(0.14, 0.12, 0.19, 0.17)
-			)
-		)
-		top_margin.add_child(_header_panel)
-		top_margin.move_child(_header_panel, 0)
-		_header_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
-		_header_panel.offset_left = -8.0
-		_header_panel.offset_right = 8.0
-		_header_panel.offset_top = -4.0
-		_header_panel.offset_bottom = 8.0
-
-	_build_header_panel_decor()
-
-	if _ambient_blobs.is_empty():
-		for blob_spec in AMBIENT_BLOB_LAYOUTS:
-			var blob: PanelContainer = PanelContainer.new()
-			blob.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			var blob_color: Color = blob_spec.get("color", Color(1.0, 1.0, 1.0, 0.10))
-			var blob_radius: int = int(blob_spec.get("radius", 88))
-			var blob_border: Color = blob_color.lightened(0.22)
-			blob_border.a = minf(0.40, blob_color.a + 0.10)
-			blob.add_theme_stylebox_override(
-				"panel",
-				_build_rounded_shadow_stylebox(
-					blob_color,
-					blob_radius,
-					blob_border,
-					12,
-					Color(0.16, 0.12, 0.20, 0.12),
-					1,
-					2.0
-				)
-			)
-			_decorate_ambient_blob(blob, _ambient_blobs.size())
-			background_rect.add_child(blob)
-			_ambient_blobs.append(blob)
-
-	_layout_visual_atmosphere()
-
-
-func _ensure_background_decor() -> void:
-	if background_rect.get_node_or_null("AtmosphereGradient") == null:
-		var gradient_rect: TextureRect = TextureRect.new()
-		gradient_rect.name = "AtmosphereGradient"
-		gradient_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		gradient_rect.texture = _create_background_gradient_texture()
-		gradient_rect.stretch_mode = TextureRect.STRETCH_SCALE
-		gradient_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		gradient_rect.modulate = Color(1.0, 1.0, 1.0, 0.98)
-		gradient_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-		background_rect.add_child(gradient_rect)
-		background_rect.move_child(gradient_rect, 0)
-
-	if background_rect.get_node_or_null("AtmospherePattern") == null:
-		var pattern_rect: TextureRect = TextureRect.new()
-		pattern_rect.name = "AtmospherePattern"
-		pattern_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		pattern_rect.texture = _create_background_pattern_texture()
-		pattern_rect.stretch_mode = TextureRect.STRETCH_SCALE
-		pattern_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		pattern_rect.modulate = Color(1.0, 1.0, 1.0, 0.84)
-		pattern_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-		background_rect.add_child(pattern_rect)
-		background_rect.move_child(pattern_rect, 1)
-
-
-func _ensure_atmosphere_lane_panel() -> void:
-	if _atmosphere_lane_panel != null and is_instance_valid(_atmosphere_lane_panel):
-		return
-
-	_atmosphere_lane_panel = PanelContainer.new()
-	_atmosphere_lane_panel.name = "AtmosphereLane"
-	_atmosphere_lane_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_atmosphere_lane_panel.add_theme_stylebox_override(
-		"panel",
-		_build_rounded_shadow_stylebox(
-			Color(1.0, 0.99, 1.0, 0.66),
-			52,
-			Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.24),
-			0,
-			Color(0.0, 0.0, 0.0, 0.0),
-			1,
-			0.0
-		)
-	)
-	background_rect.add_child(_atmosphere_lane_panel)
-	background_rect.move_child(_atmosphere_lane_panel, 2)
-	_build_atmosphere_lane_decor()
-
-
-func _build_atmosphere_lane_decor() -> void:
-	if _atmosphere_lane_panel == null:
-		return
-	if _atmosphere_lane_panel.get_node_or_null("LaneGradient") == null:
-		var gradient_rect: TextureRect = TextureRect.new()
-		gradient_rect.name = "LaneGradient"
-		gradient_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		gradient_rect.texture = _create_lane_gradient_texture()
-		gradient_rect.stretch_mode = TextureRect.STRETCH_SCALE
-		gradient_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		gradient_rect.modulate = Color(1.0, 1.0, 1.0, 0.96)
-		gradient_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-		_atmosphere_lane_panel.add_child(gradient_rect)
-		_atmosphere_lane_panel.move_child(gradient_rect, 0)
-
-	if _atmosphere_lane_panel.get_node_or_null("LanePattern") == null:
-		var pattern_rect: TextureRect = TextureRect.new()
-		pattern_rect.name = "LanePattern"
-		pattern_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		pattern_rect.texture = _create_lane_pattern_texture()
-		pattern_rect.stretch_mode = TextureRect.STRETCH_SCALE
-		pattern_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		pattern_rect.modulate = Color(1.0, 1.0, 1.0, 0.82)
-		pattern_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-		_atmosphere_lane_panel.add_child(pattern_rect)
-		_atmosphere_lane_panel.move_child(pattern_rect, 1)
-
-
-func _create_lane_gradient_texture() -> Texture2D:
-	var gradient: Gradient = Gradient.new()
-	gradient.offsets = PackedFloat32Array([0.0, 0.48, 1.0])
-	gradient.colors = PackedColorArray([
-		Color(1.0, 0.97, 0.99, 0.80),
-		Color(0.98, 0.97, 1.0, 0.68),
-		Color(0.98, 1.0, 0.99, 0.58)
-	])
-
-	var gradient_texture: GradientTexture2D = GradientTexture2D.new()
-	gradient_texture.gradient = gradient
-	gradient_texture.fill = GradientTexture2D.FILL_LINEAR
-	gradient_texture.fill_from = Vector2(0.5, 0.0)
-	gradient_texture.fill_to = Vector2(0.5, 1.0)
-	gradient_texture.width = 4
-	gradient_texture.height = 256
-	return gradient_texture
-
-
-func _create_lane_pattern_texture() -> Texture2D:
-	var width: int = 256
-	var height: int = 512
-	var image: Image = Image.create(width, height, false, Image.FORMAT_RGBA8)
-	image.fill(Color(0.0, 0.0, 0.0, 0.0))
-
-	var wave_color: Color = Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.30)
-	var dot_color: Color = Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.24)
-	var grid_color: Color = Color(Constants.PALETTE_MINT.r, Constants.PALETTE_MINT.g, Constants.PALETTE_MINT.b, 0.22)
-	var sparkle_color: Color = Color(1.0, 1.0, 1.0, 0.28)
-	for y in range(16, height, 28):
-		for x in range(width):
-			var wave_y: int = y + int(round(sin(float(x) * 0.07 + float(y) * 0.02) * 1.8))
-			if wave_y >= 0 and wave_y < height:
-				image.set_pixel(x, wave_y, wave_color)
-
-	for y in range(14, height, 32):
-		for x in range(12, width, 28):
-			image.set_pixel(x, y, dot_color)
-			if x + 1 < width:
-				image.set_pixel(x + 1, y, Color(dot_color.r, dot_color.g, dot_color.b, 0.10))
-			if y + 1 < height:
-				image.set_pixel(x, y + 1, Color(dot_color.r, dot_color.g, dot_color.b, 0.10))
-
-	var cell_half_width: int = 18
-	var cell_half_height: int = 10
-	for row in range(-2, int(ceil(float(height) / float(cell_half_height))) + 3):
-		var center_y: int = row * cell_half_height
-		var offset_x: int = cell_half_width if (row & 1) != 0 else 0
-		for column in range(-2, int(ceil(float(width) / float(cell_half_width * 2.0))) + 3):
-			var center_x: int = column * (cell_half_width * 2) + offset_x
-			for local_x in range(-cell_half_width, cell_half_width + 1):
-				var normalized_x: float = absf(float(local_x)) / float(maxi(1, cell_half_width))
-				var y_delta: int = int(round((1.0 - normalized_x) * float(cell_half_height)))
-				var top_y: int = center_y - y_delta
-				var bottom_y: int = center_y + y_delta
-				var draw_color: Color = grid_color
-				if (column + row) % 4 == 0:
-					draw_color = Color(grid_color.r, grid_color.g, grid_color.b, grid_color.a + 0.06)
-				if top_y >= 0 and top_y < height and center_x + local_x >= 0 and center_x + local_x < width:
-					image.set_pixel(center_x + local_x, top_y, draw_color)
-				if bottom_y >= 0 and bottom_y < height and center_x + local_x >= 0 and center_x + local_x < width:
-					image.set_pixel(center_x + local_x, bottom_y, draw_color)
-			if (column + row) % 5 == 0 and center_x >= 0 and center_x < width and center_y >= 0 and center_y < height:
-				image.set_pixel(center_x, center_y, sparkle_color)
-
-	return ImageTexture.create_from_image(image)
-
-
-func _build_header_panel_decor() -> void:
-	if _header_panel == null:
-		return
-	if _header_panel.get_node_or_null("HeaderGradient") != null:
-		return
-
-	var gradient_rect: TextureRect = TextureRect.new()
-	gradient_rect.name = "HeaderGradient"
-	gradient_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	gradient_rect.texture = _create_header_panel_gradient_texture()
-	gradient_rect.stretch_mode = TextureRect.STRETCH_SCALE
-	gradient_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	gradient_rect.modulate = Color(1.0, 1.0, 1.0, 0.95)
-	gradient_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_header_panel.add_child(gradient_rect)
-	_header_panel.move_child(gradient_rect, 0)
-
-	var pattern_rect: TextureRect = TextureRect.new()
-	pattern_rect.name = "HeaderPattern"
-	pattern_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	pattern_rect.texture = _create_header_panel_pattern_texture()
-	pattern_rect.stretch_mode = TextureRect.STRETCH_SCALE
-	pattern_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	pattern_rect.modulate = Color(1.0, 1.0, 1.0, 0.52)
-	pattern_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_header_panel.add_child(pattern_rect)
-	_header_panel.move_child(pattern_rect, 1)
-
-
-func _create_header_panel_gradient_texture() -> Texture2D:
-	var gradient: Gradient = Gradient.new()
-	gradient.offsets = PackedFloat32Array([0.0, 0.5, 1.0])
-	gradient.colors = PackedColorArray([
-		Color(1.0, 0.96, 0.99, 0.92),
-		Color(0.97, 0.95, 1.0, 0.76),
-		Color(0.96, 0.99, 1.0, 0.66)
-	])
-
-	var gradient_texture: GradientTexture2D = GradientTexture2D.new()
-	gradient_texture.gradient = gradient
-	gradient_texture.fill = GradientTexture2D.FILL_LINEAR
-	gradient_texture.fill_from = Vector2(0.5, 0.0)
-	gradient_texture.fill_to = Vector2(0.5, 1.0)
-	gradient_texture.width = 4
-	gradient_texture.height = 128
-	return gradient_texture
-
-
-func _create_background_gradient_texture() -> Texture2D:
-	var gradient: Gradient = Gradient.new()
-	gradient.offsets = PackedFloat32Array([0.0, 0.45, 1.0])
-	gradient.colors = PackedColorArray([
-		Color(1.0, 0.98, 0.99, 0.96),
-		Color(0.99, 0.97, 0.95, 0.88),
-		Color(0.98, 0.97, 1.0, 0.92)
-	])
-
-	var gradient_texture: GradientTexture2D = GradientTexture2D.new()
-	gradient_texture.gradient = gradient
-	gradient_texture.fill = GradientTexture2D.FILL_LINEAR
-	gradient_texture.fill_from = Vector2(0.5, 0.0)
-	gradient_texture.fill_to = Vector2(0.5, 1.0)
-	gradient_texture.width = 4
-	gradient_texture.height = 256
-	return gradient_texture
-
-
-func _create_background_pattern_texture() -> Texture2D:
-	var width: int = 256
-	var height: int = 512
-	var image: Image = Image.create(width, height, false, Image.FORMAT_RGBA8)
-	image.fill(Color(0.0, 0.0, 0.0, 0.0))
-
-	var line_color: Color = Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.27)
-	var dot_color: Color = Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.34)
-	for y in range(20, height, 34):
-		for x in range(width):
-			var wave_y: int = y + int(round(sin(float(x) * 0.07 + float(y) * 0.02) * 1.8))
-			if wave_y >= 0 and wave_y < height:
-				image.set_pixel(x, wave_y, line_color)
-
-	for y in range(18, height, 38):
-		for x in range(12, width, 30):
-			image.set_pixel(x, y, dot_color)
-			if x + 1 < width:
-				image.set_pixel(x + 1, y, Color(dot_color.r, dot_color.g, dot_color.b, 0.12))
-			if y + 1 < height:
-				image.set_pixel(x, y + 1, Color(dot_color.r, dot_color.g, dot_color.b, 0.12))
-
-	for stripe in range(6):
-		var stripe_y: int = int(float(height) * (0.12 + float(stripe) * 0.15))
-		if stripe_y < 0 or stripe_y >= height:
-			continue
-		for x in range(width):
-			var drift_y: int = stripe_y + int(round(sin(float(x) * 0.03 + float(stripe) * 0.9) * 2.4))
-			if drift_y < 0 or drift_y >= height:
-				continue
-			image.set_pixel(
-				x,
-				drift_y,
-				Color(Constants.PALETTE_MINT.r, Constants.PALETTE_MINT.g, Constants.PALETTE_MINT.b, 0.16)
-			)
-
-	return ImageTexture.create_from_image(image)
-
-
-func _create_header_panel_pattern_texture() -> Texture2D:
-	var width: int = 256
-	var height: int = 128
-	var image: Image = Image.create(width, height, false, Image.FORMAT_RGBA8)
-	image.fill(Color(0.0, 0.0, 0.0, 0.0))
-
-	var wave_color: Color = Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.18)
-	var dot_color: Color = Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.18)
-
-	for y in range(10, height, 20):
-		for x in range(width):
-			var wave_y: int = y + int(round(sin(float(x) * 0.06) * 2.0))
-			if wave_y >= 0 and wave_y < height:
-				image.set_pixel(x, wave_y, wave_color)
-
-	for y in range(12, height, 24):
-		for x in range(10, width, 26):
-			if x < width and y < height:
-				image.set_pixel(x, y, dot_color)
-			if x + 1 < width:
-				image.set_pixel(x + 1, y, Color(dot_color.r, dot_color.g, dot_color.b, 0.12))
-			if y + 1 < height:
-				image.set_pixel(x, y + 1, Color(dot_color.r, dot_color.g, dot_color.b, 0.12))
-
-	return ImageTexture.create_from_image(image)
-
-
-func _decorate_ambient_blob(blob: PanelContainer, blob_index: int) -> void:
-	if blob == null:
-		return
-	if blob.get_node_or_null("BlobGradient") != null:
-		return
-
-	var gradient_rect: TextureRect = TextureRect.new()
-	gradient_rect.name = "BlobGradient"
-	gradient_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	gradient_rect.texture = _create_blob_gradient_texture(blob_index)
-	gradient_rect.stretch_mode = TextureRect.STRETCH_SCALE
-	gradient_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	gradient_rect.modulate = Color(1.0, 1.0, 1.0, 0.99)
-	gradient_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-	blob.add_child(gradient_rect)
-	blob.move_child(gradient_rect, 0)
-
-	var pattern_rect: TextureRect = TextureRect.new()
-	pattern_rect.name = "BlobPattern"
-	pattern_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	pattern_rect.texture = _create_blob_pattern_texture(blob_index)
-	pattern_rect.stretch_mode = TextureRect.STRETCH_SCALE
-	pattern_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	pattern_rect.modulate = Color(1.0, 1.0, 1.0, 0.74)
-	pattern_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-	blob.add_child(pattern_rect)
-	blob.move_child(pattern_rect, 1)
-
-
-func _create_blob_gradient_texture(blob_index: int) -> Texture2D:
-	var base_color: Color = Color(0.99, 0.98, 1.0, 0.62)
-	match blob_index:
-		0:
-			base_color = Color(0.88, 0.94, 1.0, 0.70)
-		1:
-			base_color = Color(1.0, 0.90, 0.84, 0.64)
-		2:
-			base_color = Color(0.88, 0.98, 0.92, 0.64)
-		3:
-			base_color = Color(0.95, 0.90, 1.0, 0.62)
-		_:
-			pass
-
-	var gradient: Gradient = Gradient.new()
-	gradient.offsets = PackedFloat32Array([0.0, 0.62, 1.0])
-	gradient.colors = PackedColorArray([
-		base_color.lightened(0.18),
-		base_color,
-		base_color.darkened(0.12)
-	])
-
-	var gradient_texture: GradientTexture2D = GradientTexture2D.new()
-	gradient_texture.gradient = gradient
-	gradient_texture.fill = GradientTexture2D.FILL_LINEAR
-	gradient_texture.fill_from = Vector2(0.2, 0.0)
-	gradient_texture.fill_to = Vector2(0.8, 1.0)
-	gradient_texture.width = 4
-	gradient_texture.height = 128
-	return gradient_texture
-
-
-func _create_blob_pattern_texture(blob_index: int) -> Texture2D:
-	var width: int = 192
-	var height: int = 96
-	var image: Image = Image.create(width, height, false, Image.FORMAT_RGBA8)
-	image.fill(Color(0.0, 0.0, 0.0, 0.0))
-
-	var stripe_color: Color = Color(1.0, 1.0, 1.0, 0.34)
-	var accent_color: Color = Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.34)
-	if blob_index == 1:
-		accent_color = Color(Constants.PALETTE_PEACH.r, Constants.PALETTE_PEACH.g, Constants.PALETTE_PEACH.b, 0.28)
-	elif blob_index == 2:
-		accent_color = Color(Constants.PALETTE_MINT.r, Constants.PALETTE_MINT.g, Constants.PALETTE_MINT.b, 0.28)
-	elif blob_index == 3:
-		accent_color = Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.28)
-
-	for y in range(8, height, 16):
-		for x in range(width):
-			var row_y: int = y + int(round(sin(float(x) * 0.09 + float(blob_index) * 0.7) * 1.4))
-			if row_y >= 0 and row_y < height:
-				image.set_pixel(x, row_y, stripe_color)
-
-	for y in range(10, height, 22):
-		for x in range(10, width, 26):
-			image.set_pixel(x, y, accent_color)
-			if x + 1 < width:
-				image.set_pixel(x + 1, y, Color(accent_color.r, accent_color.g, accent_color.b, 0.16))
-			if y + 1 < height:
-				image.set_pixel(x, y + 1, Color(accent_color.r, accent_color.g, accent_color.b, 0.16))
-
-	for y in range(14, height, 28):
-		for x in range(18, width, 34):
-			image.set_pixel(x, y, Color(1.0, 1.0, 1.0, 0.22))
-			if x + 1 < width:
-				image.set_pixel(x + 1, y, Color(1.0, 1.0, 1.0, 0.10))
-			if y + 1 < height:
-				image.set_pixel(x, y + 1, Color(1.0, 1.0, 1.0, 0.10))
-
-	var tile_half_width: int = 14
-	var tile_half_height: int = 8
-	for row in range(-1, int(ceil(float(height) / float(tile_half_height))) + 2):
-		var row_center_y: int = row * tile_half_height
-		var row_x_offset: int = tile_half_width if (row & 1) != 0 else 0
-		for column in range(-1, int(ceil(float(width) / float(tile_half_width * 2.0))) + 2):
-			if (row + column + blob_index) % 3 != 0:
-				continue
-			var center_x: int = column * (tile_half_width * 2) + row_x_offset
-			var center_y: int = row_center_y
-			var line_color: Color = Color(accent_color.r, accent_color.g, accent_color.b, 0.24)
-			for local_x in range(-tile_half_width, tile_half_width + 1):
-				var normalized_x: float = absf(float(local_x)) / float(maxi(1, tile_half_width))
-				var y_offset: int = int(round((1.0 - normalized_x) * float(tile_half_height)))
-				var top_y: int = center_y - y_offset
-				var bottom_y: int = center_y + y_offset
-				var px: int = center_x + local_x
-				if px < 0 or px >= width:
-					continue
-				if top_y >= 0 and top_y < height:
-					image.set_pixel(px, top_y, line_color)
-				if bottom_y >= 0 and bottom_y < height:
-					image.set_pixel(px, bottom_y, line_color)
-
-	return ImageTexture.create_from_image(image)
-
-
-func _layout_visual_atmosphere() -> void:
-	var viewport_size: Vector2 = get_viewport_rect().size
-	if _atmosphere_lane_panel != null:
-		var lane_width: float = viewport_size.x * 0.94
-		var lane_height: float = viewport_size.y * 0.86
-		_atmosphere_lane_panel.size = Vector2(lane_width, lane_height)
-		_atmosphere_lane_panel.position = Vector2(
-			(viewport_size.x - lane_width) * 0.5,
-			viewport_size.y * 0.10
-		)
-
-	for index in _ambient_blobs.size():
-		var blob: PanelContainer = _ambient_blobs[index]
-		var blob_spec: Dictionary = AMBIENT_BLOB_LAYOUTS[index]
-		var blob_width: float = viewport_size.x * float(blob_spec.get("width_ratio", 0.8))
-		var blob_height: float = float(blob_spec.get("height", 180.0))
-		var blob_y_center: float = viewport_size.y * float(blob_spec.get("y_ratio", 0.4))
-		var blob_x_offset: float = float(blob_spec.get("x_offset", 0.0))
-		blob.size = Vector2(blob_width, blob_height)
-		blob.position = Vector2(
-			(viewport_size.x - blob_width) * 0.5 + blob_x_offset,
-			blob_y_center - blob_height * 0.5
-		)
-
-
-func _build_rounded_shadow_stylebox(
-	background_color: Color,
-	corner_radius: int,
-	border_color: Color,
-	shadow_size: int,
-	shadow_color: Color,
-	border_width: int = 1,
-	shadow_offset_y: float = 3.0
-) -> StyleBoxFlat:
-	var stylebox: StyleBoxFlat = StyleBoxFlat.new()
-	stylebox.bg_color = background_color
-	stylebox.corner_radius_top_left = corner_radius
-	stylebox.corner_radius_top_right = corner_radius
-	stylebox.corner_radius_bottom_left = corner_radius
-	stylebox.corner_radius_bottom_right = corner_radius
-	stylebox.border_width_left = border_width
-	stylebox.border_width_top = border_width
-	stylebox.border_width_right = border_width
-	stylebox.border_width_bottom = border_width
-	stylebox.border_color = border_color
-	stylebox.shadow_color = shadow_color
-	stylebox.shadow_size = shadow_size
-	stylebox.shadow_offset = Vector2(0.0, shadow_offset_y)
-	return stylebox
-
-
-func _apply_fab_elevation(button: Button, base_color: Color, is_primary: bool = false) -> void:
-	var button_states: Array[StringName] = [&"normal", &"hover", &"pressed", &"disabled"]
-	var button_height: float = button.custom_minimum_size.y
-	if button_height <= 0.0 and button.size.y > 0.0:
-		button_height = button.size.y
-	button_height = maxf(button_height, 44.0)
-	var corner_radius: int = int(round(button_height * 0.5))
-	var shadow_size: int = 12 if is_primary else 10
-	var shadow_alpha: float = 0.14 if is_primary else 0.12
-	var border_alpha: float = 0.42 if is_primary else 0.34
-	var pressed_shadow_size: int = maxi(8, shadow_size - 2)
-	var shadow_offset_y: float = 4.0 if is_primary else 3.0
-	for state in button_states:
-		var state_color: Color = base_color
-		if state == &"hover":
-			state_color = base_color.lightened(0.07 if is_primary else 0.06)
-		elif state == &"pressed":
-			state_color = base_color.darkened(0.12 if is_primary else 0.10)
-		elif state == &"disabled":
-			state_color = base_color.darkened(0.18)
-			state_color.a = 0.74
-
-		var stylebox: StyleBoxFlat = _build_rounded_shadow_stylebox(
-			state_color,
-			corner_radius,
-			Color(1.0, 1.0, 1.0, border_alpha),
-			pressed_shadow_size if state == &"pressed" else shadow_size,
-			Color(0.16, 0.12, 0.20, shadow_alpha),
-			2,
-			shadow_offset_y
-		)
-		stylebox.content_margin_left = FAB_TEXT_PADDING_X
-		stylebox.content_margin_right = FAB_TEXT_PADDING_X
-		stylebox.content_margin_top = FAB_TEXT_PADDING_Y
-		stylebox.content_margin_bottom = FAB_TEXT_PADDING_Y
-		button.add_theme_stylebox_override(String(state), stylebox)
-
-
-func _restart_swipe_hint_animation() -> void:
-	if _swipe_hint_chevron_label == null or not is_instance_valid(_swipe_hint_chevron_label):
-		return
-	if not _swipe_hint_chevron_label.visible:
-		return
-
-	if _swipe_hint_pulse_tween != null and _swipe_hint_pulse_tween.is_running():
-		_swipe_hint_pulse_tween.kill()
-
-	_swipe_hint_chevron_label.position.y = 6.0
-	_swipe_hint_chevron_label.modulate = Color(1.0, 1.0, 1.0, 0.62)
-
-	_swipe_hint_pulse_tween = create_tween()
-	_swipe_hint_pulse_tween.set_loops()
-	_swipe_hint_pulse_tween.set_trans(Tween.TRANS_SINE)
-	_swipe_hint_pulse_tween.set_ease(Tween.EASE_IN_OUT)
-	_swipe_hint_pulse_tween.tween_property(_swipe_hint_chevron_label, "position:y", -2.0, SWIPE_HINT_PULSE_DURATION)
-	_swipe_hint_pulse_tween.parallel().tween_property(_swipe_hint_chevron_label, "modulate:a", 0.96, SWIPE_HINT_PULSE_DURATION)
-	_swipe_hint_pulse_tween.tween_property(_swipe_hint_chevron_label, "position:y", 6.0, SWIPE_HINT_PULSE_DURATION)
-	_swipe_hint_pulse_tween.parallel().tween_property(_swipe_hint_chevron_label, "modulate:a", 0.62, SWIPE_HINT_PULSE_DURATION)
+	VisualTheme.apply_label_theme(title_label, Constants.FONT_SIZE_TITLE, Constants.COLOR_TEXT_DARK)
+	VisualTheme.apply_label_theme(subtitle_label, Constants.FONT_SIZE_SUBTITLE, Constants.COLOR_TEXT_DARK.lightened(0.24))
+	VisualTheme.apply_label_theme(swipe_hint_label, Constants.FONT_SIZE_BODY, Constants.COLOR_TEXT_DARK.lightened(0.28))

@@ -29,13 +29,6 @@ const SCORE_PANEL_MAP_GAP: float = 10.0
 const SCORE_PANEL_FALLBACK_LOCAL_Y: float = 300.0
 const DEFAULT_TARGET_SCORE: int = 230
 const MOMENT_FEED_ITEM_PREFIX: String = "moment_"
-const CARD_PANEL_RADIUS: int = 26
-const CARD_PANEL_BORDER_WIDTH: int = 2
-const CARD_PANEL_SHADOW_SIZE: int = 10
-const CARD_PANEL_SHADOW_OFFSET_Y: float = 3.0
-const CARD_PANEL_SHADOW_COLOR: Color = Color(0.16, 0.12, 0.20, 0.12)
-const STATUS_PANEL_MAP_OVERSCAN_X: float = 20.0
-const MAP_BACKDROP_RADIUS: int = 36
 
 const SCORE_ENEMY_DEFEATED_POINTS: int = 140
 const SCORE_DAMAGE_POINTS_PER_HP: int = 5
@@ -44,7 +37,6 @@ const SCORE_TURN_EFFICIENCY_POINTS: int = 20
 const SCORE_TURN_BASELINE: int = 4
 
 const SCORE_FALLBACK_PERCENTILE_FACTOR: float = 0.36
-const FEED_PUFF_VISUAL_SCALE: float = 1.14
 
 const ORIGINAL_SCORE_KEYS: Array = [
 	"original_player_score",
@@ -125,10 +117,9 @@ var _battle_map: BattleMap
 var _turn_manager: TurnManager
 var _enemy_intent: EnemyIntent
 
-var _status_panel: PanelContainer
+var _status_panel: ColorRect
 var _status_label: Label
 var _detail_label: Label
-var _map_backdrop: PanelContainer
 var _score_panel: PanelContainer
 var _score_title_label: Label
 var _score_value_label: Label
@@ -153,19 +144,6 @@ var _cycle_done: bool = false
 var _decision_start_time_seconds: float = 0.0
 var _decision_lock_time_seconds: float = 0.0
 var _cycle_completion_time_seconds: float = 0.0
-
-
-func _set_control_rect(control: Control, top_left: Vector2, rect_size: Vector2) -> void:
-	if control == null:
-		return
-	control.anchor_left = 0.0
-	control.anchor_top = 0.0
-	control.anchor_right = 0.0
-	control.anchor_bottom = 0.0
-	control.offset_left = top_left.x
-	control.offset_top = top_left.y
-	control.offset_right = top_left.x + rect_size.x
-	control.offset_bottom = top_left.y + rect_size.y
 
 
 func configure_snapshot(snapshot: Dictionary) -> void:
@@ -197,10 +175,6 @@ func can_advance_to_next_item() -> bool:
 	return _cycle_done
 
 
-func should_show_swipe_hint() -> bool:
-	return _cycle_done or not _decision_started
-
-
 func get_status_text() -> String:
 	if _status_label == null:
 		return ""
@@ -210,7 +184,7 @@ func get_status_text() -> String:
 func get_score_panel_bottom_global_y() -> float:
 	if _score_panel == null:
 		return NAN
-	var local_bottom: Vector2 = Vector2(0.0, _score_panel.offset_bottom)
+	var local_bottom: Vector2 = _score_panel.position + Vector2(0.0, _score_panel.size.y)
 	return to_global(local_bottom).y
 
 
@@ -221,157 +195,99 @@ func _ready() -> void:
 
 
 func _build_status_overlay() -> void:
-	_status_panel = PanelContainer.new()
+	_status_panel = ColorRect.new()
 	_status_panel.name = "StatusPanel"
-	_status_panel.z_index = 30
 	_layout_status_overlay()
-	_status_panel.add_theme_stylebox_override(
-		"panel",
-		_build_card_stylebox(
-			Color(0.90, 0.89, 0.96, 0.82),
-			CARD_PANEL_RADIUS,
-			Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.28),
-			CARD_PANEL_SHADOW_SIZE,
-			CARD_PANEL_SHADOW_COLOR
-		)
-	)
+	_status_panel.color = Color(0.08, 0.11, 0.19, 0.68)
 	add_child(_status_panel)
-	_decorate_panel_surface(
-		_status_panel,
-		"StatusGradient",
-		"StatusPattern",
-		[
-			Color(1.0, 0.99, 1.0, 0.48),
-			Color(0.93, 0.92, 0.98, 0.36),
-			Color(0.86, 0.85, 0.93, 0.28)
-		],
-		Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.15),
-		Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.11),
-		0.89,
-		0.38
-	)
-
-	var status_layout: VBoxContainer = VBoxContainer.new()
-	status_layout.set_anchors_preset(Control.PRESET_FULL_RECT)
-	status_layout.offset_left = 26.0
-	status_layout.offset_top = 24.0
-	status_layout.offset_right = -26.0
-	status_layout.offset_bottom = -24.0
-	status_layout.add_theme_constant_override("separation", 6)
-	_status_panel.add_child(status_layout)
 
 	_status_label = Label.new()
-	_status_label.custom_minimum_size = Vector2(0.0, 78.0)
+	_status_label.position = Vector2(24.0, 26.0)
+	_status_label.size = Vector2(756.0, 72.0)
 	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_status_label.add_theme_font_size_override("font_size", 33)
-	_status_label.add_theme_color_override("font_color", Color(0.13, 0.09, 0.22, 1.0))
-	_status_label.add_theme_constant_override("outline_size", 2)
-	_status_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.72))
-	status_layout.add_child(_status_label)
+	_status_label.add_theme_font_size_override("font_size", 34)
+	_status_label.add_theme_color_override("font_color", Color(0.98, 0.98, 1.0, 1.0))
+	_status_panel.add_child(_status_label)
 
 	_detail_label = Label.new()
-	_detail_label.custom_minimum_size = Vector2(0.0, 74.0)
-	_detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_detail_label.position = Vector2(24.0, 110.0)
+	_detail_label.size = Vector2(756.0, 88.0)
 	_detail_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_detail_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_detail_label.add_theme_font_size_override("font_size", 22)
-	_detail_label.add_theme_color_override("font_color", Color(0.19, 0.14, 0.28, 0.90))
-	_detail_label.add_theme_constant_override("outline_size", 1)
-	_detail_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.58))
-	status_layout.add_child(_detail_label)
+	_detail_label.add_theme_font_size_override("font_size", 24)
+	_detail_label.add_theme_color_override("font_color", Color(0.88, 0.93, 1.0, 0.92))
+	_status_panel.add_child(_detail_label)
 
 	_build_score_overlay()
 
 	_set_status(
-		"Your turn: move, attack, or bump",
-		"Pick one clean tactical move, then watch the result unfold."
+		"One-turn puzzle: choose move, attack, or bump",
+		"Play the tactical turn, then watch 3s resolve + 2s scoring."
 	)
 
 
 func _build_score_overlay() -> void:
 	_score_panel = PanelContainer.new()
 	_score_panel.name = "ScorePanel"
-	_score_panel.z_index = 32
 	_layout_score_overlay()
 	_score_panel.visible = false
 	add_child(_score_panel)
 
-	var panel_style: StyleBoxFlat = _build_card_stylebox(
-		Color(0.92, 0.90, 0.97, 0.84),
-		CARD_PANEL_RADIUS,
-		Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.26),
-		CARD_PANEL_SHADOW_SIZE,
-		CARD_PANEL_SHADOW_COLOR
-	)
+	var panel_style: StyleBoxFlat = StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.06, 0.09, 0.17, 0.90)
+	panel_style.corner_radius_top_left = 28
+	panel_style.corner_radius_top_right = 28
+	panel_style.corner_radius_bottom_right = 28
+	panel_style.corner_radius_bottom_left = 28
+	panel_style.border_width_left = 2
+	panel_style.border_width_top = 2
+	panel_style.border_width_right = 2
+	panel_style.border_width_bottom = 2
+	panel_style.border_color = Color(0.53, 0.74, 0.98, 0.9)
 	_score_panel.add_theme_stylebox_override("panel", panel_style)
-	_decorate_panel_surface(
-		_score_panel,
-		"ScoreGradient",
-		"ScorePattern",
-		[
-			Color(1.0, 0.99, 1.0, 0.50),
-			Color(0.94, 0.94, 0.99, 0.38),
-			Color(0.87, 0.89, 0.95, 0.30)
-		],
-		Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.14),
-		Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.10),
-		0.88,
-		0.34
-	)
 
 	var root_layout: VBoxContainer = VBoxContainer.new()
 	root_layout.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root_layout.offset_left = 24.0
-	root_layout.offset_top = 18.0
-	root_layout.offset_right = -24.0
-	root_layout.offset_bottom = -18.0
-	root_layout.add_theme_constant_override("separation", 10)
+	root_layout.offset_left = 20.0
+	root_layout.offset_top = 16.0
+	root_layout.offset_right = -20.0
+	root_layout.offset_bottom = -16.0
+	root_layout.add_theme_constant_override("separation", 8)
 	_score_panel.add_child(root_layout)
 
 	_score_title_label = Label.new()
 	_score_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_score_title_label.add_theme_font_size_override("font_size", 29)
-	_score_title_label.add_theme_color_override("font_color", Color(0.14, 0.10, 0.22, 1.0))
-	_score_title_label.add_theme_constant_override("outline_size", 1)
-	_score_title_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.58))
+	_score_title_label.add_theme_font_size_override("font_size", 30)
+	_score_title_label.add_theme_color_override("font_color", Color(0.97, 0.98, 1.0, 1.0))
 	_score_title_label.text = "Score Breakdown"
 	root_layout.add_child(_score_title_label)
 
 	_score_value_label = Label.new()
 	_score_value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_score_value_label.add_theme_font_size_override("font_size", 56)
-	_score_value_label.add_theme_color_override("font_color", Color(0.92, 0.48, 0.33, 1.0))
-	_score_value_label.add_theme_constant_override("outline_size", 2)
-	_score_value_label.add_theme_color_override("font_outline_color", Color(0.30, 0.18, 0.17, 0.48))
+	_score_value_label.add_theme_color_override("font_color", Color(0.99, 0.89, 0.59, 1.0))
 	_score_value_label.text = "0"
 	root_layout.add_child(_score_value_label)
 
 	_score_breakdown_label = Label.new()
 	_score_breakdown_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_score_breakdown_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_score_breakdown_label.add_theme_font_size_override("font_size", 19)
-	_score_breakdown_label.add_theme_color_override("font_color", Color(0.20, 0.15, 0.30, 0.86))
+	_score_breakdown_label.add_theme_font_size_override("font_size", 20)
+	_score_breakdown_label.add_theme_color_override("font_color", Color(0.87, 0.93, 1.0, 0.95))
 	root_layout.add_child(_score_breakdown_label)
 
 	_score_comparison_label = Label.new()
 	_score_comparison_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_score_comparison_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_score_comparison_label.add_theme_font_size_override("font_size", 21)
-	_score_comparison_label.add_theme_color_override("font_color", Color(0.15, 0.34, 0.30, 0.92))
+	_score_comparison_label.add_theme_font_size_override("font_size", 22)
+	_score_comparison_label.add_theme_color_override("font_color", Color(0.79, 0.97, 0.85, 1.0))
 	root_layout.add_child(_score_comparison_label)
 
 	_share_button = Button.new()
 	_share_button.text = "Share"
 	_share_button.focus_mode = Control.FOCUS_NONE
-	VisualTheme.apply_button_theme(
-		_share_button,
-		Constants.PALETTE_PEACH.lightened(0.04),
-		Constants.COLOR_TEXT_DARK,
-		Vector2(196.0, 56.0),
-		20
-	)
-	_apply_share_button_accent_theme(_share_button)
+	_share_button.custom_minimum_size = Vector2(180.0, 52.0)
 	root_layout.add_child(_share_button)
 	_connect_if_needed(_share_button, &"pressed", Callable(self, "_on_share_button_pressed"))
 
@@ -379,452 +295,10 @@ func _build_score_overlay() -> void:
 	_share_stub_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_share_stub_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_share_stub_label.add_theme_font_size_override("font_size", 18)
-	_share_stub_label.add_theme_color_override("font_color", Color(0.39, 0.22, 0.19, 0.92))
+	_share_stub_label.add_theme_color_override("font_color", Color(0.95, 0.82, 0.58, 0.95))
 	_share_stub_label.text = ""
 	_share_stub_label.visible = false
 	root_layout.add_child(_share_stub_label)
-
-	_ensure_map_backdrop()
-
-
-func _build_card_stylebox(
-	background_color: Color,
-	corner_radius: int,
-	border_color: Color,
-	shadow_size: int,
-	shadow_color: Color,
-	border_width: int = CARD_PANEL_BORDER_WIDTH,
-	shadow_offset_y: float = CARD_PANEL_SHADOW_OFFSET_Y
-) -> StyleBoxFlat:
-	var stylebox: StyleBoxFlat = StyleBoxFlat.new()
-	stylebox.bg_color = background_color
-	stylebox.corner_radius_top_left = corner_radius
-	stylebox.corner_radius_top_right = corner_radius
-	stylebox.corner_radius_bottom_left = corner_radius
-	stylebox.corner_radius_bottom_right = corner_radius
-	stylebox.border_width_left = border_width
-	stylebox.border_width_top = border_width
-	stylebox.border_width_right = border_width
-	stylebox.border_width_bottom = border_width
-	stylebox.border_color = border_color
-	stylebox.shadow_color = shadow_color
-	stylebox.shadow_size = shadow_size
-	stylebox.shadow_offset = Vector2(0.0, shadow_offset_y)
-	return stylebox
-
-
-func _apply_share_button_accent_theme(button: Button) -> void:
-	if button == null:
-		return
-	var base_color: Color = Constants.PALETTE_PINK.lerp(Constants.PALETTE_PEACH, 0.36)
-	var states: Array[StringName] = [&"normal", &"hover", &"pressed", &"disabled"]
-	for state in states:
-		var state_color: Color = base_color
-		if state == &"hover":
-			state_color = base_color.lightened(0.08)
-		elif state == &"pressed":
-			state_color = base_color.darkened(0.12)
-		elif state == &"disabled":
-			state_color = base_color.darkened(0.16)
-			state_color.a = 0.74
-
-		var stylebox: StyleBoxFlat = _build_card_stylebox(
-			state_color,
-			28,
-			Color(1.0, 1.0, 1.0, 0.38),
-			10,
-			Color(0.16, 0.12, 0.20, 0.12),
-			2,
-			3.0
-		)
-		stylebox.content_margin_left = 18.0
-		stylebox.content_margin_right = 18.0
-		stylebox.content_margin_top = 12.0
-		stylebox.content_margin_bottom = 12.0
-		button.add_theme_stylebox_override(String(state), stylebox)
-	button.add_theme_color_override("font_color", Color(0.20, 0.11, 0.24, 0.98))
-	button.add_theme_font_size_override("font_size", 22)
-
-
-func _decorate_panel_surface(
-	panel: PanelContainer,
-	gradient_name: String,
-	pattern_name: String,
-	gradient_colors: Array[Color],
-	pattern_primary: Color,
-	pattern_secondary: Color,
-	gradient_modulate_alpha: float = 0.97,
-	pattern_modulate_alpha: float = 0.65
-) -> void:
-	if panel == null:
-		return
-	if panel.get_node_or_null(gradient_name) == null:
-		var gradient_rect: TextureRect = TextureRect.new()
-		gradient_rect.name = gradient_name
-		gradient_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		gradient_rect.texture = _create_panel_gradient_texture(gradient_colors)
-		gradient_rect.stretch_mode = TextureRect.STRETCH_SCALE
-		gradient_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		gradient_rect.modulate = Color(1.0, 1.0, 1.0, clampf(gradient_modulate_alpha, 0.0, 1.0))
-		gradient_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-		panel.add_child(gradient_rect)
-		panel.move_child(gradient_rect, 0)
-
-	if panel.get_node_or_null(pattern_name) == null:
-		var pattern_rect: TextureRect = TextureRect.new()
-		pattern_rect.name = pattern_name
-		pattern_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		pattern_rect.texture = _create_panel_pattern_texture(pattern_primary, pattern_secondary)
-		pattern_rect.stretch_mode = TextureRect.STRETCH_SCALE
-		pattern_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		pattern_rect.modulate = Color(1.0, 1.0, 1.0, clampf(pattern_modulate_alpha, 0.0, 1.0))
-		pattern_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-		panel.add_child(pattern_rect)
-		panel.move_child(pattern_rect, 1)
-
-
-func _create_panel_gradient_texture(colors: Array[Color]) -> Texture2D:
-	var gradient: Gradient = Gradient.new()
-	var resolved_colors: PackedColorArray = PackedColorArray()
-	if colors.is_empty():
-		resolved_colors = PackedColorArray([
-			Color(1.0, 1.0, 1.0, 0.54),
-			Color(1.0, 1.0, 1.0, 0.32)
-		])
-	else:
-		for color in colors:
-			resolved_colors.append(color)
-
-	var offsets: PackedFloat32Array = PackedFloat32Array()
-	if resolved_colors.size() == 1:
-		offsets = PackedFloat32Array([0.0])
-	else:
-		for index in resolved_colors.size():
-			offsets.append(float(index) / float(resolved_colors.size() - 1))
-
-	gradient.offsets = offsets
-	gradient.colors = resolved_colors
-
-	var gradient_texture: GradientTexture2D = GradientTexture2D.new()
-	gradient_texture.gradient = gradient
-	gradient_texture.fill = GradientTexture2D.FILL_LINEAR
-	gradient_texture.fill_from = Vector2(0.45, 0.0)
-	gradient_texture.fill_to = Vector2(0.55, 1.0)
-	gradient_texture.width = 4
-	gradient_texture.height = 192
-	return gradient_texture
-
-
-func _create_panel_pattern_texture(primary_color: Color, secondary_color: Color) -> Texture2D:
-	var width: int = 320
-	var height: int = 180
-	var image: Image = Image.create(width, height, false, Image.FORMAT_RGBA8)
-	image.fill(Color(0.0, 0.0, 0.0, 0.0))
-
-	for y in range(16, height, 26):
-		for x in range(width):
-			var wave_y: int = y + int(round(sin(float(x) * 0.07 + float(y) * 0.02) * 1.6))
-			_set_backdrop_pixel(image, x, wave_y, primary_color)
-
-	for y in range(18, height, 34):
-		for x in range(12, width, 28):
-			_set_backdrop_pixel(image, x, y, secondary_color)
-			_set_backdrop_pixel(
-				image,
-				x + 1,
-				y,
-				Color(secondary_color.r, secondary_color.g, secondary_color.b, secondary_color.a * 0.40)
-			)
-			_set_backdrop_pixel(
-				image,
-				x,
-				y + 1,
-				Color(secondary_color.r, secondary_color.g, secondary_color.b, secondary_color.a * 0.40)
-			)
-
-	return ImageTexture.create_from_image(image)
-
-
-func _ensure_map_backdrop() -> void:
-	if _map_backdrop != null and is_instance_valid(_map_backdrop):
-		return
-	_map_backdrop = PanelContainer.new()
-	_map_backdrop.name = "MapBackdrop"
-	_map_backdrop.z_index = -20
-	_map_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_map_backdrop.add_theme_stylebox_override(
-		"panel",
-		_build_card_stylebox(
-			Color(0.98, 0.98, 0.97, 0.78),
-			MAP_BACKDROP_RADIUS,
-			Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.17),
-			10,
-			Color(0.16, 0.12, 0.20, 0.12),
-			1,
-			2.4
-		)
-	)
-	add_child(_map_backdrop)
-	move_child(_map_backdrop, 0)
-	_build_map_backdrop_decor()
-
-
-func _build_map_backdrop_decor() -> void:
-	if _map_backdrop == null:
-		return
-	if _map_backdrop.get_node_or_null("BackdropGradient") != null:
-		return
-
-	var gradient_rect: TextureRect = TextureRect.new()
-	gradient_rect.name = "BackdropGradient"
-	gradient_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	gradient_rect.texture = _create_map_backdrop_gradient_texture()
-	gradient_rect.stretch_mode = TextureRect.STRETCH_SCALE
-	gradient_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	gradient_rect.modulate = Color(1.0, 1.0, 1.0, 0.96)
-	gradient_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_map_backdrop.add_child(gradient_rect)
-	_map_backdrop.move_child(gradient_rect, 0)
-
-	var pattern_rect: TextureRect = TextureRect.new()
-	pattern_rect.name = "BackdropPattern"
-	pattern_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	pattern_rect.texture = _create_map_backdrop_pattern_texture()
-	pattern_rect.stretch_mode = TextureRect.STRETCH_SCALE
-	pattern_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	pattern_rect.modulate = Color(1.0, 1.0, 1.0, 0.94)
-	pattern_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_map_backdrop.add_child(pattern_rect)
-	_map_backdrop.move_child(pattern_rect, 1)
-
-	var top_blob: PanelContainer = _build_map_backdrop_blob(
-		"BackdropBlobTop",
-		Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.20)
-	)
-	var middle_blob: PanelContainer = _build_map_backdrop_blob(
-		"BackdropBlobMiddle",
-		Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.18)
-	)
-	var lower_blob: PanelContainer = _build_map_backdrop_blob(
-		"BackdropBlobLower",
-		Color(Constants.PALETTE_MINT.r, Constants.PALETTE_MINT.g, Constants.PALETTE_MINT.b, 0.16)
-	)
-	_map_backdrop.add_child(top_blob)
-	_map_backdrop.add_child(middle_blob)
-	_map_backdrop.add_child(lower_blob)
-	_layout_map_backdrop_decor()
-
-
-func _create_map_backdrop_gradient_texture() -> Texture2D:
-	var gradient: Gradient = Gradient.new()
-	gradient.offsets = PackedFloat32Array([0.0, 0.35, 0.72, 1.0])
-	gradient.colors = PackedColorArray([
-		Color(1.0, 0.97, 0.99, 0.94),
-		Color(0.98, 0.96, 1.0, 0.86),
-		Color(0.95, 0.98, 0.99, 0.78),
-		Color(0.94, 0.98, 0.96, 0.68)
-	])
-
-	var gradient_texture: GradientTexture2D = GradientTexture2D.new()
-	gradient_texture.gradient = gradient
-	gradient_texture.fill = GradientTexture2D.FILL_LINEAR
-	gradient_texture.fill_from = Vector2(0.5, 0.0)
-	gradient_texture.fill_to = Vector2(0.5, 1.0)
-	gradient_texture.width = 4
-	gradient_texture.height = 256
-	return gradient_texture
-
-
-func _create_map_backdrop_pattern_texture() -> Texture2D:
-	var width: int = 320
-	var height: int = 320
-	var image: Image = Image.create(width, height, false, Image.FORMAT_RGBA8)
-	image.fill(Color(0.0, 0.0, 0.0, 0.0))
-
-	var major_line: Color = Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.50)
-	var minor_line: Color = Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.40)
-	var sparkle_color: Color = Color(1.0, 1.0, 1.0, 0.42)
-
-	var tile_width: int = 56
-	var tile_height: int = 30
-	var half_width: int = tile_width / 2
-	var half_height: int = tile_height / 2
-	var row_step: int = maxi(1, half_height)
-	var row_start: int = -3
-	var row_end: int = int(ceil(float(height) / float(row_step))) + 4
-
-	for row in range(row_start, row_end):
-		var center_y: int = row * row_step
-		var center_x_offset: int = half_width if (row & 1) != 0 else 0
-		var column_start: int = -3
-		var column_end: int = int(ceil(float(width) / float(tile_width))) + 4
-		for column in range(column_start, column_end):
-			var center_x: int = column * tile_width + center_x_offset
-			var edge_color: Color = major_line if ((row + column) % 3 == 0) else minor_line
-			_draw_backdrop_diamond_outline(image, Vector2i(center_x, center_y), half_width, half_height, edge_color)
-
-			if ((row + column) % 5) == 0:
-				_set_backdrop_pixel(image, center_x, center_y, sparkle_color)
-				_set_backdrop_pixel(image, center_x + 1, center_y, Color(sparkle_color.r, sparkle_color.g, sparkle_color.b, 0.22))
-				_set_backdrop_pixel(image, center_x, center_y + 1, Color(sparkle_color.r, sparkle_color.g, sparkle_color.b, 0.22))
-
-	var guide_major: Color = Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.84)
-	var guide_minor: Color = Color(Constants.PALETTE_SKY.r, Constants.PALETTE_SKY.g, Constants.PALETTE_SKY.b, 0.70)
-	var guide_glow: Color = Color(1.0, 1.0, 1.0, 0.54)
-	var guide_center: Vector2i = Vector2i(width / 2, int(height * 0.54))
-	var guide_half_width: int = 29
-	var guide_half_height: int = 16
-	for board_y in range(Constants.GRID_HEIGHT):
-		for board_x in range(Constants.GRID_WIDTH):
-			var cell_center_x: int = guide_center.x + (board_x - board_y) * guide_half_width
-			var cell_center_y: int = guide_center.y + (board_x + board_y) * guide_half_height
-			var edge_cell: bool = (
-				board_x == 0
-				or board_y == 0
-				or board_x == Constants.GRID_WIDTH - 1
-				or board_y == Constants.GRID_HEIGHT - 1
-			)
-			var line_color: Color = guide_major if edge_cell else guide_minor
-			_draw_backdrop_diamond_outline(
-				image,
-				Vector2i(cell_center_x, cell_center_y),
-				guide_half_width,
-				guide_half_height,
-				line_color
-			)
-			var fill_alpha: float = 0.16 if edge_cell else 0.12
-			_fill_backdrop_diamond(
-				image,
-				Vector2i(cell_center_x, cell_center_y),
-				guide_half_width - 2,
-				guide_half_height - 1,
-				Color(line_color.r, line_color.g, line_color.b, fill_alpha)
-			)
-			_set_backdrop_pixel(
-				image,
-				cell_center_x,
-				cell_center_y,
-				Color(line_color.r, line_color.g, line_color.b, 0.42)
-			)
-			if ((board_x + board_y) % 2) == 0:
-				_set_backdrop_pixel(image, cell_center_x, cell_center_y, guide_glow)
-				_set_backdrop_pixel(image, cell_center_x + 1, cell_center_y, Color(guide_glow.r, guide_glow.g, guide_glow.b, 0.28))
-				_set_backdrop_pixel(image, cell_center_x, cell_center_y + 1, Color(guide_glow.r, guide_glow.g, guide_glow.b, 0.28))
-			if board_x < Constants.GRID_WIDTH - 1:
-				var right_center: Vector2i = Vector2i(
-					guide_center.x + (board_x + 1 - board_y) * guide_half_width,
-					guide_center.y + (board_x + 1 + board_y) * guide_half_height
-				)
-				_draw_backdrop_line(
-					image,
-					Vector2i(cell_center_x, cell_center_y),
-					right_center,
-					Color(line_color.r, line_color.g, line_color.b, 0.24)
-				)
-			if board_y < Constants.GRID_HEIGHT - 1:
-				var down_center: Vector2i = Vector2i(
-					guide_center.x + (board_x - (board_y + 1)) * guide_half_width,
-					guide_center.y + (board_x + board_y + 1) * guide_half_height
-				)
-				_draw_backdrop_line(
-					image,
-					Vector2i(cell_center_x, cell_center_y),
-					down_center,
-					Color(line_color.r, line_color.g, line_color.b, 0.20)
-				)
-
-	return ImageTexture.create_from_image(image)
-
-
-func _draw_backdrop_diamond_outline(
-	image: Image,
-	center: Vector2i,
-	half_width: int,
-	half_height: int,
-	color: Color
-) -> void:
-	for local_x in range(-half_width, half_width + 1):
-		var normalized_x: float = absf(float(local_x)) / float(maxi(1, half_width))
-		var y_offset: int = int(round((1.0 - normalized_x) * float(half_height)))
-		_set_backdrop_pixel(image, center.x + local_x, center.y - y_offset, color)
-		_set_backdrop_pixel(image, center.x + local_x, center.y + y_offset, color)
-
-
-func _fill_backdrop_diamond(
-	image: Image,
-	center: Vector2i,
-	half_width: int,
-	half_height: int,
-	color: Color
-) -> void:
-	if half_width <= 0 or half_height <= 0:
-		return
-	for local_x in range(-half_width, half_width + 1):
-		var normalized_x: float = absf(float(local_x)) / float(maxi(1, half_width))
-		var y_limit: int = int(round((1.0 - normalized_x) * float(half_height)))
-		for local_y in range(-y_limit, y_limit + 1):
-			_set_backdrop_pixel(image, center.x + local_x, center.y + local_y, color)
-
-
-func _draw_backdrop_line(image: Image, start: Vector2i, finish: Vector2i, color: Color) -> void:
-	var delta: Vector2 = Vector2(finish - start)
-	var steps: int = int(maxf(absf(delta.x), absf(delta.y)))
-	if steps <= 0:
-		_set_backdrop_pixel(image, start.x, start.y, color)
-		return
-
-	for step in range(steps + 1):
-		var t: float = float(step) / float(steps)
-		var x: int = int(round(lerpf(float(start.x), float(finish.x), t)))
-		var y: int = int(round(lerpf(float(start.y), float(finish.y), t)))
-		_set_backdrop_pixel(image, x, y, color)
-
-
-func _set_backdrop_pixel(image: Image, x: int, y: int, color: Color) -> void:
-	if x < 0 or y < 0:
-		return
-	if x >= image.get_width() or y >= image.get_height():
-		return
-	image.set_pixel(x, y, color)
-
-
-func _build_map_backdrop_blob(name: String, color: Color) -> PanelContainer:
-	var blob: PanelContainer = PanelContainer.new()
-	blob.name = name
-	blob.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	blob.add_theme_stylebox_override(
-		"panel",
-		_build_card_stylebox(
-			color,
-			88,
-			Color(1.0, 1.0, 1.0, 0.16),
-			0,
-			Color(0.0, 0.0, 0.0, 0.0),
-			1,
-			0.0
-		)
-	)
-	return blob
-
-
-func _layout_map_backdrop_decor() -> void:
-	if _map_backdrop == null:
-		return
-
-	var top_blob: PanelContainer = _map_backdrop.get_node_or_null("BackdropBlobTop") as PanelContainer
-	if top_blob != null:
-		top_blob.size = Vector2(_map_backdrop.size.x * 0.84, _map_backdrop.size.y * 0.36)
-		top_blob.position = Vector2(_map_backdrop.size.x * 0.06, _map_backdrop.size.y * 0.02)
-
-	var middle_blob: PanelContainer = _map_backdrop.get_node_or_null("BackdropBlobMiddle") as PanelContainer
-	if middle_blob != null:
-		middle_blob.size = Vector2(_map_backdrop.size.x * 0.80, _map_backdrop.size.y * 0.30)
-		middle_blob.position = Vector2(_map_backdrop.size.x * 0.18, _map_backdrop.size.y * 0.34)
-
-	var lower_blob: PanelContainer = _map_backdrop.get_node_or_null("BackdropBlobLower") as PanelContainer
-	if lower_blob != null:
-		lower_blob.size = Vector2(_map_backdrop.size.x * 0.76, _map_backdrop.size.y * 0.31)
-		lower_blob.position = Vector2(_map_backdrop.size.x * 0.10, _map_backdrop.size.y * 0.64)
 
 
 func _setup_decision_timeout_timer() -> void:
@@ -837,7 +311,6 @@ func _setup_decision_timeout_timer() -> void:
 
 func _rebuild_battle_snapshot() -> void:
 	_clear_existing_battle_snapshot()
-	_ensure_map_backdrop()
 
 	var battle_variant: Node = TURN_BATTLE_SCENE.instantiate()
 	if not (battle_variant is Node2D):
@@ -846,7 +319,6 @@ func _rebuild_battle_snapshot() -> void:
 		return
 
 	_battle_root = battle_variant
-	_battle_root.z_index = -10
 	var turn_manager_candidate: Node = _battle_root.get_node_or_null("TurnManager")
 	if turn_manager_candidate is TurnManager:
 		turn_manager_candidate.auto_spawn_demo_puffs = false
@@ -865,8 +337,8 @@ func _rebuild_battle_snapshot() -> void:
 		_turn_manager.set_process_unhandled_input(false)
 
 	_set_status(
-		"Your turn: move, attack, or bump",
-		"Take your time and line up one sweet move."
+		"One-turn puzzle: choose move, attack, or bump",
+		"Decision window %.0fs to %.0fs before result reveal." % [MIN_DECISION_SECONDS, MAX_DECISION_SECONDS]
 	)
 	_show_score_preview_overlay()
 
@@ -881,30 +353,10 @@ func _layout_battle_snapshot() -> void:
 	var map_center_x: float = map_bounds.position.x + (map_bounds.size.x * 0.5)
 	var map_top_local: float = SNAPSHOT_LOCAL_Y + map_bounds.position.y * SNAPSHOT_SCALE.y
 	var map_bottom_local: float = SNAPSHOT_LOCAL_Y + (map_bounds.position.y + map_bounds.size.y) * SNAPSHOT_SCALE.y
-	var map_width_local: float = map_bounds.size.x * SNAPSHOT_SCALE.x
 	var centered_x_offset: float = -map_center_x * SNAPSHOT_SCALE.x
 	_battle_root.position = Vector2(centered_x_offset, SNAPSHOT_LOCAL_Y)
-	_layout_map_backdrop(map_bounds, centered_x_offset)
-	_layout_status_overlay(map_top_local, map_width_local)
+	_layout_status_overlay(map_top_local)
 	_layout_score_overlay(map_bottom_local)
-
-
-func _layout_map_backdrop(map_bounds: Rect2, centered_x_offset: float) -> void:
-	if _map_backdrop == null:
-		return
-	var backdrop_padding: Vector2 = Vector2(32.0, 30.0)
-	var map_left: float = centered_x_offset + map_bounds.position.x * SNAPSHOT_SCALE.x
-	var map_top: float = SNAPSHOT_LOCAL_Y + map_bounds.position.y * SNAPSHOT_SCALE.y
-	var backdrop_size: Vector2 = Vector2(
-		map_bounds.size.x * SNAPSHOT_SCALE.x + backdrop_padding.x * 2.0,
-		map_bounds.size.y * SNAPSHOT_SCALE.y + backdrop_padding.y * 2.0
-	)
-	_set_control_rect(
-		_map_backdrop,
-		Vector2(map_left - backdrop_padding.x, map_top - backdrop_padding.y),
-		backdrop_size
-	)
-	_layout_map_backdrop_decor()
 
 
 func _resolve_snapshot_map_bounds_local() -> Rect2:
@@ -940,35 +392,24 @@ func _resolve_snapshot_map_bounds_local() -> Rect2:
 	return Rect2(min_bounds, max_bounds - min_bounds)
 
 
-func _layout_status_overlay(map_top_local: float = NAN, map_width_local: float = NAN) -> void:
+func _layout_status_overlay(map_top_local: float = NAN) -> void:
 	if _status_panel == null:
 		return
-
-	var panel_width: float = STATUS_PANEL_SIZE.x
-	if not is_nan(map_width_local):
-		panel_width = maxf(panel_width, map_width_local + STATUS_PANEL_MAP_OVERSCAN_X)
+	_status_panel.size = STATUS_PANEL_SIZE
 	var panel_y: float = STATUS_PANEL_FALLBACK_LOCAL_Y
 	if not is_nan(map_top_local):
-		panel_y = map_top_local - STATUS_PANEL_SIZE.y - STATUS_PANEL_MAP_GAP
-	_set_control_rect(
-		_status_panel,
-		Vector2(-panel_width * 0.5, panel_y),
-		Vector2(panel_width, STATUS_PANEL_SIZE.y)
-	)
+		panel_y = map_top_local - _status_panel.size.y - STATUS_PANEL_MAP_GAP
+	_status_panel.position = Vector2(-_status_panel.size.x * 0.5, panel_y)
 
 
 func _layout_score_overlay(map_bottom_local: float = NAN) -> void:
 	if _score_panel == null:
 		return
-
+	_score_panel.size = SCORE_PANEL_SIZE
 	var panel_y: float = SCORE_PANEL_FALLBACK_LOCAL_Y
 	if not is_nan(map_bottom_local):
 		panel_y = map_bottom_local + SCORE_PANEL_MAP_GAP
-	_set_control_rect(
-		_score_panel,
-		Vector2(-SCORE_PANEL_SIZE.x * 0.5, panel_y),
-		SCORE_PANEL_SIZE
-	)
+	_score_panel.position = Vector2(-_score_panel.size.x * 0.5, panel_y)
 
 
 func _cache_battle_nodes() -> void:
@@ -1064,8 +505,6 @@ func _spawn_snapshot_puff(puff_config: Dictionary) -> void:
 	puff_data_resource = _apply_snapshot_puff_overrides(puff_data_resource, puff_config)
 	if puff_data_resource != null:
 		puff.set_puff_data(puff_data_resource)
-	puff.scale = Vector2(FEED_PUFF_VISUAL_SCALE, FEED_PUFF_VISUAL_SCALE)
-	puff.z_index = 12
 
 	var cell: Vector2i = _to_cell(puff_config.get("cell", Vector2i.ZERO))
 	puff.set_grid_cell(cell)
@@ -1105,7 +544,7 @@ func _begin_decision_phase() -> void:
 
 	_set_status(
 		"Your turn: move, attack, or bump",
-		"Take your time and plan a one-turn masterpiece."
+		"Decision timer: %.0f seconds max" % MAX_DECISION_SECONDS
 	)
 
 
@@ -1157,14 +596,14 @@ func _run_completion_flow(player_acted: bool) -> void:
 	var min_hold_seconds: float = maxf(0.0, MIN_DECISION_SECONDS - elapsed_decision)
 	if min_hold_seconds > 0.0:
 		_set_status(
-			"Locking your move...",
-			"Quick sparkle beat before the reveal."
+			"Locking tactical result...",
+			"Holding %.1fs so each feed cycle stays within 20-35 seconds." % min_hold_seconds
 		)
 		await get_tree().create_timer(min_hold_seconds).timeout
 
 	_set_status(
-		"Resolving turn",
-		"Watch your puffs carry it out."
+		"Resolving turn result",
+		"Outcome animation (%.0f seconds)." % RESULT_PHASE_SECONDS
 	)
 	await _play_result_animation()
 
@@ -1175,7 +614,7 @@ func _run_completion_flow(player_acted: bool) -> void:
 
 	_set_status(
 		"Score reveal",
-		"%s" % comparison_text
+		"%s Comparison screen (%.0f seconds)." % [comparison_text, SCORE_PHASE_SECONDS]
 	)
 
 	var reveal_duration: float = minf(SCORE_REVEAL_DURATION, SCORE_PHASE_SECONDS)
@@ -1189,8 +628,8 @@ func _run_completion_flow(player_acted: bool) -> void:
 
 	_emit_feed_item_completed(final_score)
 	_set_status(
-		"Swipe up for next puzzle",
-		"Nice play. The next puzzle is ready."
+		"Swipe up for next feed item",
+		"Cycle complete in %.1fs." % _cycle_duration_seconds()
 	)
 
 	emit_signal("cycle_completed", final_score, _cycle_duration_seconds())
@@ -1459,7 +898,7 @@ func _show_score_overlay(score_breakdown: Dictionary, comparison_text: String) -
 
 	var final_score: int = int(score_breakdown.get("final_score", 0))
 	_score_panel.visible = true
-	_score_title_label.text = "Your Score"
+	_score_title_label.text = "Score Breakdown"
 	_score_value_label.text = "0"
 	_score_breakdown_label.text = _build_score_breakdown_text(score_breakdown)
 	_score_comparison_label.text = comparison_text
@@ -1467,7 +906,6 @@ func _show_score_overlay(score_breakdown: Dictionary, comparison_text: String) -
 	_share_button.visible = true
 	_share_button.disabled = false
 	_share_button.tooltip_text = "Share this result"
-	_animate_score_panel_state()
 
 	if final_score <= 0:
 		_set_score_display_value(0.0)
@@ -1486,25 +924,14 @@ func _show_score_preview_overlay() -> void:
 		return
 
 	_score_panel.visible = true
-	_score_title_label.text = "Turn Objective"
-	_score_value_label.text = "Make Move"
-	_score_breakdown_label.text = "Defeat enemies, protect allies, and finish this turn clean for a higher score."
-	_score_comparison_label.text = "Pick one tactical move, then lock in your result."
+	_score_title_label.text = "Score Preview"
+	_score_value_label.text = "Ready"
+	_score_breakdown_label.text = "Score comes from enemies defeated, damage dealt, allies surviving, and turn efficiency."
+	_score_comparison_label.text = "Play your turn to reveal your final score and ranking."
 	_share_button.visible = false
 	_share_button.disabled = true
 	_share_button.tooltip_text = ""
 	_share_stub_label.text = ""
-	_animate_score_panel_state()
-
-
-func _animate_score_panel_state() -> void:
-	if _score_panel == null or not _score_panel.visible:
-		return
-	_score_panel.modulate = Color(1.0, 1.0, 1.0, 0.0)
-	var tween: Tween = create_tween()
-	tween.set_trans(Tween.TRANS_SINE)
-	tween.set_ease(Tween.EASE_OUT)
-	tween.tween_property(_score_panel, "modulate:a", 1.0, 0.16)
 
 
 func _animate_score_countup(final_score: int, reveal_duration: float) -> void:
@@ -1534,8 +961,8 @@ func _set_score_display_value(value: float) -> void:
 
 func _on_share_button_pressed() -> void:
 	_set_status(
-		"Great turn",
-		"Keep going and stack your best highlights."
+		"Share action",
+		"Sharing is coming soon."
 	)
 
 
