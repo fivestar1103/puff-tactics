@@ -22,6 +22,11 @@ const SWIPE_HINT_GAP_MIN: float = 56.0
 const SWIPE_HINT_GAP_MAX: float = 84.0
 const SCORE_TO_SWIPE_HINT_GAP: float = 20.0
 const SWIPE_HINT_TO_FAB_GAP: float = 20.0
+const FAB_PROFILE_MIN_SIZE: Vector2 = Vector2(170.0, 74.0)
+const FAB_CREATE_MIN_SIZE: Vector2 = Vector2(212.0, 88.0)
+const FAB_LEADERBOARD_MIN_SIZE: Vector2 = Vector2(170.0, 74.0)
+const FAB_TEXT_PADDING_X: float = 18.0
+const FAB_TEXT_PADDING_Y: float = 12.0
 const FEED_BATCH_SIZE: int = 50
 const MIN_PLAYER_PUFFS_PER_SNAPSHOT: int = 2
 const MIN_ENEMY_PUFFS_PER_SNAPSHOT: int = 2
@@ -812,9 +817,9 @@ func _layout_feed_items() -> void:
 func _layout_hud_overlays() -> void:
 	var viewport_size: Vector2 = get_viewport_rect().size
 
-	profile_button.custom_minimum_size = Vector2(172.0, 74.0)
-	create_button.custom_minimum_size = Vector2(196.0, 82.0)
-	leaderboard_button.custom_minimum_size = Vector2(172.0, 74.0)
+	profile_button.custom_minimum_size = FAB_PROFILE_MIN_SIZE
+	create_button.custom_minimum_size = FAB_CREATE_MIN_SIZE
+	leaderboard_button.custom_minimum_size = FAB_LEADERBOARD_MIN_SIZE
 
 	profile_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	create_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1065,25 +1070,29 @@ func _on_puzzle_editor_published(_snapshot_id: String, status_text: String) -> v
 
 
 func _style_fab_buttons() -> void:
-	VisualTheme.apply_button_theme(profile_button, Constants.PALETTE_SKY, Constants.COLOR_TEXT_DARK, Vector2(172.0, 74.0), Constants.FONT_SIZE_BUTTON - 2)
-	VisualTheme.apply_button_theme(create_button, Constants.PALETTE_PEACH.lightened(0.03), Constants.COLOR_TEXT_DARK, Vector2(196.0, 82.0), Constants.FONT_SIZE_BUTTON + 2)
-	VisualTheme.apply_button_theme(leaderboard_button, Constants.PALETTE_MINT, Constants.COLOR_TEXT_DARK, Vector2(172.0, 74.0), Constants.FONT_SIZE_BUTTON - 2)
-	_apply_fab_elevation(profile_button, Constants.PALETTE_SKY)
-	_apply_fab_elevation(create_button, Constants.PALETTE_PEACH.lightened(0.03))
-	_apply_fab_elevation(leaderboard_button, Constants.PALETTE_MINT)
+	var profile_base: Color = Constants.PALETTE_SKY
+	var create_base: Color = Constants.PALETTE_PEACH.lerp(Constants.PALETTE_PINK, 0.20)
+	var leaderboard_base: Color = Constants.PALETTE_MINT
+
+	VisualTheme.apply_button_theme(profile_button, profile_base, Constants.COLOR_TEXT_DARK, FAB_PROFILE_MIN_SIZE, Constants.FONT_SIZE_BUTTON - 2)
+	VisualTheme.apply_button_theme(create_button, create_base, Constants.COLOR_TEXT_DARK, FAB_CREATE_MIN_SIZE, Constants.FONT_SIZE_BUTTON + 3)
+	VisualTheme.apply_button_theme(leaderboard_button, leaderboard_base, Constants.COLOR_TEXT_DARK, FAB_LEADERBOARD_MIN_SIZE, Constants.FONT_SIZE_BUTTON - 2)
+	_apply_fab_elevation(profile_button, profile_base)
+	_apply_fab_elevation(create_button, create_base, true)
+	_apply_fab_elevation(leaderboard_button, leaderboard_base)
 
 
 func _style_header_labels() -> void:
-	VisualTheme.apply_label_theme(title_label, Constants.FONT_SIZE_TITLE + 10, Color(0.18, 0.12, 0.26, 1.0))
-	VisualTheme.apply_label_theme(subtitle_label, Constants.FONT_SIZE_SUBTITLE + 5, Color(0.22, 0.17, 0.31, 0.98))
-	VisualTheme.apply_label_theme(swipe_hint_label, Constants.FONT_SIZE_BODY + 4, Color(0.26, 0.20, 0.34, 0.92))
-	title_label.add_theme_constant_override("outline_size", 3)
-	title_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.78))
+	VisualTheme.apply_label_theme(title_label, Constants.FONT_SIZE_TITLE + 10, Color(0.14, 0.09, 0.23, 1.0))
+	VisualTheme.apply_label_theme(subtitle_label, Constants.FONT_SIZE_SUBTITLE + 5, Color(0.18, 0.12, 0.28, 0.98))
+	VisualTheme.apply_label_theme(swipe_hint_label, Constants.FONT_SIZE_BODY + 4, Color(0.22, 0.15, 0.31, 0.88))
+	title_label.add_theme_constant_override("outline_size", 4)
+	title_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.82))
 	subtitle_label.add_theme_constant_override("outline_size", 2)
-	subtitle_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.62))
-	swipe_hint_label.add_theme_constant_override("outline_size", 2)
-	swipe_hint_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.62))
-	swipe_hint_label.text = "↑ Swipe up when your score locks"
+	subtitle_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.70))
+	swipe_hint_label.add_theme_constant_override("outline_size", 1)
+	swipe_hint_label.add_theme_color_override("font_outline_color", Color(1.0, 1.0, 1.0, 0.78))
+	swipe_hint_label.text = "↑ Swipe up once score locks"
 
 
 func _ensure_swipe_hint_panel() -> void:
@@ -1107,11 +1116,11 @@ func _ensure_swipe_hint_panel() -> void:
 	_swipe_hint_panel.add_theme_stylebox_override(
 		"panel",
 		_build_rounded_shadow_stylebox(
-			Color(0.99, 0.98, 1.0, 0.90),
+			Color(0.99, 0.98, 1.0, 0.95),
 			22,
-			Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.30),
-			8,
-			Color(0.16, 0.12, 0.20, 0.10),
+			Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.40),
+			10,
+			Color(0.16, 0.12, 0.20, 0.12),
 			1,
 			2.0
 		)
@@ -1131,11 +1140,11 @@ func _build_visual_atmosphere() -> void:
 		_header_panel.add_theme_stylebox_override(
 			"panel",
 			_build_rounded_shadow_stylebox(
-				Color(Constants.COLOR_BG_CREAM.r, Constants.COLOR_BG_CREAM.g, Constants.COLOR_BG_CREAM.b, 0.96),
+				Color(0.99, 0.98, 1.0, 0.97),
 				30,
-				Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.40),
-				11,
-				Color(0.14, 0.12, 0.19, 0.12)
+				Color(Constants.PALETTE_LAVENDER.r, Constants.PALETTE_LAVENDER.g, Constants.PALETTE_LAVENDER.b, 0.50),
+				12,
+				Color(0.14, 0.12, 0.19, 0.15)
 			)
 		)
 		top_margin.add_child(_header_panel)
@@ -1157,9 +1166,9 @@ func _build_visual_atmosphere() -> void:
 				_build_rounded_shadow_stylebox(
 					blob_color,
 					blob_radius,
-					Color(1.0, 1.0, 1.0, 0.14),
+					Color(1.0, 1.0, 1.0, 0.18),
 					12,
-					Color(0.16, 0.12, 0.20, 0.07)
+					Color(0.16, 0.12, 0.20, 0.09)
 				)
 			)
 			background_rect.add_child(blob)
@@ -1210,25 +1219,39 @@ func _build_rounded_shadow_stylebox(
 	return stylebox
 
 
-func _apply_fab_elevation(button: Button, base_color: Color) -> void:
+func _apply_fab_elevation(button: Button, base_color: Color, is_primary: bool = false) -> void:
 	var button_states: Array[StringName] = [&"normal", &"hover", &"pressed", &"disabled"]
+	var button_height: float = button.custom_minimum_size.y
+	if button_height <= 0.0 and button.size.y > 0.0:
+		button_height = button.size.y
+	button_height = maxf(button_height, 44.0)
+	var corner_radius: int = int(round(button_height * 0.5))
+	var shadow_size: int = 12 if is_primary else 10
+	var shadow_alpha: float = 0.14 if is_primary else 0.12
+	var border_alpha: float = 0.42 if is_primary else 0.34
+	var pressed_shadow_size: int = maxi(8, shadow_size - 2)
+	var shadow_offset_y: float = 4.0 if is_primary else 3.0
 	for state in button_states:
 		var state_color: Color = base_color
 		if state == &"hover":
-			state_color = base_color.lightened(0.06)
+			state_color = base_color.lightened(0.07 if is_primary else 0.06)
 		elif state == &"pressed":
-			state_color = base_color.darkened(0.10)
+			state_color = base_color.darkened(0.12 if is_primary else 0.10)
 		elif state == &"disabled":
 			state_color = base_color.darkened(0.18)
 			state_color.a = 0.74
 
 		var stylebox: StyleBoxFlat = _build_rounded_shadow_stylebox(
 			state_color,
-			38,
-			Color(1.0, 1.0, 1.0, 0.34),
-			10,
-			Color(0.16, 0.12, 0.20, 0.12),
+			corner_radius,
+			Color(1.0, 1.0, 1.0, border_alpha),
+			pressed_shadow_size if state == &"pressed" else shadow_size,
+			Color(0.16, 0.12, 0.20, shadow_alpha),
 			2,
-			3.0
+			shadow_offset_y
 		)
+		stylebox.content_margin_left = FAB_TEXT_PADDING_X
+		stylebox.content_margin_right = FAB_TEXT_PADDING_X
+		stylebox.content_margin_top = FAB_TEXT_PADDING_Y
+		stylebox.content_margin_bottom = FAB_TEXT_PADDING_Y
 		button.add_theme_stylebox_override(String(state), stylebox)

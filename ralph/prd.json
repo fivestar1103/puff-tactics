@@ -820,8 +820,8 @@
         "All .gd scripts have no syntax errors"
       ],
       "priority": 42,
-      "passes": false,
-      "notes": "",
+      "passes": true,
+      "notes": "Screenshot review (2026-02-18) showed the bottom FAB row reading as faint text with weak button silhouettes: corners were not true pills per button height, the primary Create action did not stand out enough, and button label padding felt cramped. Updated src/scripts/feed/feed_main.gd to use explicit FAB size constants (Profile/Leaderboard 170x74, Create 212x88), derive FAB corner radius from each button height (height/2) for full pill geometry, apply per-state styleboxes with subtle card-matched shadow, and add content margins (18px horizontal, 12px vertical) so labels have clear breathing room. Also increased primary emphasis by using a warmer peach-pink create fill plus larger Create font size. Verified scene parse with HOME=/tmp godot --headless --path /home/fives/projects/puff-tactics --scene res://src/scenes/feed/FeedMain.tscn --quit.",
       "dependsOn": [
         "US-041"
       ]
@@ -980,7 +980,7 @@
       ],
       "priority": 50,
       "passes": false,
-      "notes": "Visual QA on 2026-02-18 attached screenshot (portrait, 768x1365): map frame reads centered at roughly 66% of screen width; 4 puffs are visible (2 player mint/green, 2 enemy pink-ringed). Empty-space estimate from the screenshot: top/header-to-map-card gap ~24% of screen height, map-card interior dead zone above the units ~18%, and score-to-bottom-control gap ~16%. Checklist from this screenshot: map width/centering PASS; all 25 tiles visible FAIL; 4+ puffs visible PASS; puff face readability PASS; no puff overlap PASS; no vertical gap >15% FAIL; text readability FAIL; no debug/stub/placeholder text FAIL (preview value looked placeholder); pastel kawaii palette PASS. Applied style-only remediation without changing protected layout constants: strengthened header/swipe-hint contrast with elevated pastel cards, replaced preview placeholder copy, softened the oversized map backdrop with gradient/blob treatment so empty areas read intentional, boosted terrain tile color/edge contrast so the 5x5 board reads more clearly, and strengthened team-ring color separation. Parse check passed: `HOME=/tmp godot --headless --path /home/fives/projects/puff-tactics --scene res://src/scenes/feed/FeedMain.tscn --quit`.",
+      "notes": "Visual QA on 2026-02-18 attached screenshot (portrait 768x1365): map width/centering PASS (~66%), all 25 tiles visible FAIL, 4+ puffs visible PASS (2 player mint/green + 2 enemy pink), puff facial readability PASS, puff overlap PASS, no gap >15% FAIL (top/header->map and map interior dead-zone both oversized), text readability FAIL, no placeholder/debug text FAIL (score preview value looked placeholder), pastel kawaii palette PASS. Style-only remediation (no protected layout constants changed): updated `src/scripts/feed/feed_item.gd` panel typography/contrast, replaced score preview value with player-facing \"Ready\", added richer map-backdrop gradient/pattern/blob decor to reduce dead-space feel, updated `src/scripts/feed/feed_main.gd` header/swipe card contrast and label readability, and updated `src/scripts/core/battle_map.gd` terrain palette + edge highlights so the 5x5 grid reads clearly in feed snapshots. Parse check passed: `HOME=/tmp godot --headless --path /home/fives/projects/puff-tactics --scene res://src/scenes/feed/FeedMain.tscn --quit`.",
       "dependsOn": [
         "US-049"
       ]

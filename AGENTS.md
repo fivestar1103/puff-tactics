@@ -49,6 +49,7 @@ AI coding agents read this file automatically. Keep entries concise and actionab
 - "`src/scripts/feed/feed_main.gd::_build_visual_atmosphere()` adds non-interactive pastel ambient blobs + a header card so tall portrait whitespace reads intentional when layout constants are locked."
 - "`src/scripts/feed/feed_item.gd` feed card polish should prefer style upgrades (`_build_card_stylebox()`, `_ensure_map_backdrop()`, elevated status/score panels) before touching protected spacing constants."
 - "For feed UI depth consistency, keep status/score panels (`feed_item.gd`) and FAB button state styleboxes (`feed_main.gd`) on the same elevation profile: ~26px corners for cards, 1-2px pastel borders, and subtle shadows (size ~10, y-offset ~3, alpha ~0.12)."
+- "`src/scripts/feed/feed_main.gd` FAB polish should derive each button's corner radius from its current minimum height (`height/2`) and set stylebox content margins (~18px horizontal, ~12px vertical) so pill geometry and label padding remain consistent across Profile/Create/Leaderboard."
 - "Feed header/status/error copy should stay player-facing; avoid implementation-detail wording like `scene unavailable`, `failed to initialize`, or build-state messages in visible subtitles."
 
 ## Gotchas
