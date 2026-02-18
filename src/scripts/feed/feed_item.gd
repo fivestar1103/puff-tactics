@@ -334,7 +334,10 @@ func _build_score_overlay() -> void:
 	_share_button = Button.new()
 	_share_button.text = "Share"
 	_share_button.focus_mode = Control.FOCUS_NONE
-	_share_button.custom_minimum_size = Vector2(180.0, 52.0)
+	_share_button.custom_minimum_size = Vector2(180.0, 48.0)
+	_share_button.add_theme_font_size_override("font_size", 18)
+	_share_button.add_theme_color_override("font_color", Color(0.15, 0.15, 0.2, 1.0))
+	_style_pill_button(_share_button, Constants.PALETTE_MINT, 24)
 	root_layout.add_child(_share_button)
 	_connect_if_needed(_share_button, &"pressed", Callable(self, "_on_share_button_pressed"))
 
@@ -1141,6 +1144,29 @@ func _build_snapshot_puff_name(puff_config: Dictionary, cell: Vector2i) -> Strin
 
 func _on_snapshot_puff_exited(puff_id: int) -> void:
 	_puff_team_by_id.erase(puff_id)
+
+
+func _style_pill_button(button: Button, base_color: Color, corner_radius: int) -> void:
+	for state_name in ["normal", "hover", "pressed", "disabled"]:
+		var style: StyleBoxFlat = StyleBoxFlat.new()
+		match state_name:
+			"normal":
+				style.bg_color = base_color
+			"hover":
+				style.bg_color = base_color.lightened(0.08)
+			"pressed":
+				style.bg_color = base_color.darkened(0.1)
+			"disabled":
+				style.bg_color = base_color.darkened(0.3)
+		style.corner_radius_top_left = corner_radius
+		style.corner_radius_top_right = corner_radius
+		style.corner_radius_bottom_right = corner_radius
+		style.corner_radius_bottom_left = corner_radius
+		style.content_margin_left = 16.0
+		style.content_margin_right = 16.0
+		style.content_margin_top = 8.0
+		style.content_margin_bottom = 8.0
+		button.add_theme_stylebox_override(state_name, style)
 
 
 func _connect_if_needed(source: Object, signal_name: StringName, callback: Callable) -> void:
